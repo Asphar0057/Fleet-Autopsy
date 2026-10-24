@@ -13,6 +13,7 @@ import type { Scenario } from '../sim/scenarios';
 import { runHeadless } from '../sim/sim';
 import type { FaultEvent, FaultKind, SimConfig } from '../sim/types';
 import { blameFirstAlarm, blameMostSevere, matchesGroundTruth, targetOf } from './baselines';
+import { verifyFix } from './fix';
 import { HIGH_GAP, HIGH_SCORE, MED_GAP, MED_SCORE, ROUND_K, diagnose } from './diagnose';
 import {
   BLOCK_ENTRIES,
@@ -429,4 +430,36 @@ export function renderResultsMd(r: BenchmarkResult): string {
   for (const k of TUNED_NAMES) if (k in r.constants) row([k, String(r.constants[k])]);
   lines.push('');
   return lines.join('\n');
+}
+
+// ---- precomputed autopsies (task 11) ----
+
+/**
+ * Precomputed autopsy of a curated scenario, as file text: a BENCH_TICKS-tick
+ * world run, detectJam (throws when null), diagnose with the Observed_Config
+ * only, and verifyFix against the world. `elapsedMs` is dropped and nothing
+ * else depends on a clock, so repeated calls give byte-identical text. Only
+ * plain JSON values are included (no Recording, no typed arrays).
+ */
+export async function buildAutopsy(layout: Layout, scenario: Scenario): Promise<string> {
+  const world = scenarioConfig(scenario, layout);
+  const rec = runHeadless(layout, world, BENCH_TICKS);
+  const jam = detectJam(rec, layout, BENCH_TICKS);
+  if (jam === null) throw new Error(`autopsy ${scenario.id}: no jam detected`);
+  const observed: ObservedConfig = { seed: world.seed, robots: world.robots, queueCap: world.queueCap };
+  const d = await diagnose(layout, observed, rec, jam);
+  const fix = verifyFix(layout, world, d);
+  const { elapsedMs: _elapsed, ...diagnosis } = d;
+  void _elapsed;
+  const obj = {
+    scenarioId: scenario.id,
+    layoutId: scenario.layoutId,
+    seed: world.seed,
+    robots: world.robots,
+    ticks: BENCH_TICKS,
+    jam,
+    diagnosis,
+    fix,
+  };
+  return JSON.stringify(obj, null, 2) + '\n';
 }

@@ -106,7 +106,7 @@ Rules for every task:
     - _Requirements: 8.2, 8.3, 8.4_
   - [x] 9.3 Check and commit: `npm run build` bundles the worker; commit "run diagnosis in a web worker with progress and abort"
 
-- [ ] 10. Tune on dev seeds, run and commit the benchmark
+- [x] 10. Tune on dev seeds, run and commit the benchmark
   - [x] 10.1 Run `BENCH_MODE=dev npm run benchmark`; if accuracy is poor, follow the debug rule in `docs/spec3-debug.md` (max 8 attempts, dev seeds only, never loosen pass criteria)
     - _Requirements: 7.4_
   - [x] 10.2 Replace the design.md "Tuned constants" table with the final values and the dev-seed accuracy they gave
@@ -115,14 +115,14 @@ Rules for every task:
     - _Requirements: 7.1, 7.2, 7.3_
   - [x] 10.4 Commit: "tune diagnosis constants on dev seeds and commit benchmark results"
 
-- [ ] 11. Precomputed autopsies and the dev readout
-  - [~] 11.1 Implement `buildAutopsy` in `src/diagnosis/benchmark.ts` and `scripts/precompute.run.ts` writing `public/autopsies/<scenarioId>.json` for the 6 curated scenarios (no `elapsedMs`, no timestamps, trailing newline); run `npm run precompute`
+- [x] 11. Precomputed autopsies and the dev readout
+  - [x] 11.1 Implement `buildAutopsy` in `src/diagnosis/benchmark.ts` and `scripts/precompute.run.ts` writing `public/autopsies/<scenarioId>.json` for the 6 curated scenarios (no `elapsedMs`, no timestamps, trailing newline); run `npm run precompute`
     - _Requirements: 9.1, 9.2_
-  - [~] 11.2 Write `tests/precompute.test.ts`: `buildAutopsy` for `pd-holder-freeze` and `pd-decoy-first` is byte-identical across two calls and equal to the committed files
+  - [x] 11.2 Write `tests/precompute.test.ts`: `buildAutopsy` for `pd-holder-freeze` and `pd-decoy-first` is byte-identical across two calls and equal to the committed files
     - _Requirements: 9.2_
-  - [~] 11.3 Implement `src/diagnosis/DebugPanel.tsx` and `debugMount.tsx` (only under `?debug=diagnose`; curated select initialised from `?scenario=<id>`; `diagnoseInWorker` with observed config; progress line `replaying n of m timelines`; ranked faults; `verifyFix` result labelled sim-verified; real `<select>` and `<button>` with labels); add the one line `import './diagnosis/debugMount';` to `src/main.tsx`
+  - [x] 11.3 Implement `src/diagnosis/DebugPanel.tsx` and `debugMount.tsx` (only under `?debug=diagnose`; curated select initialised from `?scenario=<id>`; `diagnoseInWorker` with observed config; progress line `replaying n of m timelines`; ranked faults; `verifyFix` result labelled sim-verified; real `<select>` and `<button>` with labels); add the one line `import './diagnosis/debugMount';` to `src/main.tsx`
     - _Requirements: 9.3, 9.4_
-  - [~] 11.4 Visible check and commit: `npm run build` passes; `npm run dev` with `?debug=diagnose&scenario=pd-decoy-first` shows R3 as root cause and a passing fix; the app without the flag is unchanged. Commit "precompute curated autopsies and add diagnosis debug readout"
+  - [x] 11.4 Visible check and commit: `npm run build` passes; `npm run dev` with `?debug=diagnose&scenario=pd-decoy-first` shows R3 as root cause and a passing fix; the app without the flag is unchanged. Commit "precompute curated autopsies and add diagnosis debug readout"
 
 - [~] 12. Final checkpoint
   - Ensure `npm test`, `npm run lint`, and `npm run build` pass, Spec 1 golden hashes unchanged, `git diff --stat` shows no change under `src/sim` or `src/ui`; ask the user if questions arise
