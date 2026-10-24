@@ -25,7 +25,7 @@ const PIPELINE: readonly { label: string; cause: boolean }[] = [
   { label: 'inject a failure', cause: false },
   { label: 'observe telemetry', cause: false },
   { label: 'detect the jam', cause: false },
-  { label: 'find the cause · verify the fix', cause: true },
+  { label: 'replay timelines · verify the fix', cause: true },
 ];
 const VIEW_H = PIPELINE.length * NODE_H + (PIPELINE.length - 1) * GAP + 1;
 
@@ -35,7 +35,7 @@ function Pipeline() {
     <svg
       className="pipeline"
       role="img"
-      aria-label="Pipeline: simulate, then inject a failure, then observe telemetry, then detect the jam, then find the cause and verify the fix"
+      aria-label="Pipeline: simulate, then inject a failure, then observe telemetry, then detect the jam, then replay alternate timelines and verify the fix"
       viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
       width="100%"
       preserveAspectRatio="xMidYMin meet"

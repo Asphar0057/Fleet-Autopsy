@@ -59,7 +59,7 @@ export const HOW_IT_WORKS: readonly { title: string; body: string }[] = [
   },
   {
     title: 'Replay alternate timelines and verify the fix',
-    body: 'Each suspect is removed in a replay. The one whose removal restores throughput is the cause, and the replay verifies the fix.',
+    body: 'Each suspect is injected alone in a replay; the one whose replay best matches the observed run is chosen greedily as the cause. Removing it in a final replay verifies the fix.',
   },
 ];
 

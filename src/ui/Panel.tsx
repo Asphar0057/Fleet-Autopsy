@@ -17,9 +17,12 @@ import { TelemetryPanel } from './TelemetryPanel';
 import type { TelemetryView } from './TelemetryPanel';
 
 const ASSUMPTIONS = [
-  'simulation only; results are not validated on real fleets',
-  'faults are injected with known ground truth',
-  'detection thresholds are fixed and were not tuned on the evaluation scenarios beyond the healthy baselines',
+  'simulation only; no real robots, and nothing is validated on real fleets',
+  'faults are injected, so the ground truth is known',
+  'detection thresholds are fixed',
+  'mild faults (slowed station, partly blocked door, slow robot) fall below the detector threshold and are not detected',
+  'benchmark seeds (1000 and up) are separate from the dev seeds used for tuning',
+  'diagnosis is classical search and simulation; no trained model',
   'inspired by fulfillment-center drive-unit systems; no affiliation with any company',
   'discrete ticks; each robot stays or moves one cell (4-neighborhood)',
   'service takes 8–14 ticks, drawn from the seeded rng',
