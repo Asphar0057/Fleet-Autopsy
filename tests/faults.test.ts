@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { createDistanceCache, INF } from '../src/sim/distance';
-import { blockableCells, createFaultState, isActive, validateFaults } from '../src/sim/faults';
+import { blockableCells, blockedAt, blockWindows, createFaultState, isActive, validateFaults } from '../src/sim/faults';
 import type { Layout } from '../src/sim/layout';
 import { createPlanner } from '../src/sim/pibt';
 import { hashRecording } from '../src/sim/recorder';
 import type { Recording } from '../src/sim/recorder';
-import { createSim } from '../src/sim/sim';
+import { createSim, runHeadless } from '../src/sim/sim';
 import { CellKind, EKind } from '../src/sim/types';
 import type { FaultEvent } from '../src/sim/types';
 import { verifyRun } from '../src/sim/verify';
-import { blockableFor, faultsValid, loadPreset, PRESET_IDS, runCase, runCaseArb } from './helpers';
+import { blockableFor, faultArb, faultsValid, loadPreset, PRESET_IDS, runCase, runCaseArb } from './helpers';
 import type { RunCase } from './helpers';
 
 const PRESETS = ['pocket-dc', 'fulfillment-block', 'chokepoint'];
@@ -531,6 +531,193 @@ describe('blocked cells', () => {
         return cache.get(goal, allow) === map;
       }),
       { numRuns: 100 },
+    );
+  });
+});
+
+// ---- Verifier block rule and headless seam (task 4) ----
+
+/** A copy of rec with its own positions buffer, so mutations leave rec intact. */
+function withPositions(rec: Recording): Recording {
+  return { ...rec, positions: rec.positions.slice() };
+}
+
+describe('blockWindows and the blocked-cell verifier rule', () => {
+  const c: RunCase = { id: 'fulfillment-block', seed: 1, robots: loadPreset('fulfillment-block').recommendedRobots };
+  const layout = loadPreset(c.id);
+
+  it('gives [start, end) per fault, -1 for non-blocks and blocks that never engage', () => {
+    const { frame, cell } = occupiedBlockable(c, RUN_TICKS);
+    const faults: FaultEvent[] = [
+      { kind: 'robot-freeze', tick: 5, robot: 0, duration: 10 },
+      block(cell, frame, 150),
+      block(blockableFor(layout)[0], RUN_TICKS + 50, null), // starts after the recording ends
+    ];
+    expect(faultsValid(layout, c.robots, faults)).toBe(true);
+    const rec = runCase(c, RUN_TICKS, faults).recording;
+    const w = blockWindows(faults, rec);
+    expect(w.length).toBe(6);
+    expect([w[0], w[1], w[4], w[5]]).toEqual([-1, -1, -1, -1]);
+    expect(w[2]).toBeGreaterThan(frame); // occupied at frame - 1 (and frame), so it engages later
+    expect(occupiedAt(rec, w[2] - 1, cell)).toBe(false);
+    for (let t = frame; t < w[2] - 1; t++) expect(occupiedAt(rec, t, cell)).toBe(true);
+    expect(w[3]).toBe(frame + 150);
+    const mask = new Uint8Array(layout.kinds.length);
+    blockedAt(faults, w, w[2] - 1, mask);
+    expect(mask[cell]).toBe(0);
+    blockedAt(faults, w, w[2], mask);
+    expect(mask[cell]).toBe(1);
+    expect(mask.reduce((s, v) => s + v, 0)).toBe(1);
+    blockedAt(faults, w, w[3], mask);
+    expect(mask[cell]).toBe(0);
+  });
+
+  it('clips permanent and long windows to the recording', () => {
+    const cell = blockableFor(layout)[0];
+    const faults = [block(cell, 10, null), block(cell, 10, 10_000)];
+    const rec = runCase(c, 100, faults).recording;
+    const w = blockWindows(faults, rec);
+    expect(w[1]).toBe(rec.frames);
+    expect(w[3]).toBe(rec.frames);
+  });
+
+  it('agrees with the sim engagement (FaultState) on every frame', () => {
+    const { frame, cell } = occupiedBlockable(c, RUN_TICKS);
+    const cells = blockableFor(layout);
+    const faults: FaultEvent[] = [block(cell, frame, 80), block(cells[cells.length - 1], 30, 40), block(cell, frame + 100, null)];
+    expect(faultsValid(layout, c.robots, faults)).toBe(true);
+    const rec = runCase(c, RUN_TICKS, faults).recording;
+    const w = blockWindows(faults, rec);
+    const st = createFaultState(layout, rec.robots, faults);
+    const mask = new Uint8Array(layout.kinds.length);
+    for (let t = 1; t < rec.frames; t++) {
+      st.update(t, rec.positions.subarray((t - 1) * rec.robots, t * rec.robots));
+      blockedAt(faults, w, t, mask);
+      expect(Array.from(mask)).toEqual(Array.from(st.blocked));
+    }
+  });
+
+  it('flags a robot on an engaged block with tick and robot, and nothing when faults are omitted', () => {
+    const cell = blockableFor(layout)[0];
+    const faults = [block(cell, 10, 100)];
+    const rec = runCase(c, 200, faults).recording;
+    expect(verifyRun(rec, layout, faults)).toEqual([]);
+    const w = blockWindows(faults, rec);
+    expect(w[0]).toBeGreaterThanOrEqual(10);
+    const t = w[0] + 5;
+    const bad = withPositions(rec);
+    bad.positions[t * rec.robots + 2] = cell;
+    expect(verifyRun(bad, layout, faults)).toContainEqual({ kind: 'blocked-cell', tick: t, robots: [2] });
+    // Spec 1 rules only: no blocked-cell violations without faults, same as an empty list.
+    const spec1 = verifyRun(bad, layout);
+    expect(spec1.some((v) => v.kind === 'blocked-cell')).toBe(false);
+    expect(verifyRun(bad, layout, [])).toEqual(spec1);
+    // At the window end the cell is free to use again.
+    expect(w[1]).toBe(110);
+    const after = withPositions(rec);
+    after.positions[w[1] * rec.robots + 2] = cell;
+    expect(verifyRun(after, layout, faults).some((v) => v.kind === 'blocked-cell')).toBe(false);
+  });
+});
+
+describe('runHeadless', () => {
+  it('equals createSim + run', () => {
+    const layout = loadPreset('pocket-dc');
+    const faults: FaultEvent[] = [
+      { kind: 'robot-freeze', tick: 40, robot: 1, duration: 60 },
+      block(blockableFor(layout)[0], 20, null),
+    ];
+    const config = { seed: 7, robots: layout.recommendedRobots, queueCap: layout.queueCap, faults };
+    const sim = createSim(layout, config);
+    sim.run(RUN_TICKS);
+    const rec = runHeadless(layout, config, RUN_TICKS);
+    expect(rec.frames).toBe(RUN_TICKS + 1);
+    expect(hashRecording(rec)).toBe(hashRecording(sim.recording));
+  });
+});
+
+/** Run case plus 1 to 3 valid faults for it. */
+function faultedCaseArb(): fc.Arbitrary<[RunCase, FaultEvent[]]> {
+  return runCaseArb().chain((c) => fc.tuple(fc.constant(c), faultArb(loadPreset(c.id), c.robots)));
+}
+
+function runFaults(c: RunCase, faults: FaultEvent[]): Recording {
+  const layout = loadPreset(c.id);
+  return runHeadless(layout, { seed: c.seed, robots: c.robots, queueCap: layout.queueCap, faults }, RUN_TICKS);
+}
+
+describe('faulted run properties', () => {
+  // Feature: failures-telemetry, Property 1: Faulted runs are deterministic, order-independent, and removal-consistent
+  // **Validates: Requirements 1.8, 7.2**
+  it('Property 1: Faulted runs are deterministic, order-independent, and removal-consistent', () => {
+    const arb = faultedCaseArb().chain(([c, faults]) =>
+      fc.tuple(fc.constant(c), fc.constant(faults), fc.integer({ min: 0, max: faults.length - 1 })),
+    );
+    fc.assert(
+      fc.property(arb, ([c, faults, k]) => {
+        const h = hashRecording(runFaults(c, faults));
+        if (hashRecording(runFaults(c, faults)) !== h) return false;
+        if (hashRecording(runFaults(c, [...faults].reverse())) !== h) return false;
+        const filtered = faults.filter((_, i) => i !== k);
+        const removed = runFaults(c, filtered);
+        const fresh = runCase(c, RUN_TICKS, filtered.map((f) => ({ ...f }))).recording;
+        return hashRecording(removed) === hashRecording(fresh);
+      }),
+      { numRuns: 25 },
+    );
+  });
+
+  // Feature: failures-telemetry, Property 2: Faulted runs are verifier-clean
+  // **Validates: Requirements 1.4, 2.1, 2.2, 2.3**
+  it('Property 2: Faulted runs are verifier-clean', () => {
+    fc.assert(
+      fc.property(faultedCaseArb(), ([c, faults]) => {
+        const rec = runFaults(c, faults);
+        expect(verifyRun(rec, loadPreset(c.id), faults)).toEqual([]);
+      }),
+      { numRuns: 25 },
+    );
+  });
+
+  // Feature: failures-telemetry, Property 8: Verifier detects blocked-cell entries
+  // **Validates: Requirements 2.1**
+  it('Property 8: Verifier detects blocked-cell entries', () => {
+    // A run case, an early blocked-cell fault (index 0, so it is likely to engage),
+    // optional extra faults, and picks for the frame and robot to move onto the cell.
+    const arb = runCaseArb().chain((c) => {
+      const l = loadPreset(c.id);
+      const blockArb = fc.record({
+        kind: fc.constant('blocked-cell' as const),
+        tick: fc.integer({ min: 1, max: 50 }),
+        cell: fc.constantFrom(...Array.from(blockableFor(l))),
+        duration: fc.option(fc.integer({ min: 20, max: 200 }), { nil: null }),
+      });
+      const faultsArb = fc
+        .tuple(blockArb, fc.option(faultArb(l, c.robots), { nil: null }))
+        .map(([b, rest]): FaultEvent[] => [b, ...(rest ?? [])])
+        .filter((fs) => faultsValid(l, c.robots, fs));
+      return fc.record({
+        c: fc.constant(c),
+        faults: faultsArb,
+        framePick: fc.integer({ min: 0, max: 1 << 20 }),
+        robot: fc.integer({ min: 0, max: c.robots - 1 }),
+      });
+    });
+    fc.assert(
+      fc.property(arb, ({ c, faults, framePick, robot }) => {
+        const layout = loadPreset(c.id);
+        const rec = runFaults(c, faults);
+        expect(verifyRun(rec, layout, faults)).toEqual([]);
+        const w = blockWindows(faults, rec);
+        fc.pre(w[0] >= 0 && w[1] > w[0]);
+        const t = w[0] + (framePick % (w[1] - w[0]));
+        const f = faults[0];
+        if (f.kind !== 'blocked-cell') return false;
+        const bad = withPositions(rec);
+        bad.positions[t * rec.robots + robot] = f.cell;
+        expect(verifyRun(bad, layout, faults)).toContainEqual({ kind: 'blocked-cell', tick: t, robots: [robot] });
+      }),
+      { numRuns: 25 },
     );
   });
 });

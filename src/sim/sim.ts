@@ -368,3 +368,13 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
     },
   };
 }
+
+/**
+ * Headless replay seam (Requirement 7.1): creates a Sim, runs `ticks` ticks,
+ * and returns its Recording (ticks + 1 frames). No UI or rendering work.
+ */
+export function runHeadless(layout: Layout, config: SimConfig, ticks: number): Recording {
+  const sim = createSim(layout, config);
+  sim.run(ticks);
+  return sim.recording;
+}

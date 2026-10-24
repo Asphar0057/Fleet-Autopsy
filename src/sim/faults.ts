@@ -2,6 +2,7 @@
 // Pure functions; no module-level mutable state. See design.md D1, D8.
 
 import type { Layout } from './layout';
+import type { Recording } from './recorder';
 import { CellKind } from './types';
 import type { FaultEvent } from './types';
 
@@ -270,4 +271,56 @@ export function createFaultState(layout: Layout, robots: number, faults: readonl
       return hasBlocks ? updateBlocks(t, pos) : false;
     },
   };
+}
+
+/**
+ * Engaged-block windows recomputed from a Recording, exactly as the sim decides
+ * engagement (D7): a blocked-cell fault engages at the first frame t in its
+ * window whose previous frame t - 1 has no robot on the cell, and stays engaged
+ * until the window ends.
+ *
+ * Layout: 2 entries per fault, `[start_k, end_k]` at indices `2k` and `2k + 1`,
+ * meaning frames `start_k <= t < end_k`. `end_k` is `min(tick + duration,
+ * rec.frames)`, or `rec.frames` when permanent. Both entries are -1 when fault k
+ * is not a blocked-cell fault or never engages within the recording.
+ */
+export function blockWindows(faults: readonly FaultEvent[], rec: Recording): Int32Array {
+  const out = new Int32Array(2 * faults.length).fill(-1);
+  const n = rec.robots;
+  const pos = rec.positions;
+  for (let k = 0; k < faults.length; k++) {
+    const f = faults[k];
+    if (f.kind !== 'blocked-cell') continue;
+    const end = f.duration === null ? rec.frames : Math.min(f.tick + f.duration, rec.frames);
+    for (let t = Math.max(f.tick, 1); t < end; t++) {
+      const o = (t - 1) * n;
+      let occupied = false;
+      for (let r = 0; r < n; r++) {
+        if (pos[o + r] === f.cell) {
+          occupied = true;
+          break;
+        }
+      }
+      if (!occupied) {
+        out[2 * k] = t;
+        out[2 * k + 1] = end;
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Fills `out` (one entry per cell) with 1 on every cell that is an engaged
+ * block at frame `tick`, given windows from `blockWindows`, and 0 elsewhere.
+ */
+export function blockedAt(faults: readonly FaultEvent[], windows: Int32Array, tick: number, out: Uint8Array): void {
+  out.fill(0);
+  for (let k = 0; k < faults.length; k++) {
+    const f = faults[k];
+    if (f.kind !== 'blocked-cell') continue;
+    const start = windows[2 * k];
+    if (start >= 0 && tick >= start && tick < windows[2 * k + 1]) out[f.cell] = 1;
+  }
 }

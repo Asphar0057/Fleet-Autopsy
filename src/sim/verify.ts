@@ -1,17 +1,50 @@
 // Independent run verifier. Reads only the Recording and the Layout, never Sim
-// internals. Rules: same-cell, swap, jump, illegal-cell (design.md D5).
+// internals. Rules: same-cell, swap, jump, illegal-cell (design.md D5), plus
+// blocked-cell when faults are given (Spec 2): engagement is recomputed from the
+// Recording by blockWindows (D7).
 
+import { blockWindows } from './faults';
 import type { Layout } from './layout';
 import type { Recording } from './recorder';
 import { CellKind } from './types';
-import type { Violation } from './types';
+import type { FaultEvent, Violation } from './types';
 
 function adjacent(layout: Layout, a: number, b: number): boolean {
   for (let d = 0; d < 4; d++) if (layout.neighbors[a * 4 + d] === b) return true;
   return false;
 }
 
-export function verifyRun(rec: Recording, layout: Layout): Violation[] {
+/**
+ * Checks a run. With `faults`, also reports a `blocked-cell` Violation for every
+ * frame in which a robot stands on an Engaged_Block (reported after the Spec 1
+ * rules, by fault index, then tick, then robot id).
+ */
+export function verifyRun(rec: Recording, layout: Layout, faults?: readonly FaultEvent[]): Violation[] {
+  const out = verifySpec1(rec, layout);
+  if (faults && faults.length > 0) verifyBlocks(rec, faults, out);
+  return out;
+}
+
+function verifyBlocks(rec: Recording, faults: readonly FaultEvent[], out: Violation[]): void {
+  const windows = blockWindows(faults, rec);
+  const n = rec.robots;
+  const { positions } = rec;
+  for (let k = 0; k < faults.length; k++) {
+    const f = faults[k];
+    if (f.kind !== 'blocked-cell') continue;
+    const start = windows[2 * k];
+    if (start < 0) continue;
+    const end = windows[2 * k + 1];
+    for (let t = start; t < end; t++) {
+      const o = t * n;
+      for (let r = 0; r < n; r++) {
+        if (positions[o + r] === f.cell) out.push({ kind: 'blocked-cell', tick: t, robots: [r] });
+      }
+    }
+  }
+}
+
+function verifySpec1(rec: Recording, layout: Layout): Violation[] {
   const out: Violation[] = [];
   const n = rec.robots;
   const cells = layout.kinds.length;
