@@ -19,10 +19,12 @@ export interface ScrubberProps {
   series: Int16Array;
   /** Fault start ticks, drawn as accent ticks; pass null unless ground truth is revealed. */
   faultTicks?: readonly number[] | null;
+  /** Detected jam onset, drawn as a full-height accent line during the autopsy. */
+  onsetTick?: number | null;
   onSeek(tick: number): void;
 }
 
-export function Scrubber({ rec, frames, playhead, series, faultTicks = null, onSeek }: ScrubberProps) {
+export function Scrubber({ rec, frames, playhead, series, faultTicks = null, onsetTick = null, onSeek }: ScrubberProps) {
   const last = Math.max(0, frames - 1);
 
   const line = useMemo(
@@ -81,6 +83,18 @@ export function Scrubber({ rec, frames, playhead, series, faultTicks = null, onS
               vectorEffect="non-scaling-stroke"
             />
           ) : null,
+        )}
+        {onsetTick !== null && onsetTick <= last && (
+          <line
+            className="scrubber-onset"
+            x1={x(onsetTick)}
+            x2={x(onsetTick)}
+            y1={0}
+            y2={H}
+            stroke="var(--accent)"
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
         )}
       </svg>
       <input

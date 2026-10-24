@@ -2,7 +2,7 @@
 // (layout, robots, seed). A rAF loop owns the playhead and redraws the canvas every
 // frame it changes; React state for the header, panel, and scrubber is published at
 // about 10 Hz so 16× playback does not re-render React on every tick.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { drawFrame, fitCanvas, readColors } from '../render/canvasRenderer';
 import type { Layout, LayoutMeta } from '../sim/layout';
 import { blockedAt, blockWindows } from '../sim/faults';
@@ -25,6 +25,15 @@ import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from './play
 import type { Speed } from './playback';
 import { Scrubber } from './Scrubber';
 import type { TelemetryView } from './TelemetryPanel';
+import { FindCause } from './autopsy/FindCause';
+import type { FindStatus } from './autopsy/FindCause';
+import { faultsWithoutCause } from './autopsy/model';
+import { isAbort, obtainAutopsy } from './autopsy/obtain';
+import { CURATED_AUTOPSIES, DECOY_SCENARIO } from './autopsy/types';
+import type { AutopsyRun } from './autopsy/types';
+
+// The autopsy stage is its own chunk, loaded on the first diagnosis.
+const AutopsyStage = lazy(() => import('./autopsy/AutopsyStage'));
 
 const DEFAULT_LAYOUT = 'fulfillment-block';
 const DEFAULT_SEED = 42;
@@ -61,6 +70,8 @@ interface Runtime {
   trails: boolean;
   congestion: boolean;
   reveal: boolean;
+  /** Diagnosed culprit marked in accent (autopsy steps 4 and 5); null hides it. */
+  culprit: FaultEvent[] | null;
 }
 
 export interface AppProps {
@@ -103,8 +114,23 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
     trails: false,
     congestion: false,
     reveal: false,
+    culprit: null,
   });
   const scenario = findScenario(scenarioId);
+  // Autopsy (Spec 4): bound to the run key; a different run hides it.
+  const [autopsy, setAutopsy] = useState<AutopsyRun | null>(null);
+  const [findStatus, setFindStatus] = useState<FindStatus>({ kind: 'idle' });
+  const [stageStep, setStageStep] = useState(1);
+  const [fixKey, setFixKey] = useState<string | null>(null);
+  const [scenarioTouched, setScenarioTouched] = useState(false);
+  const findAbort = useRef<AbortController | null>(null);
+  const runKey = `${layout?.id ?? ''}|${robots}|${seed}|${scenarioId ?? ''}`;
+  const run = autopsy && autopsy.key === runKey ? autopsy : null;
+  const fixActive = run !== null && fixKey === runKey;
+  const fixFaults = useMemo(
+    () => (fixActive && run && layout ? faultsWithoutCause(run.data, run.world.faults, layout) : null),
+    [fixActive, run, layout],
+  );
   // Read by the layout-load effect, which must not re-run when the scenario changes.
   // Set by the handlers together with scenarioId.
   const scenarioRef = useRef<Scenario | null>(null);
@@ -158,12 +184,12 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
     if (!layout || robots < 1) return { sim: null, error: null };
     if (scenario && scenario.layoutId !== layout.id) return { sim: null, error: null };
     try {
-      const faults = scenario ? scenarioConfig(scenario, layout).faults : [];
+      const faults = fixFaults ?? (scenario ? scenarioConfig(scenario, layout).faults : []);
       return { sim: createSim(layout, { seed, robots, queueCap: layout.queueCap, faults }), error: null };
     } catch (e) {
       return { sim: null, error: errorText(e) };
     }
-  }, [layout, robots, seed, scenario]);
+  }, [layout, robots, seed, scenario, fixFaults]);
   const sim = created.sim;
   const faults: readonly FaultEvent[] = sim ? sim.config.faults : NO_FAULTS;
   // Incremental telemetry per Sim (Requirement 9.4). It reads the live recording.
@@ -179,6 +205,20 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
     r.reveal = reveal;
     r.dirty = true;
   }, [playing, speed, trails, congestion, reveal]);
+
+  // Culprit marker on the main canvas from autopsy step 4, not on the fix run.
+  const culprit = run?.data.diagnosis.rootCause?.fault ?? null;
+  useEffect(() => {
+    rt.current.culprit = culprit && stageStep >= 4 && !fixActive ? [culprit] : null;
+    rt.current.dirty = true;
+  }, [culprit, stageStep, fixActive]);
+
+  // A different run cancels a diagnosis in flight.
+  useEffect(() => {
+    findAbort.current?.abort();
+    findAbort.current = null;
+    setFindStatus({ kind: 'idle' });
+  }, [runKey]);
 
   const publish = useCallback(() => {
     if (!sim) return;
@@ -237,7 +277,11 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
         }
         blockedAt(simFaults, windows, ph, blocked);
       }
-      const marks = r.reveal ? revealMarks(simFaults, ph) : null;
+      const marks = r.reveal
+        ? revealMarks(simFaults, ph)
+        : r.culprit
+          ? revealMarks(r.culprit, ph).map((m) => ({ ...m, tag: 'cause' }))
+          : null;
       if (marks) {
         revealSkip.fill(0);
         for (const m of marks) {
@@ -429,6 +473,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
   const onScenario = useCallback(
     (id: string | null) => {
       const s = findScenario(id);
+      setScenarioTouched(true);
       scenarioRef.current = s;
       window.clearTimeout(noteTimer.current);
       setScenarioNote(null);
@@ -440,6 +485,67 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
     },
     [layoutId],
   );
+
+  const jam = telemetry?.jam ?? null;
+  const findCause = useCallback(() => {
+    const meta = layouts.find((m) => m.id === layout?.id);
+    if (!sim || !layout || !meta || !jam || fixActive) return;
+    if (run) return; // already open for this run
+    findAbort.current?.abort();
+    const ac = new AbortController();
+    findAbort.current = ac;
+    const key = runKey;
+    const world = { ...sim.config, faults: sim.config.faults.map((f) => ({ ...f })) };
+    setFindStatus({ kind: 'running', done: 0, total: 0 });
+    obtainAutopsy({
+      scenarioId,
+      layout,
+      meta,
+      world,
+      rec: sim.recording,
+      jam,
+      signal: ac.signal,
+      onProgress: (done, total) => {
+        if (!ac.signal.aborted) setFindStatus({ kind: 'running', done, total });
+      },
+    }).then(
+      (data) => {
+        if (ac.signal.aborted) return;
+        findAbort.current = null;
+        setStageStep(1);
+        setAutopsy({ key, data, world });
+        setFindStatus({ kind: 'idle' });
+      },
+      (e: unknown) => {
+        if (findAbort.current !== ac) return;
+        findAbort.current = null;
+        setFindStatus(isAbort(e) || ac.signal.aborted ? { kind: 'aborted' } : { kind: 'error', message: errorText(e) });
+      },
+    );
+  }, [layouts, layout, sim, jam, fixActive, run, runKey, scenarioId]);
+
+  const cancelFind = useCallback(() => {
+    // Keep the controller as current so the rejection reports "cancelled".
+    findAbort.current?.abort();
+  }, []);
+
+  const playFrom = useCallback(
+    (t: number) => {
+      seek(t);
+      setPlaying(true);
+    },
+    [seek],
+  );
+
+  const toggleFix = useCallback(() => {
+    setFixKey((k) => (k === runKey ? null : runKey));
+    setPlaying(true);
+  }, [runKey]);
+
+  const onDecoy = useCallback(() => {
+    onScenario(DECOY_SCENARIO);
+    setPlaying(true);
+  }, [onScenario]);
 
   const rec = sim ? sim.recording : null;
   // State can lag a just-created Sim by one render; clamp into its recording.
@@ -507,6 +613,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
         reveal={reveal}
         onReveal={setReveal}
         disabled={!sim}
+        onDecoy={scenarioTouched ? undefined : onDecoy}
       />
 
       <main className="main">
@@ -528,10 +635,27 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
             playhead={shownPlayhead}
             series={series}
             faultTicks={shownFaultTicks}
+            onsetTick={run && !fixActive ? run.data.jam.onsetTick : null}
             onSeek={seek}
           />
           <CanvasLegend reveal={legend} />
         </div>
+        {run && layout && (
+          <Suspense fallback={<p className="muted">Loading the autopsy</p>}>
+            <AutopsyStage
+              key={run.key}
+              run={run}
+              layout={layout}
+              scenario={scenario}
+              observed={rec}
+              playhead={shownPlayhead}
+              fixActive={fixActive}
+              onStep={setStageStep}
+              onPlayFrom={playFrom}
+              onToggleFix={toggleFix}
+            />
+          </Suspense>
+        )}
         <Panel
           layout={layout}
           rec={rec}
@@ -541,6 +665,16 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
           badge={badge}
           telemetry={telemetry}
           error={error}
+          findCause={
+            <FindCause
+              status={findStatus}
+              jam={jam !== null && !fixActive}
+              curated={scenarioId !== null && CURATED_AUTOPSIES.includes(scenarioId)}
+              open={run !== null}
+              onFind={findCause}
+              onCancel={cancelFind}
+            />
+          }
         />
       </main>
     </div>

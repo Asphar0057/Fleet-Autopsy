@@ -4,6 +4,7 @@
 // card has a title and one grey sentence saying what it shows. An error card
 // spans all columns above them.
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import type { Layout } from '../sim/layout';
 import { meanCycleTime, queueLengths, THROUGHPUT_WINDOW } from '../sim/metrics';
 import type { Recording } from '../sim/recorder';
@@ -39,9 +40,11 @@ export interface PanelProps {
   /** Telemetry and jam detection, published about 4 times a second. */
   telemetry: TelemetryView | null;
   error: string | null;
+  /** "Find the cause" block for the Telemetry card. */
+  findCause?: ReactNode;
 }
 
-export function Panel({ layout, rec, playhead, frames, series, badge, telemetry, error }: PanelProps) {
+export function Panel({ layout, rec, playhead, frames, series, badge, telemetry, error, findCause }: PanelProps) {
   const ready = rec !== null && playhead < frames && playhead < rec.frames;
 
   const metrics = useMemo(() => {
@@ -101,7 +104,7 @@ export function Panel({ layout, rec, playhead, frames, series, badge, telemetry,
         )}
       </section>
 
-      <TelemetryPanel view={telemetry} queueCap={layout ? layout.queueCap : 0}>
+      <TelemetryPanel view={telemetry} queueCap={layout ? layout.queueCap : 0} findCause={findCause}>
         <details className="disclosure">
           <summary className="disclosure-summary">Stations</summary>
           <p className="section-note">{SECTION_NOTES.stations}</p>

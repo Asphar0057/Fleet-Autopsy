@@ -54,9 +54,11 @@ export interface TelemetryPanelProps {
   queueCap: number;
   /** Rendered at the end of the card, after the queue bars (the Stations disclosure). */
   children?: ReactNode;
+  /** The "Find the cause" block; a disabled placeholder when absent. */
+  findCause?: ReactNode;
 }
 
-export function TelemetryPanel({ view, queueCap, children }: TelemetryPanelProps) {
+export function TelemetryPanel({ view, queueCap, children, findCause }: TelemetryPanelProps) {
   const spark = useMemo(() => {
     if (!view) return null;
     const n = view.throughput.length;
@@ -70,14 +72,16 @@ export function TelemetryPanel({ view, queueCap, children }: TelemetryPanelProps
     <section className="card">
       <SectionHead title={CARD_TITLES[2]} note={SECTION_NOTES.telemetry} />
       <JamBadge jam={view ? view.jam : null} />
-      <div className="find-cause">
-        <button type="button" className="btn btn--primary" disabled aria-describedby="find-cause-note">
-          Find the cause
-        </button>
-        <p id="find-cause-note" className="note">
-          Coming in the next step
-        </p>
-      </div>
+      {findCause ?? (
+        <div className="find-cause">
+          <button type="button" className="btn btn--primary" disabled aria-describedby="find-cause-note">
+            Find the cause
+          </button>
+          <p id="find-cause-note" className="note">
+            No jam to diagnose
+          </p>
+        </div>
+      )}
       {view && spark ? (
         <>
           <p className="label spark-label">

@@ -1,0 +1,111 @@
+/* Autopsy stage (Spec 4). Reads tokens only; no transitions or animations. */
+
+.autopsy-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.autopsy-title {
+  margin: var(--s-1) 0 0;
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+.autopsy-nav,
+.autopsy-steps,
+.autopsy-report-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.autopsy-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.autopsy-cols,
+.side-by-side {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.autopsy-cols > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  align-items: flex-start;
+}
+
+@media (max-width: 759px) {
+  .autopsy-cols,
+  .side-by-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.side-by-side figure,
+.fix-curves {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.side-by-side-note {
+  grid-column: 1 / -1;
+}
+
+.suspects {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s-2);
+}
+
+.suspect {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.fix-curves svg {
+  width: 100%;
+  height: 96px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.baselines caption {
+  text-align: left;
+  padding-bottom: var(--s-2);
+}
+
+.autopsy-report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  border-top: 1px solid var(--hairline);
+  padding-top: var(--s-3);
+}
+
+.autopsy-report-head {
+  justify-content: space-between;
+}
+
+.autopsy-report-text {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-variant-numeric: tabular-nums;
+  white-space: pre-wrap;
+  color: var(--fg-2);
+}

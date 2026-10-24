@@ -42,6 +42,8 @@ export interface ControlsProps {
   reveal: boolean;
   onReveal(on: boolean): void;
   disabled: boolean;
+  /** "Start with the decoy scenario"; hidden when absent. */
+  onDecoy?: () => void;
 }
 
 /* 16px inline icons, stroked or filled in currentColor; decorative (the button has the name). */
@@ -133,6 +135,13 @@ export function Controls(p: ControlsProps) {
             {p.scenarioNote ?? ''}
           </span>
         </span>
+        {p.onDecoy && (
+          <span className="field decoy-start">
+            <button type="button" className="btn btn--primary" onClick={p.onDecoy}>
+              Start with the decoy scenario
+            </button>
+          </span>
+        )}
         <span className="field">
           <button type="button" className="switch" aria-pressed={p.reveal} onClick={() => p.onReveal(!p.reveal)}>
             <span className="switch-track" aria-hidden="true">

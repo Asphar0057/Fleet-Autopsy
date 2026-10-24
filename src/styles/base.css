@@ -1292,3 +1292,13 @@ input[type='range']:disabled {
     animation: none !important;
   }
 }
+
+/* ---------- Autopsy entry points (Spec 4) ---------- */
+
+.find-progress {
+  margin-top: var(--s-2);
+}
+
+.decoy-start {
+  align-self: flex-end;
+}
