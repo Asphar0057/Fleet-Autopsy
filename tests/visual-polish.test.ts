@@ -73,6 +73,15 @@ describe('Landing render (Requirement 5.1, 5.2, 8.4)', () => {
   });
 });
 
+describe('Landing intro markup', () => {
+  it('names the h1 "Fleet Autopsy." and keeps the Enter button', async () => {
+    const Landing = await component('Landing', 'Landing');
+    const html = renderToString(createElement(Landing, { onEnter: noop, onHowItWorks: noop }));
+    expect(html).toMatch(/<h1[^>]*aria-label="Fleet Autopsy\."/);
+    expect(html).toMatch(/<button[^>]*>Enter the simulator<\/button>/);
+  });
+});
+
 describe('shortLayoutName (Requirement 8.5)', () => {
   it('drops a trailing " Block" and leaves other names unchanged', () => {
     expect(shortLayoutName('Fulfillment Block')).toBe('Fulfillment');

@@ -100,7 +100,7 @@ export function Controls(p: ControlsProps) {
     <div className="controls">
       <div className="cluster cluster--scenario" role="group" aria-label="scenario">
         <span className="field field--stacked field--scenario">
-          <span className="cluster-label accent-text" aria-hidden="true">
+          <span className="cluster-label" aria-hidden="true">
             Scenario
           </span>
           <label className="sr-only" htmlFor="scenario">

@@ -172,7 +172,7 @@ button {
 }
 
 /* Accent text: the wordmark full stop, the landing eyebrow and the word
-   "wrong" in the lede, and the scenario select (label and failure options). */
+   "wrong" in the lede. */
 .accent-dot,
 .accent-text {
   color: var(--accent);
@@ -772,10 +772,9 @@ input[type='range']:disabled {
   background: var(--surface);
 }
 
-/* Scenario select: the "Scenario" label, a selected failure scenario, and the
-   failure options in the open list (where the browser styles options) use Accent.
-   "Healthy fleet" and the group labels stay white. */
-.cluster-label.accent-text,
+/* Scenario select: a selected failure scenario and the failure options in the
+   open list (where the browser styles options) use Accent. "Healthy fleet",
+   the group labels and the "Scenario" label keep their usual colours. */
 .select select.select--failure,
 .select option.option--failure {
   color: var(--accent);
