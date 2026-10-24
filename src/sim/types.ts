@@ -20,6 +20,23 @@ export interface SimConfig {
   faults: FaultEvent[];
 }
 
+/** Which faults of a scenario are the root cause and which are decoys (indices into `faults`). */
+export interface GroundTruth {
+  primaryFaultIndex: number;
+  decoyIndices: number[];
+}
+
+/** A named failure scenario with known ground truth (Spec 2). */
+export interface Scenario {
+  id: string;
+  name: string;
+  layoutId: string;
+  seed: number;
+  robots: number;
+  faults: FaultEvent[];
+  groundTruth: GroundTruth;
+}
+
 export const RState = { Idle: 0, ToPod: 1, ToStation: 2, Serving: 3, Returning: 4 } as const;
 export type RState = (typeof RState)[keyof typeof RState];
 
