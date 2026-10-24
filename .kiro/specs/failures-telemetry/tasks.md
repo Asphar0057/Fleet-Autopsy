@@ -121,7 +121,7 @@ Rules for every task:
     - _Requirements: 8.4_
   - [x] 10.4 Visible check and commit: `npm run build` passes; in `npm run dev` choosing a scenario updates layout, robots, and seed; no fault markers until reveal; blocks hatched; legend and scrubber ticks on reveal; all reachable by keyboard. Commit "add scenario select and ground-truth reveal"
 
-- [ ] 11. Telemetry panel, jam badge, assumptions, README
+- [x] 11. Telemetry panel, jam badge, assumptions, README
   - [x] 11.1 Implement `jamBadgeText` in `src/ui/jamBadge.ts`, `JamBadge` and `TelemetryPanel.tsx` (sparkline with accent onset marker, queue bars, stalled ≥ 20 count, disabled "Find the cause" with caption "available in the next step"); renumber panel sections (D20)
     - _Requirements: 9.1, 9.2, 9.3_
   - [x] 11.2 In `App.tsx`, create a tracker per Sim and run `advance(playhead)` + `detectJam` every 250 ms in the rAF loop
@@ -130,9 +130,9 @@ Rules for every task:
     - _Requirements: 10.1, 10.2_
   - [x] 11.4 Write `jamBadgeText` examples in `tests/jam.test.ts` (null gives `HEALTHY`; a jam gives `JAM DETECTED · ONSET T=… · SEVERITY …%` with alert)
     - _Requirements: 9.2_
-  - [-] 11.5 Visible check and commit: in `npm run dev`, `pd-holder-freeze` shows `JAM DETECTED` with an onset, playback stays smooth at 16×. Commit "add telemetry panel and jam badge"
+  - [x] 11.5 Visible check and commit: in `npm run dev`, `pd-holder-freeze` shows `JAM DETECTED` with an onset, playback stays smooth at 16×. Commit "add telemetry panel and jam badge"
 
-- [~] 12. Final checkpoint
+- [x] 12. Final checkpoint
   - Ensure `npm test`, `npm run lint`, and `npm run build` pass, including golden, healthy-baseline, jam, and oracle tests; ask the user if questions arise
   - Commit any remaining fixes: "fix final spec 2 checks" (skip if nothing changed)
 
