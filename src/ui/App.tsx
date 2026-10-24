@@ -362,6 +362,8 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey || e.metaKey || isEditable(e.target)) return;
+      // The How it works dialog owns the keyboard while it has focus.
+      if (e.target instanceof Element && e.target.closest('[role="dialog"]')) return;
       if (e.key === ' ') {
         // A focused button already activates on space; let it.
         if (e.target instanceof HTMLButtonElement) return;

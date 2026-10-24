@@ -4,14 +4,15 @@
 // of Landing (Backdrop loop) and App (sim loop) is mounted at a time.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { App } from './App';
+import { HowItWorks } from './HowItWorks';
 import { Landing } from './Landing';
 import { parseRoute, routeHash } from './route';
 import type { Route } from './route';
 
 export function Root() {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
-  // Drawer state; the HowItWorks drawer that reads it arrives in task 8.
-  const [, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // The control that opened the drawer; focus returns to it on close (Requirement 5.3).
   const openerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -34,9 +35,24 @@ export function Root() {
     setDrawerOpen(true);
   }, []);
 
-  return route === 'app' ? (
-    <App onHome={() => navigate('landing')} onHowItWorks={openDrawer} />
-  ) : (
-    <Landing onEnter={() => navigate('app')} onHowItWorks={openDrawer} />
+  const closeDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    const opener = openerRef.current;
+    openerRef.current = null;
+    // After the drawer unmounts; skip if the opener left the page meanwhile.
+    requestAnimationFrame(() => {
+      if (opener && opener.isConnected) opener.focus();
+    });
+  }, []);
+
+  return (
+    <>
+      {route === 'app' ? (
+        <App onHome={() => navigate('landing')} onHowItWorks={openDrawer} />
+      ) : (
+        <Landing onEnter={() => navigate('app')} onHowItWorks={openDrawer} />
+      )}
+      <HowItWorks open={drawerOpen} onClose={closeDrawer} />
+    </>
   );
 }
