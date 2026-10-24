@@ -3,3 +3,4 @@ dist
 *.tsbuildinfo
 .vscode/
 benchmark/dev-results.json
+public/benchmark/

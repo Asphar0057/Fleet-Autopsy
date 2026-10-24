@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node -e \"const fs=require('fs');fs.mkdirSync('public/benchmark',{recursive:true});fs.copyFileSync('benchmark/results.json','public/benchmark/results.json')\" && tsc -b && vite build",
     "test": "vitest --run",
     "lint": "eslint .",
     "benchmark": "vitest --run --config vitest.scripts.config.ts benchmark",
