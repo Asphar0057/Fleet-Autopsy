@@ -4,8 +4,7 @@
 // about 10 Hz so 16× playback does not re-render React on every tick.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { drawFrame, fitCanvas, readColors } from '../render/canvasRenderer';
-import { parseLayout } from '../sim/layout';
-import type { Layout, LayoutManifest, LayoutMeta } from '../sim/layout';
+import type { Layout, LayoutMeta } from '../sim/layout';
 import { blockedAt, blockWindows } from '../sim/faults';
 import { createWaitCounter, stalledAt, throughputSeries } from '../sim/metrics';
 import { SCENARIOS, scenarioConfig } from '../sim/scenarios';
@@ -15,10 +14,12 @@ import type { FaultEvent, Scenario } from '../sim/types';
 import { detectJam } from '../sim/jam';
 import { createTelemetryTracker } from '../sim/telemetry';
 import { verifyRun } from '../sim/verify';
-import { badgeText } from './badge';
 import type { Badge } from './badge';
+import { CanvasLegend } from './CanvasLegend';
 import { Controls } from './Controls';
+import { SCENARIO_CLEARED_NOTE, verifierCopy } from './copy';
 import { faultLegend, faultTicks, revealMarks } from './legend';
+import { loadLayout, loadManifest } from './loaders';
 import { Panel } from './Panel';
 import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from './playback';
 import type { Speed } from './playback';
@@ -31,6 +32,7 @@ const PUBLISH_MS = 100; // React state updates at about 10 Hz
 const VERIFY_MS = 250; // re-verify the growing recording at most 4 times a second
 const TELEMETRY_MS = 250; // telemetry and jam detection at most 4 times a second (Requirement 9.4)
 const MAX_STEPS_PER_FRAME = 32; // cap catch-up after a background tab
+const SCENARIO_NOTE_MS = 3000; // how long "Scenario cleared…" stays visible
 
 const EMPTY_SERIES = new Int16Array(0);
 const NO_FAULTS: readonly FaultEvent[] = [];
@@ -41,18 +43,6 @@ function findScenario(id: string | null): Scenario | null {
 
 function errorText(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
-}
-
-async function loadManifest(): Promise<LayoutMeta[]> {
-  const res = await fetch(`${import.meta.env.BASE_URL}layouts/layouts.json`);
-  if (!res.ok) throw new Error(`layouts.json: http ${res.status}`);
-  return ((await res.json()) as LayoutManifest).layouts;
-}
-
-async function loadLayout(meta: LayoutMeta): Promise<Layout> {
-  const res = await fetch(`${import.meta.env.BASE_URL}layouts/${meta.file}`);
-  if (!res.ok) throw new Error(`${meta.file}: http ${res.status}`);
-  return parseLayout(meta, await res.text());
 }
 
 /** Keyboard shortcuts are ignored while focus is in a field that uses the keys itself. */
@@ -73,7 +63,14 @@ interface Runtime {
   reveal: boolean;
 }
 
-export function App() {
+export interface AppProps {
+  /** Wordmark: return to the landing view. */
+  onHome?(): void;
+  /** Header "How it works": open the drawer; focus returns to the opener on close. */
+  onHowItWorks?(opener: HTMLElement): void;
+}
+
+export function App({ onHome, onHowItWorks }: AppProps = {}) {
   const [layouts, setLayouts] = useState<LayoutMeta[]>([]);
   const [layoutId, setLayoutId] = useState(DEFAULT_LAYOUT);
   const [layout, setLayout] = useState<Layout | null>(null);
@@ -86,6 +83,8 @@ export function App() {
   // Scenario (D19): null is healthy (faults []); faults are derived from the scenario.
   const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [reveal, setReveal] = useState(false);
+  const [scenarioNote, setScenarioNote] = useState<string | null>(null);
+  const noteTimer = useRef<number | undefined>(undefined);
   const [loadError, setLoadError] = useState<string | null>(null);
   // Published at about 10 Hz by the loop, immediately by user actions.
   const [playhead, setPlayhead] = useState(0);
@@ -198,6 +197,9 @@ export function App() {
     r.playhead = 0;
     r.dirty = true;
     const stalled = new Uint8Array(sim.config.robots);
+    // 1 per robot with a reveal marker (filled only while revealed); the renderer
+    // skips its stall ring and label so the culprit shows one accent marker.
+    const revealSkip = new Uint8Array(sim.config.robots);
     const waits = createWaitCounter(lay);
     const colors = readColors();
     const simFaults = sim.config.faults;
@@ -235,13 +237,21 @@ export function App() {
         }
         blockedAt(simFaults, windows, ph, blocked);
       }
+      const marks = r.reveal ? revealMarks(simFaults, ph) : null;
+      if (marks) {
+        revealSkip.fill(0);
+        for (const m of marks) {
+          if (m.target === 'robot' && m.index >= 0 && m.index < revealSkip.length) revealSkip[m.index] = 1;
+        }
+      }
       drawFrame(ctx, lay, rec, ph, {
         trails: r.trails,
         congestion: r.congestion,
         waitCounts: r.congestion ? waits.at(rec, ph) : null,
         stalled,
         blocked,
-        reveal: r.reveal ? revealMarks(simFaults, ph) : null,
+        reveal: marks,
+        revealSkip: marks ? revealSkip : null,
         colors,
       });
     };
@@ -253,13 +263,13 @@ export function App() {
     observer.observe(box);
     fitCanvas(canvas, lay);
 
-    // Canvas text does not trigger web font loading; request Geist Mono and
-    // redraw once it (and any other pending font) is ready.
+    // Canvas text does not trigger web font loading; request Montserrat 500
+    // (station digits and labels), and redraw once it is ready.
     let cancelled = false;
     const fonts = document.fonts as FontFaceSet | undefined;
     if (fonts) {
       fonts
-        .load(`11px 'Geist Mono'`)
+        .load(`500 11px 'Montserrat'`)
         .then(() => fonts.ready)
         .then(
           () => {
@@ -306,7 +316,7 @@ export function App() {
       if (rec.frames !== verifiedFrames && now - lastVerify >= VERIFY_MS) {
         lastVerify = now;
         verifiedFrames = rec.frames;
-        setBadge(badgeText(verifyRun(rec, lay, simFaults).length, sim.tick));
+        setBadge(verifierCopy(verifyRun(rec, lay, simFaults).length, sim.tick));
       }
       if (r.playhead !== telemetryAt && now - lastTelemetry >= TELEMETRY_MS) {
         lastTelemetry = now;
@@ -356,6 +366,8 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey || e.metaKey || isEditable(e.target)) return;
+      // The How it works dialog owns the keyboard while it has focus.
+      if (e.target instanceof Element && e.target.closest('[role="dialog"]')) return;
       if (e.key === ' ') {
         // A focused button already activates on space; let it.
         if (e.target instanceof HTMLButtonElement) return;
@@ -373,31 +385,43 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [togglePlay, onStepBack, onStepForward]);
 
-  // Any manual change to layout, robots, or seed returns to healthy (D19).
+  // Any manual change to layout, robots, or seed returns to healthy (D19); if a
+  // scenario was active, a grey note says so for SCENARIO_NOTE_MS.
+  const clearScenario = useCallback(() => {
+    if (scenarioRef.current === null) return;
+    scenarioRef.current = null;
+    setScenarioId(null);
+    setScenarioNote(SCENARIO_CLEARED_NOTE);
+    window.clearTimeout(noteTimer.current);
+    noteTimer.current = window.setTimeout(() => setScenarioNote(null), SCENARIO_NOTE_MS);
+  }, []);
+
+  useEffect(() => () => window.clearTimeout(noteTimer.current), []);
+
   const onLayout = useCallback(
     (id: string) => {
       if (id === layoutId) return;
-      scenarioRef.current = null;
-      setScenarioId(null);
+      clearScenario();
       setLayoutId(id);
     },
-    [layoutId],
+    [layoutId, clearScenario],
   );
 
-  const onRobots = useCallback((n: number) => {
-    scenarioRef.current = null;
-    setScenarioId(null);
-    setRobots(n);
-  }, []);
+  const onRobots = useCallback(
+    (n: number) => {
+      clearScenario();
+      setRobots(n);
+    },
+    [clearScenario],
+  );
 
   const onSeed = useCallback(
     (n: number) => {
       if (n === seed) return;
-      scenarioRef.current = null;
-      setScenarioId(null);
+      clearScenario();
       setSeed(n);
     },
-    [seed],
+    [seed, clearScenario],
   );
 
   // Choosing a scenario sets layout, robots, seed, and faults together (D19).
@@ -406,6 +430,8 @@ export function App() {
     (id: string | null) => {
       const s = findScenario(id);
       scenarioRef.current = s;
+      window.clearTimeout(noteTimer.current);
+      setScenarioNote(null);
       setScenarioId(s ? s.id : null);
       if (!s) return;
       setSeed(s.seed);
@@ -431,12 +457,27 @@ export function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1 className="wordmark">
-          Fleet <em>Autopsy</em>
-        </h1>
-        <p className="meta mono" aria-live="off">
-          SEED {pad4(seed)} · TICK {pad4(shownPlayhead)}
-        </p>
+        <div className="header-left">
+          <h1 className="header-title">
+            <button
+              type="button"
+              className="wordmark"
+              aria-label="Fleet Autopsy, back to start"
+              onClick={() => onHome?.()}
+            >
+              Fleet Autopsy<span className="accent-dot">.</span>
+            </button>
+          </h1>
+          <p className="scenario-name">{scenario?.name ?? 'Healthy fleet'}</p>
+        </div>
+        <div className="header-right">
+          <p className="meta mono" aria-live="off">
+            seed {pad4(seed)} · tick {pad4(shownPlayhead)}
+          </p>
+          <button type="button" className="btn btn--quiet" onClick={(e) => onHowItWorks?.(e.currentTarget)}>
+            How it works
+          </button>
+        </div>
       </header>
 
       <Controls
@@ -462,6 +503,7 @@ export function App() {
         scenarios={SCENARIOS}
         scenarioId={scenarioId}
         onScenario={onScenario}
+        scenarioNote={scenarioNote}
         reveal={reveal}
         onReveal={setReveal}
         disabled={!sim}
@@ -480,11 +522,6 @@ export function App() {
               aria-label={layout ? `${layout.name} floor, ${robots} robots, tick ${shownPlayhead}` : 'warehouse floor'}
             />
           </div>
-          {legend !== null && (
-            <p className="legend mono" title={legend}>
-              {legend}
-            </p>
-          )}
           <Scrubber
             rec={rec}
             frames={shownFrames}
@@ -493,6 +530,7 @@ export function App() {
             faultTicks={shownFaultTicks}
             onSeek={seek}
           />
+          <CanvasLegend reveal={legend} />
         </div>
         <Panel
           layout={layout}
