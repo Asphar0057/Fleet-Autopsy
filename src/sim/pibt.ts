@@ -13,7 +13,7 @@ export interface PlanInput {
   pos: Int16Array;
   goal: Int16Array;
   prio: Int32Array; // effective priority, higher first
-  pinned: Uint8Array; // 1 = serving: stays and cannot be pushed (rule c)
+  pinned: Uint8Array; // 1 = serving, frozen, or slow-pinned: stays and cannot be pushed (rule c)
   allowAccess: Int16Array; // access cell for this robot's distance map, or -1
   holds: Int16Array; // station index this robot holds, or -1
   tieRot: Uint8Array; // 0..4 rotation of the candidate list

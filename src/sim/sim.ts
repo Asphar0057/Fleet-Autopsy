@@ -4,7 +4,7 @@
 // Each Sim owns all of its state in typed arrays sized at creation.
 
 import { createDistanceCache } from './distance';
-import { validateFaults } from './faults';
+import { createFaultState, validateFaults } from './faults';
 import type { Layout } from './layout';
 import { createPlanner } from './pibt';
 import type { PlanInput } from './pibt';
@@ -107,6 +107,13 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
   const planner = createPlanner(layout, cache, n);
   const recorder = createRecorder(n, S);
   const queueCap = config.queueCap;
+  // Fault effects (Spec 2). Every fault path is gated on hasFaults so a
+  // fault-free run executes exactly the Spec 1 draws and decisions.
+  const hasFaults = config.faults.length > 0;
+  const fs = createFaultState(layout, n, config.faults);
+  const frozen = fs.frozen;
+  const slowPin = fs.slowPin;
+  const factor = fs.factor;
 
   // Per robot.
   const pos = new Int16Array(n);
@@ -224,8 +231,12 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
     // Events carry the index of the frame this step produces.
     const t = tick + 1;
 
-    // 1. Task phase, robots in id order.
+    // 0. Faults active in frame t (skipped entirely when there are none).
+    if (hasFaults) fs.update(t, pos);
+
+    // 1. Task phase, robots in id order. A frozen robot skips it entirely (D3).
     for (let i = 0; i < n; i++) {
+      if (hasFaults && frozen[i] === 1) continue;
       const st = state[i];
       if (st === RState.Idle) {
         tryTask(i, t);
@@ -257,6 +268,8 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
         recorder.pushEvent(t, i, EKind.ServiceStart, stn[i]);
         state[i] = RState.Serving;
         timer[i] = randInt(rng, 8, 14);
+        // Station slowdown scales only services starting now (D6); one draw as in Spec 1.
+        if (hasFaults) timer[i] *= factor[stn[i]];
       } else if (st === RState.Returning) {
         recorder.pushEvent(t, i, EKind.Deliver, home[i]);
         podReserved[home[i]] = 0;
@@ -287,11 +300,11 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
     // 4. Plan.
     for (let i = 0; i < n; i++) {
       const st = state[i];
-      inp.pinned[i] = st === RState.Serving ? 1 : 0;
+      inp.pinned[i] = st === RState.Serving || (hasFaults && (frozen[i] === 1 || slowPin[i] === 1)) ? 1 : 0;
       inp.prio[i] = effectivePriority(st, holding[i] >= 0, age[i]);
       inp.allowAccess[i] =
         st === RState.ToStation || st === RState.Serving || st === RState.Returning ? access[stn[i]] : -1;
-      // One draw per planned robot per tick (D3).
+      // One draw per non-serving robot per tick (D3), whether pinned by a fault or not (Spec 2 D5).
       inp.tieRot[i] = st === RState.Serving ? 0 : Math.floor(rng() * 5);
     }
     planner.plan(inp, out);
@@ -304,7 +317,8 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
         stallFired[i] = 0;
       }
       const st = state[i];
-      if (st !== RState.Serving && st !== RState.Idle) age[i]++;
+      // A frozen robot's age does not grow (D3).
+      if (st !== RState.Serving && st !== RState.Idle && !(hasFaults && frozen[i] === 1)) age[i]++;
       if (stallDue(t, lastMove[i], st, stallFired[i])) {
         recorder.pushEvent(t, i, EKind.Stall, pos[i]);
         stallFired[i] = 1;

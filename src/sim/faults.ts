@@ -173,3 +173,63 @@ export function blockableCells(layout: Layout): Int16Array {
   }
   return Int16Array.from(out);
 }
+
+/** Saturation cap for a station's combined slowdown factor (fits the Uint8 array). */
+const FACTOR_CAP = 255;
+
+/**
+ * Per-tick fault effects, owned by one Sim and sized at creation (design.md
+ * FaultState). `update(t)` recomputes every array for frame `t` from the faults
+ * list without allocating. Effects combine order-independently (D2): freeze and
+ * slow-robot pins are OR'd, overlapping slowdown factors multiply (saturating at
+ * 255, which is also order-independent because every factor is >= 2).
+ */
+export interface FaultState {
+  /** 1 while a robot-freeze fault on the robot is active (D3). */
+  frozen: Uint8Array;
+  /** 1 on ticks where an active slow-robot fault pins the robot: t % period !== 0 (D4). */
+  slowPin: Uint8Array;
+  /** Product of active slowdown factors per station, 1 when none (D6). */
+  factor: Uint8Array;
+  /** Engaged blocked cells (D7). Allocated here; engagement arrives with blocked-cell support. */
+  blocked: Uint8Array;
+  /** Recomputes the arrays for frame `t`; returns true if the blocked mask changed. */
+  update(t: number, pos: Int16Array): boolean;
+}
+
+export function createFaultState(layout: Layout, robots: number, faults: readonly FaultEvent[]): FaultState {
+  const frozen = new Uint8Array(robots);
+  const slowPin = new Uint8Array(robots);
+  const factor = new Uint8Array(layout.stations.length).fill(1);
+  const blocked = new Uint8Array(layout.kinds.length);
+  return {
+    frozen,
+    slowPin,
+    factor,
+    blocked,
+    update(t: number): boolean {
+      frozen.fill(0);
+      slowPin.fill(0);
+      factor.fill(1);
+      for (let k = 0; k < faults.length; k++) {
+        const f = faults[k];
+        if (!isActive(f, t)) continue;
+        switch (f.kind) {
+          case 'robot-freeze':
+            frozen[f.robot] = 1;
+            break;
+          case 'slow-robot':
+            if (t % f.period !== 0) slowPin[f.robot] = 1;
+            break;
+          case 'station-slowdown':
+            factor[f.station] = Math.min(FACTOR_CAP, factor[f.station] * f.factor);
+            break;
+          case 'blocked-cell':
+            // Engagement (D7) is not applied yet; the mask stays empty.
+            break;
+        }
+      }
+      return false;
+    },
+  };
+}

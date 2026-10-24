@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { blockableCells, isActive, validateFaults } from '../src/sim/faults';
+import { blockableCells, createFaultState, isActive, validateFaults } from '../src/sim/faults';
 import type { Layout } from '../src/sim/layout';
+import { hashRecording } from '../src/sim/recorder';
+import type { Recording } from '../src/sim/recorder';
 import { createSim } from '../src/sim/sim';
+import { EKind } from '../src/sim/types';
 import type { FaultEvent } from '../src/sim/types';
-import { loadPreset, PRESET_IDS } from './helpers';
+import { verifyRun } from '../src/sim/verify';
+import { loadPreset, PRESET_IDS, runCase, runCaseArb } from './helpers';
+import type { RunCase } from './helpers';
 
 const PRESETS = ['pocket-dc', 'fulfillment-block', 'chokepoint'];
 
@@ -149,6 +154,217 @@ describe('block validation property', () => {
         return threw === expected;
       }),
       { numRuns: 100 },
+    );
+  });
+});
+
+// ---- Fault effects: freeze, slow robot, station slowdown (task 2) ----
+
+const RUN_TICKS = 300;
+
+function cellAt(rec: Recording, t: number, r: number): number {
+  return rec.positions[t * rec.robots + r];
+}
+
+/** Task events (pick, service-start, service-end, deliver) of robot r with tick in [lo, hi). */
+function taskEventsIn(rec: Recording, r: number, lo: number, hi: number): number[] {
+  const out: number[] = [];
+  for (let e = 0; e < rec.events; e++) {
+    if (rec.evRobot[e] !== r || rec.evKind[e] === EKind.Stall) continue;
+    if (rec.evTick[e] >= lo && rec.evTick[e] < hi) out.push(e);
+  }
+  return out;
+}
+
+/** End of the fault window clipped to the recording: frames [f.tick, end). */
+function windowEnd(f: FaultEvent, rec: Recording): number {
+  return f.duration === null ? rec.frames : Math.min(rec.frames, f.tick + f.duration);
+}
+
+/** Completed services as [startTick, duration, station], paired per robot. */
+function services(rec: Recording): [number, number, number][] {
+  const start = new Int32Array(rec.robots).fill(-1);
+  const station = new Int32Array(rec.robots).fill(-1);
+  const out: [number, number, number][] = [];
+  for (let e = 0; e < rec.events; e++) {
+    const r = rec.evRobot[e];
+    if (rec.evKind[e] === EKind.ServiceStart) {
+      start[r] = rec.evTick[e];
+      station[r] = rec.evArg[e];
+    } else if (rec.evKind[e] === EKind.ServiceEnd) {
+      out.push([start[r], rec.evTick[e] - start[r], station[r]]);
+      start[r] = -1;
+    }
+  }
+  return out;
+}
+
+const tickArb = fc.integer({ min: 1, max: 250 });
+const durationArb = fc.option(fc.integer({ min: 1, max: 100 }), { nil: null });
+
+function withFault<F extends FaultEvent>(make: (c: RunCase) => fc.Arbitrary<F>): fc.Arbitrary<[RunCase, F]> {
+  return runCaseArb().chain((c) => fc.tuple(fc.constant(c), make(c)));
+}
+
+describe('createFaultState', () => {
+  it('ORs pins and multiplies overlapping factors, independent of order', () => {
+    const l = loadPreset('pocket-dc');
+    const faults: FaultEvent[] = [
+      { kind: 'station-slowdown', tick: 5, station: 0, factor: 2, duration: null },
+      { kind: 'station-slowdown', tick: 1, station: 0, factor: 3, duration: 10 },
+      { kind: 'robot-freeze', tick: 3, robot: 1, duration: 2 },
+      { kind: 'slow-robot', tick: 1, robot: 0, period: 3, duration: null },
+    ];
+    for (const fs of [faults, [...faults].reverse()]) {
+      const st = createFaultState(l, 2, fs);
+      const pos = new Int16Array(2);
+      st.update(4, pos);
+      expect(Array.from(st.frozen)).toEqual([0, 1]);
+      expect(Array.from(st.slowPin)).toEqual([1, 0]);
+      expect(st.factor[0]).toBe(3);
+      st.update(6, pos);
+      expect(Array.from(st.frozen)).toEqual([0, 0]);
+      expect(Array.from(st.slowPin)).toEqual([0, 0]);
+      expect(st.factor[0]).toBe(6);
+      expect(st.factor[1]).toBe(1);
+      expect(st.update(20, pos)).toBe(false);
+      expect(st.factor[0]).toBe(2);
+      expect(st.blocked.every((b) => b === 0)).toBe(true);
+    }
+  });
+});
+
+describe('fault effects in the sim', () => {
+  const c: RunCase = { id: 'fulfillment-block', seed: 1, robots: loadPreset('fulfillment-block').recommendedRobots };
+
+  it('freeze keeps the robot in place, never pushed, with its task paused', () => {
+    const f: FaultEvent = { kind: 'robot-freeze', tick: 60, robot: 3, duration: 120 };
+    const rec = runCase(c, RUN_TICKS, [f]).recording;
+    const here = cellAt(rec, f.tick - 1, 3);
+    for (let t = f.tick; t < windowEnd(f, rec); t++) expect(cellAt(rec, t, 3)).toBe(here);
+    expect(taskEventsIn(rec, 3, f.tick, windowEnd(f, rec))).toEqual([]);
+    expect(verifyRun(rec, loadPreset(c.id))).toEqual([]);
+    // The robot resumes after the window.
+    let moved = false;
+    for (let t = windowEnd(f, rec); t < rec.frames; t++) if (cellAt(rec, t, 3) !== here) moved = true;
+    expect(moved).toBe(true);
+  });
+
+  it('slow robot moves only on multiples of the period', () => {
+    const f: FaultEvent = { kind: 'slow-robot', tick: 20, robot: 5, period: 3, duration: null };
+    const rec = runCase(c, RUN_TICKS, [f]).recording;
+    let moves = 0;
+    for (let t = f.tick; t < rec.frames; t++) {
+      if (cellAt(rec, t, 5) !== cellAt(rec, t - 1, 5)) {
+        moves++;
+        expect(t % 3).toBe(0);
+      }
+    }
+    expect(moves).toBeGreaterThan(0);
+  });
+
+  it('slowdown scales only services started in the window', () => {
+    const f: FaultEvent = { kind: 'station-slowdown', tick: 80, station: 0, factor: 3, duration: 120 };
+    const rec = runCase(c, RUN_TICKS, [f]).recording;
+    let scaled = 0;
+    for (const [start, d, s] of services(rec)) {
+      if (s === 0 && start >= 80 && start < 200) {
+        scaled++;
+        expect(d % 3).toBe(0);
+        expect(d / 3).toBeGreaterThanOrEqual(8);
+        expect(d / 3).toBeLessThanOrEqual(14);
+      } else {
+        expect(d).toBeGreaterThanOrEqual(8);
+        expect(d).toBeLessThanOrEqual(14);
+      }
+    }
+    expect(scaled).toBeGreaterThan(0);
+  });
+
+  it('a faults array that takes effect changes the hash', () => {
+    const base = hashRecording(runCase(c, RUN_TICKS).recording);
+    const kinds: FaultEvent[] = [
+      { kind: 'robot-freeze', tick: 10, robot: 0, duration: null },
+      { kind: 'slow-robot', tick: 10, robot: 0, period: 2, duration: null },
+      { kind: 'station-slowdown', tick: 10, station: 0, factor: 2, duration: null },
+    ];
+    for (const f of kinds) expect(hashRecording(runCase(c, RUN_TICKS, [f]).recording)).not.toBe(base);
+  });
+});
+
+describe('fault effect properties', () => {
+  // Feature: failures-telemetry, Property 3: Frozen robots stay put and pause their task
+  // **Validates: Requirements 1.2**
+  it('Property 3: Frozen robots stay put and pause their task', () => {
+    const arb = withFault((c) =>
+      fc.record({
+        kind: fc.constant('robot-freeze' as const),
+        tick: tickArb,
+        robot: fc.integer({ min: 0, max: c.robots - 1 }),
+        duration: durationArb,
+      }),
+    );
+    fc.assert(
+      fc.property(arb, ([c, f]) => {
+        const rec = runCase(c, RUN_TICKS, [f]).recording;
+        const end = windowEnd(f, rec);
+        const here = cellAt(rec, f.tick - 1, f.robot);
+        for (let t = f.tick; t < end; t++) if (cellAt(rec, t, f.robot) !== here) return false;
+        return taskEventsIn(rec, f.robot, f.tick, end).length === 0;
+      }),
+      { numRuns: 25 },
+    );
+  });
+
+  // Feature: failures-telemetry, Property 4: Slow robots move only on period ticks
+  // **Validates: Requirements 1.5**
+  it('Property 4: Slow robots move only on period ticks', () => {
+    const arb = withFault((c) =>
+      fc.record({
+        kind: fc.constant('slow-robot' as const),
+        tick: tickArb,
+        robot: fc.integer({ min: 0, max: c.robots - 1 }),
+        period: fc.integer({ min: 2, max: 4 }),
+        duration: durationArb,
+      }),
+    );
+    fc.assert(
+      fc.property(arb, ([c, f]) => {
+        const rec = runCase(c, RUN_TICKS, [f]).recording;
+        for (let t = f.tick; t < windowEnd(f, rec); t++) {
+          if (cellAt(rec, t, f.robot) !== cellAt(rec, t - 1, f.robot) && t % f.period !== 0) return false;
+        }
+        return true;
+      }),
+      { numRuns: 25 },
+    );
+  });
+
+  // Feature: failures-telemetry, Property 5: Station slowdown scales only services started while active
+  // **Validates: Requirements 1.3**
+  it('Property 5: Station slowdown scales only services started while active', () => {
+    const arb = withFault((c) =>
+      fc.record({
+        kind: fc.constant('station-slowdown' as const),
+        tick: tickArb,
+        station: fc.integer({ min: 0, max: loadPreset(c.id).stations.length - 1 }),
+        factor: fc.integer({ min: 2, max: 4 }),
+        duration: durationArb,
+      }),
+    );
+    fc.assert(
+      fc.property(arb, ([c, f]) => {
+        const rec = runCase(c, RUN_TICKS, [f]).recording;
+        for (const [start, d, s] of services(rec)) {
+          if (s === f.station && isActive(f, start)) {
+            if (d % f.factor !== 0 || d / f.factor < 8 || d / f.factor > 14) return false;
+          } else if (d < 8 || d > 14) {
+            return false;
+          }
+        }
+        return true;
+      }),
+      { numRuns: 25 },
     );
   });
 });
