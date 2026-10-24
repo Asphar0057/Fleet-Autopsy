@@ -1,6 +1,7 @@
 /* Base styles per .kiro/steering/design.md. Tokens live in tokens.css.
    8px grid, 1px black hairlines, no shadows, gradients, or blur, radius <= 2px.
-   The accent color is used only for alerts (violation badge, loader error). */
+   The accent color is used only for alerts (violation badge, loader error) and,
+   when ground truth is revealed, fault markers (canvas, scrubber ticks). */
 
 *,
 *::before,
@@ -268,6 +269,52 @@ input[type='range']:disabled {
   width: 160px;
 }
 
+/* Select: 1px line, no fill, mono 11px uppercase like buttons; a text caret
+   in a wrapper replaces the native arrow (no images, no gradients). */
+.select {
+  position: relative;
+  display: inline-block;
+}
+
+.select::after {
+  content: '▾';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.select select {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 3px 24px 3px 8px;
+  min-height: 24px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.select select:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.select option {
+  text-transform: none;
+}
+
 /* ---------- Main: canvas column | 1px rule | panel ---------- */
 
 .main {
@@ -433,6 +480,17 @@ input[type='range']:disabled {
   font-size: 11px;
   line-height: 16px;
   color: var(--accent);
+}
+
+/* Ground-truth legend under the canvas: one mono line, shown only when revealed. */
+.legend {
+  flex: 0 0 auto;
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- Scrubber: directly under the canvas ---------- */

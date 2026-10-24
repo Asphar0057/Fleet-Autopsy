@@ -6,13 +6,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { drawFrame, fitCanvas, readColors } from '../render/canvasRenderer';
 import { parseLayout } from '../sim/layout';
 import type { Layout, LayoutManifest, LayoutMeta } from '../sim/layout';
+import { blockedAt, blockWindows } from '../sim/faults';
 import { createWaitCounter, stalledAt, throughputSeries } from '../sim/metrics';
+import { SCENARIOS, scenarioConfig } from '../sim/scenarios';
 import { createSim } from '../sim/sim';
 import type { Sim } from '../sim/sim';
+import type { FaultEvent, Scenario } from '../sim/types';
 import { verifyRun } from '../sim/verify';
 import { badgeText } from './badge';
 import type { Badge } from './badge';
 import { Controls } from './Controls';
+import { faultLegend, faultTicks, revealMarks } from './legend';
 import { Panel } from './Panel';
 import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from './playback';
 import type { Speed } from './playback';
@@ -25,6 +29,11 @@ const VERIFY_MS = 250; // re-verify the growing recording at most 4 times a seco
 const MAX_STEPS_PER_FRAME = 32; // cap catch-up after a background tab
 
 const EMPTY_SERIES = new Int16Array(0);
+const NO_FAULTS: readonly FaultEvent[] = [];
+
+function findScenario(id: string | null): Scenario | null {
+  return id === null ? null : (SCENARIOS.find((s) => s.id === id) ?? null);
+}
 
 function errorText(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
@@ -57,6 +66,7 @@ interface Runtime {
   speed: Speed;
   trails: boolean;
   congestion: boolean;
+  reveal: boolean;
 }
 
 export function App() {
@@ -69,6 +79,9 @@ export function App() {
   const [speed, setSpeed] = useState<Speed>(1);
   const [trails, setTrails] = useState(false);
   const [congestion, setCongestion] = useState(false);
+  // Scenario (D19): null is healthy (faults []); faults are derived from the scenario.
+  const [scenarioId, setScenarioId] = useState<string | null>(null);
+  const [reveal, setReveal] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   // Published at about 10 Hz by the loop, immediately by user actions.
   const [playhead, setPlayhead] = useState(0);
@@ -78,7 +91,19 @@ export function App() {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layoutCache = useRef(new Map<string, Layout>());
-  const rt = useRef<Runtime>({ playhead: 0, dirty: true, playing: true, speed: 1, trails: false, congestion: false });
+  const rt = useRef<Runtime>({
+    playhead: 0,
+    dirty: true,
+    playing: true,
+    speed: 1,
+    trails: false,
+    congestion: false,
+    reveal: false,
+  });
+  const scenario = findScenario(scenarioId);
+  // Read by the layout-load effect, which must not re-run when the scenario changes.
+  // Set by the handlers together with scenarioId.
+  const scenarioRef = useRef<Scenario | null>(null);
 
   // Manifest, once.
   useEffect(() => {
@@ -96,7 +121,8 @@ export function App() {
     };
   }, []);
 
-  // Selected layout; robots reset to the layout's recommended count in the same render.
+  // Selected layout; robots reset to the layout's recommended count in the same
+  // render, or to the scenario's robots when a scenario for this layout is chosen (D19).
   useEffect(() => {
     const meta = layouts.find((m) => m.id === layoutId);
     if (!meta) return;
@@ -109,7 +135,8 @@ export function App() {
         layoutCache.current.set(meta.id, l);
         setLoadError(null);
         setLayout(l);
-        setRobots(meta.recommendedRobots);
+        const s = scenarioRef.current;
+        setRobots(s && s.layoutId === meta.id ? s.robots : meta.recommendedRobots);
       },
       (e: unknown) => {
         if (!cancelled) setLoadError(errorText(e));
@@ -120,16 +147,21 @@ export function App() {
     };
   }, [layouts, layoutId]);
 
-  // A new Sim whenever layout, robots, or seed change (D10). createSim is deterministic.
+  // A new Sim whenever layout, robots, seed, or scenario change (D10, D19).
+  // createSim is deterministic. While a chosen scenario's layout is still
+  // loading, there is no Sim (its faults would not fit the old layout).
   const created = useMemo((): { sim: Sim | null; error: string | null } => {
     if (!layout || robots < 1) return { sim: null, error: null };
+    if (scenario && scenario.layoutId !== layout.id) return { sim: null, error: null };
     try {
-      return { sim: createSim(layout, { seed, robots, queueCap: layout.queueCap, faults: [] }), error: null };
+      const faults = scenario ? scenarioConfig(scenario, layout).faults : [];
+      return { sim: createSim(layout, { seed, robots, queueCap: layout.queueCap, faults }), error: null };
     } catch (e) {
       return { sim: null, error: errorText(e) };
     }
-  }, [layout, robots, seed]);
+  }, [layout, robots, seed, scenario]);
   const sim = created.sim;
+  const faults: readonly FaultEvent[] = sim ? sim.config.faults : NO_FAULTS;
 
   // Keep the loop's view of toggles in sync and redraw on change.
   useEffect(() => {
@@ -138,8 +170,9 @@ export function App() {
     r.speed = speed;
     r.trails = trails;
     r.congestion = congestion;
+    r.reveal = reveal;
     r.dirty = true;
-  }, [playing, speed, trails, congestion]);
+  }, [playing, speed, trails, congestion, reveal]);
 
   const publish = useCallback(() => {
     if (!sim) return;
@@ -160,6 +193,15 @@ export function App() {
     const stalled = new Uint8Array(sim.config.robots);
     const waits = createWaitCounter(lay);
     const colors = readColors();
+    const simFaults = sim.config.faults;
+    // Engaged blocks for the displayed frame (D7, D21). blockWindows clamps
+    // permanent windows to rec.frames, so it is recomputed whenever the recording
+    // has grown since the last draw; it stops scanning each fault at engagement,
+    // so this is cheap. Only runs when the scenario has blocked-cell faults.
+    const hasBlocks = simFaults.some((f) => f.kind === 'blocked-cell');
+    const blocked = hasBlocks ? new Uint8Array(lay.kinds.length) : null;
+    let windows: Int32Array = new Int32Array(0);
+    let windowsFrames = -1;
     setBadge(null);
     publish();
 
@@ -167,11 +209,20 @@ export function App() {
       const rec = sim.recording;
       const ph = r.playhead;
       stalledAt(rec, ph, stalled);
+      if (blocked) {
+        if (rec.frames !== windowsFrames) {
+          windows = blockWindows(simFaults, rec);
+          windowsFrames = rec.frames;
+        }
+        blockedAt(simFaults, windows, ph, blocked);
+      }
       drawFrame(ctx, lay, rec, ph, {
         trails: r.trails,
         congestion: r.congestion,
         waitCounts: r.congestion ? waits.at(rec, ph) : null,
         stalled,
+        blocked,
+        reveal: r.reveal ? revealMarks(simFaults, ph) : null,
         colors,
       });
     };
@@ -234,7 +285,7 @@ export function App() {
       if (rec.frames !== verifiedFrames && now - lastVerify >= VERIFY_MS) {
         lastVerify = now;
         verifiedFrames = rec.frames;
-        setBadge(badgeText(verifyRun(rec, lay).length, sim.tick));
+        setBadge(badgeText(verifyRun(rec, lay, simFaults).length, sim.tick));
       }
       raf = requestAnimationFrame(frame);
     };
@@ -296,9 +347,44 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [togglePlay, onStepBack, onStepForward]);
 
+  // Any manual change to layout, robots, or seed returns to healthy (D19).
   const onLayout = useCallback(
     (id: string) => {
-      if (id !== layoutId) setLayoutId(id);
+      if (id === layoutId) return;
+      scenarioRef.current = null;
+      setScenarioId(null);
+      setLayoutId(id);
+    },
+    [layoutId],
+  );
+
+  const onRobots = useCallback((n: number) => {
+    scenarioRef.current = null;
+    setScenarioId(null);
+    setRobots(n);
+  }, []);
+
+  const onSeed = useCallback(
+    (n: number) => {
+      if (n === seed) return;
+      scenarioRef.current = null;
+      setScenarioId(null);
+      setSeed(n);
+    },
+    [seed],
+  );
+
+  // Choosing a scenario sets layout, robots, seed, and faults together (D19).
+  // For another layout, the layout-load effect applies the scenario's robots.
+  const onScenario = useCallback(
+    (id: string | null) => {
+      const s = findScenario(id);
+      scenarioRef.current = s;
+      setScenarioId(s ? s.id : null);
+      if (!s) return;
+      setSeed(s.seed);
+      if (s.layoutId === layoutId) setRobots(s.robots);
+      else setLayoutId(s.layoutId);
     },
     [layoutId],
   );
@@ -313,6 +399,8 @@ export function App() {
   );
   const meta = layouts.find((m) => m.id === (layout?.id ?? layoutId));
   const error = loadError ?? created.error;
+  const shownFaultTicks = useMemo(() => (reveal ? faultTicks(faults) : null), [reveal, faults]);
+  const legend = reveal && layout ? faultLegend(faults, scenario?.groundTruth ?? null, layout.width) : null;
 
   return (
     <div className="app">
@@ -332,9 +420,9 @@ export function App() {
         robots={Math.max(1, robots)}
         maxRobots={meta?.maxRobots ?? 1}
         recommendedRobots={meta?.recommendedRobots ?? 1}
-        onRobots={setRobots}
+        onRobots={onRobots}
         seed={seed}
-        onSeed={setSeed}
+        onSeed={onSeed}
         playing={playing}
         onTogglePlay={togglePlay}
         speed={speed}
@@ -345,6 +433,11 @@ export function App() {
         onTrails={setTrails}
         congestion={congestion}
         onCongestion={setCongestion}
+        scenarios={SCENARIOS}
+        scenarioId={scenarioId}
+        onScenario={onScenario}
+        reveal={reveal}
+        onReveal={setReveal}
         disabled={!sim}
       />
 
@@ -361,7 +454,19 @@ export function App() {
               aria-label={layout ? `${layout.name} floor, ${robots} robots, tick ${shownPlayhead}` : 'warehouse floor'}
             />
           </div>
-          <Scrubber rec={rec} frames={shownFrames} playhead={shownPlayhead} series={series} onSeek={seek} />
+          {legend !== null && (
+            <p className="legend mono" title={legend}>
+              {legend}
+            </p>
+          )}
+          <Scrubber
+            rec={rec}
+            frames={shownFrames}
+            playhead={shownPlayhead}
+            series={series}
+            faultTicks={shownFaultTicks}
+            onSeek={seek}
+          />
         </div>
         <Panel
           layout={layout}

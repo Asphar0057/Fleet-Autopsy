@@ -7,6 +7,9 @@ import { positionsAt, statesAt } from '../sim/recorder';
 import type { Recording } from '../sim/recorder';
 import { CellKind, RState } from '../sim/types';
 import { stationFontSize, stationLabel } from './labels';
+import type { RevealMarks } from './marks';
+
+export type { RevealMark, RevealMarks } from './marks';
 
 export interface Colors {
   ink: string;
@@ -21,9 +24,14 @@ export interface DrawOptions {
   waitCounts: Uint16Array | null;
   /** 1 per stalled robot at `tick` (stalledAt). */
   stalled: Uint8Array;
+  /** 1 per cell that is an Engaged_Block at `tick` (blockedAt); drawn in ink, always (D21). */
+  blocked: Uint8Array | null;
+  /** Ground-truth markers, drawn in accent only when revealed (D21); null hides them. */
+  reveal: RevealMarks | null;
   /** Colors read once at mount via `readColors`; defaults to the design tokens. */
   colors?: Colors;
 }
+
 
 export const DEFAULT_COLORS: Colors = { ink: '#000000', bg: '#ffffff', accent: '#ff4a1c' };
 
@@ -35,6 +43,8 @@ const STALL_R = 0.78;
 const TRAIL_TICKS = 12;
 const HATCH_WIDTH = 0.6;
 const HATCH_LEVELS = 4;
+const BLOCK_HATCH_LINES = 3; // per diagonal direction
+const REVEAL_OUTSET = 1.5; // accent square sits just outside the cell
 
 /**
  * Reads --ink, --bg, --accent from CSS custom properties on `el`
@@ -342,9 +352,99 @@ function drawStalls(
 }
 
 /**
+ * Engaged blocks (D21): a 1px ink square inset like a pod slot, cross-hatched
+ * on both diagonals with 0.6px lines, so it reads differently from the
+ * single-diagonal congestion layer and from an empty pod slot.
+ */
+function drawBlocked(
+  ctx: CanvasRenderingContext2D,
+  layout: Layout,
+  blocked: Uint8Array,
+  cell: number,
+  ink: string,
+): void {
+  const { width } = layout;
+  const side = Math.max(0, cell - 2 * SLOT_INSET);
+  const n = Math.min(blocked.length, layout.kinds.length);
+  ctx.strokeStyle = ink;
+  ctx.lineCap = 'butt';
+  // Pass 0: hatching at 0.6px; pass 1: outlines at 1px.
+  for (let pass = 0; pass < 2; pass++) {
+    ctx.beginPath();
+    let any = false;
+    for (let i = 0; i < n; i++) {
+      if (blocked[i] !== 1) continue;
+      any = true;
+      const x0 = (i % width) * cell + SLOT_INSET;
+      const y0 = Math.floor(i / width) * cell + SLOT_INSET;
+      if (pass === 1) {
+        ctx.rect(x0, y0, side, side);
+        continue;
+      }
+      // Lines x + y = s ("/") and their mirror x' = side - x ("\"), clipped to the square.
+      for (let j = 1; j <= BLOCK_HATCH_LINES; j++) {
+        const s = (2 * side * j) / (BLOCK_HATCH_LINES + 1);
+        const ax = Math.max(0, s - side);
+        const bx = Math.min(side, s);
+        ctx.moveTo(x0 + ax, y0 + s - ax);
+        ctx.lineTo(x0 + bx, y0 + s - bx);
+        ctx.moveTo(x0 + side - ax, y0 + s - ax);
+        ctx.lineTo(x0 + side - bx, y0 + s - bx);
+      }
+    }
+    if (!any) return;
+    ctx.lineWidth = pass === 0 ? HATCH_WIDTH : 1;
+    ctx.stroke();
+  }
+}
+
+/**
+ * Ground-truth markers (D21): a 1px accent square just outside each faulty
+ * cell, station, or robot (at its cell at `tick`), with a mono tag above-left
+ * (flipped right near the left edge, so it does not collide with the stall
+ * label, which sits upper-right).
+ */
+function drawReveal(
+  ctx: CanvasRenderingContext2D,
+  layout: Layout,
+  rec: Recording,
+  tick: number,
+  marks: RevealMarks,
+  cell: number,
+  accent: string,
+): void {
+  if (marks.length === 0) return;
+  const pos = positionsAt(rec, tick);
+  const w = layout.width;
+  const cells = layout.kinds.length;
+  ctx.strokeStyle = accent;
+  ctx.fillStyle = accent;
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'butt';
+  ctx.font = monoFont(Math.max(9, Math.round(cell * 0.42)));
+  ctx.textBaseline = 'bottom';
+  for (const m of marks) {
+    let c = -1;
+    if (m.target === 'cell') c = m.index;
+    else if (m.target === 'station') c = m.index >= 0 && m.index < layout.stations.length ? layout.stations[m.index] : -1;
+    else if (m.index >= 0 && m.index < rec.robots) c = pos[m.index];
+    if (c < 0 || c >= cells) continue;
+    const x0 = (c % w) * cell - REVEAL_OUTSET;
+    const y0 = Math.floor(c / w) * cell - REVEAL_OUTSET;
+    const side = cell + 2 * REVEAL_OUTSET;
+    ctx.strokeRect(x0, y0, side, side);
+    const lw = ctx.measureText(m.tag).width;
+    const left = x0 - 2 - lw >= 0;
+    ctx.textAlign = left ? 'right' : 'left';
+    ctx.fillText(m.tag, left ? x0 - 2 : x0 + side + 2, Math.max(cell * 0.5, y0 + 1));
+  }
+}
+
+/**
  * Draws the full frame at `tick` (must be in [0, rec.frames)). Expects the
  * context scaled by fitCanvas. Layer order: floor structure, congestion,
- * trails, robots, stalls. The accent color is used for stalls only.
+ * engaged blocks, trails, robots, stalls, ground-truth markers. The accent
+ * color is used for stalls and, when revealed, ground-truth markers.
  */
 export function drawFrame(
   ctx: CanvasRenderingContext2D,
@@ -360,7 +460,9 @@ export function drawFrame(
   if (opts.congestion && opts.waitCounts) drawCongestion(ctx, layout, opts.waitCounts, cell, c.ink);
   drawWalls(ctx, layout, cell, c.ink);
   drawEndpoints(ctx, layout, cell, c);
+  if (opts.blocked) drawBlocked(ctx, layout, opts.blocked, cell, c.ink);
   if (opts.trails) drawTrails(ctx, layout, rec, tick, cell, c.ink);
   drawRobots(ctx, layout, rec, tick, cell, c.ink);
   drawStalls(ctx, layout, rec, tick, opts.stalled, cell, c.accent);
+  if (opts.reveal) drawReveal(ctx, layout, rec, tick, opts.reveal, cell, c.accent);
 }

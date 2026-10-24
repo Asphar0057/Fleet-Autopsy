@@ -1,7 +1,8 @@
 // Playback and run controls (Requirement 9.2, 9.7). All controls are real
 // <button>s or labeled inputs; icon-only buttons carry aria-label; toggles use aria-pressed.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { LayoutMeta } from '../sim/layout';
+import type { Scenario } from '../sim/types';
 import { SPEEDS } from './playback';
 import type { Speed } from './playback';
 
@@ -27,11 +28,23 @@ export interface ControlsProps {
   onTrails(on: boolean): void;
   congestion: boolean;
   onCongestion(on: boolean): void;
+  /** Curated scenarios; the select shows "healthy" (value '') plus each by name. */
+  scenarios: readonly Scenario[];
+  /** Selected scenario id, or null for healthy. */
+  scenarioId: string | null;
+  onScenario(id: string | null): void;
+  reveal: boolean;
+  onReveal(on: boolean): void;
   disabled: boolean;
 }
 
 export function Controls(p: ControlsProps) {
   const [seedDraft, setSeedDraft] = useState(String(p.seed));
+
+  // A scenario sets the seed from outside; show it unless the draft already means it.
+  useEffect(() => {
+    setSeedDraft((d) => (/^\d+$/.test(d) && Number(d) === p.seed ? d : String(p.seed)));
+  }, [p.seed]);
 
   const onSeedInput = (v: string) => {
     setSeedDraft(v);
@@ -43,6 +56,29 @@ export function Controls(p: ControlsProps) {
 
   return (
     <div className="controls">
+      <div className="control-group">
+        <label className="label" htmlFor="scenario">
+          scenario
+        </label>
+        <span className="select">
+          <select
+            id="scenario"
+            value={p.scenarioId ?? ''}
+            onChange={(e) => p.onScenario(e.target.value === '' ? null : e.target.value)}
+          >
+            <option value="">healthy</option>
+            {p.scenarios.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </span>
+        <button type="button" className="btn" aria-pressed={p.reveal} onClick={() => p.onReveal(!p.reveal)}>
+          reveal ground truth
+        </button>
+      </div>
+
       <div className="control-group" role="group" aria-label="layout">
         <span className="label">layout</span>
         {p.layouts.map((m) => (

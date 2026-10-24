@@ -15,10 +15,12 @@ export interface ScrubberProps {
   playhead: number;
   /** throughputSeries over 0..frames-1. */
   series: Int16Array;
+  /** Fault start ticks, drawn as accent ticks; pass null unless ground truth is revealed. */
+  faultTicks?: readonly number[] | null;
   onSeek(tick: number): void;
 }
 
-export function Scrubber({ rec, frames, playhead, series, onSeek }: ScrubberProps) {
+export function Scrubber({ rec, frames, playhead, series, faultTicks = null, onSeek }: ScrubberProps) {
   const last = Math.max(0, frames - 1);
 
   const line = useMemo(
@@ -62,6 +64,22 @@ export function Scrubber({ rec, frames, playhead, series, onSeek }: ScrubberProp
           strokeWidth={1}
           vectorEffect="non-scaling-stroke"
         />
+        {/* Fault ticks inside the recorded range; later ones appear as the recording reaches them. */}
+        {faultTicks?.map((t, k) =>
+          t <= last ? (
+            <line
+              key={`f${k}`}
+              className="scrubber-fault"
+              x1={x(t)}
+              x2={x(t)}
+              y1={0}
+              y2={H}
+              stroke="var(--accent, #ff4a1c)"
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
+            />
+          ) : null,
+        )}
       </svg>
       <input
         className="scrubber-input"

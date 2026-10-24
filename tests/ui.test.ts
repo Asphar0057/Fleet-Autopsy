@@ -2,7 +2,55 @@ import { describe, expect, it } from 'vitest';
 import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from '../src/ui/playback';
 import { createSim } from '../src/sim/sim';
 import { maxOf, polylinePoints } from '../src/ui/sparkline';
+import { faultLegend, faultTicks, revealMarks } from '../src/ui/legend';
+import { SCENARIOS } from '../src/sim/scenarios';
+import type { FaultEvent } from '../src/sim/types';
 import { loadPreset } from './helpers';
+
+describe('faultLegend (Requirement 8.4)', () => {
+  it('describes the decoy-first scenario with tags, ticks, durations, and roles', () => {
+    const s = SCENARIOS.find((x) => x.id === 'pd-decoy-first');
+    expect(s).toBeDefined();
+    if (!s) return;
+    expect(faultLegend(s.faults, s.groundTruth, 25)).toBe(
+      'ground truth · F1 freeze R6 t=350 30t (decoy) · F2 freeze R3 t=550 permanent (primary)',
+    );
+  });
+
+  it('uses short words for every fault kind and (x,y) for blocked cells', () => {
+    const faults: FaultEvent[] = [
+      { kind: 'station-slowdown', tick: 400, station: 1, factor: 4, duration: null },
+      { kind: 'blocked-cell', tick: 10, cell: 2 * 39 + 5, duration: 20 },
+      { kind: 'slow-robot', tick: 5, robot: 3, period: 2, duration: null },
+    ];
+    expect(faultLegend(faults, null, 39)).toBe(
+      'ground truth · F1 slowdown S02 ×4 t=400 permanent · F2 block (5,2) t=10 20t · F3 slow R3 period 2 t=5 permanent',
+    );
+    expect(faultLegend([], null, 39)).toBe('ground truth · no faults');
+  });
+});
+
+describe('revealMarks', () => {
+  const faults: FaultEvent[] = [
+    { kind: 'robot-freeze', tick: 350, robot: 6, duration: 30 },
+    { kind: 'station-slowdown', tick: 100, station: 0, factor: 2, duration: null },
+    { kind: 'slow-robot', tick: 360, robot: 6, period: 3, duration: null },
+    { kind: 'blocked-cell', tick: 500, cell: 77, duration: null },
+  ];
+
+  it('marks only faults that have started, merging tags on a shared target', () => {
+    expect(revealMarks(faults, 99)).toEqual([]);
+    expect(revealMarks(faults, 360)).toEqual([
+      { target: 'robot', index: 6, tag: 'F1 F3' },
+      { target: 'station', index: 0, tag: 'F2' },
+    ]);
+    expect(revealMarks(faults, 500)[2]).toEqual({ target: 'cell', index: 77, tag: 'F4' });
+  });
+
+  it('lists fault ticks in fault order', () => {
+    expect(faultTicks(faults)).toEqual([350, 100, 360, 500]);
+  });
+});
 
 describe('playback model (D10)', () => {
   it('steps within the recording, steps the sim only at the end', () => {
