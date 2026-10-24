@@ -36,12 +36,4 @@
   --dur-fast: 150ms; --dur: 200ms; --dur-slow: 250ms; --ease: cubic-bezier(.2,.0,.0,1);
   /* focus */
   --focus: 2px solid #ffffff; --focus-offset: 2px;
-
-  /* Legacy aliases, transitional: current components and the renderer's
-     readColors still read these names. Literal values (not var()) so
-     getPropertyValue returns a color. Removed once tasks 2-5 switch over. */
-  --ink: #ffffff;                  /* = --fg */
-  --ink-2: #a3a3a3;                /* = --fg-2 */
-  --line: rgba(255,255,255,.24);   /* = --hairline-strong */
-  --line-soft: rgba(255,255,255,.10); /* = --hairline */
 }
