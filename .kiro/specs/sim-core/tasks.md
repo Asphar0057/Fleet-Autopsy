@@ -117,22 +117,22 @@ Bottom-up build of the pure sim (`src/sim`), then a minimal renderer and App so 
     - `npm run build` and `npm run lint` pass; in `npm run dev` each control, the scrubber, and the keyboard work; badge reads `VERIFIED · 0 VIOLATIONS · N TICKS`
     - Commit: "add playback controls, scrubber, panel, and overlays"
 
-- [ ] 10. Styling per design.md
-  - [ ] 10.1 Write `src/styles/tokens.css` and `base.css`; import fonts
+- [x] 10. Styling per design.md
+  - [x] 10.1 Write `src/styles/tokens.css` and `base.css`; import fonts
     - Header with wordmark "Fleet *Autopsy*" and mono meta, two-thirds/one-third split with 1px rules, stacked below 1024px, button hover invert, 2px focus outline, slider square thumb, mono uppercase labels, tabular figures, `prefers-reduced-motion` disables transitions
     - Renderer reads colors from CSS custom properties once at mount
     - _Requirements: 8.8, 9.7, 9.8_
-  - [ ] 10.2 Visible check and commit
+  - [x] 10.2 Visible check and commit
     - `npm run build` passes; compare `npm run dev` against `docs/layouts-preview.png` at 1280px and 1024px
     - Commit: "style app with design tokens and editorial layout"
 
-- [ ] 11. Performance smoke test
-  - [ ] 11.1 Write `tests/perf.test.ts` (required test 7)
+- [x] 11. Performance smoke test
+  - [x] 11.1 Write `tests/perf.test.ts` (required test 7)
     - fulfillment-block, 1,000 headless ticks, log elapsed ms at 36 and 45 robots; never fail on time
     - _Requirements: 10.4, 10.5_
-  - [ ] 11.2 If timing is far above 1.5 s, profile and remove per-tick allocations in `sim.ts` / `pibt.ts`, keeping all tests green
+  - [x] 11.2 If timing is far above 1.5 s, profile and remove per-tick allocations in `sim.ts` / `pibt.ts`, keeping all tests green
     - _Requirements: 10.5_
-  - [ ] 11.3 Commit: "add headless perf smoke test"
+  - [x] 11.3 Commit: "add headless perf smoke test"
 
 - [ ] 12. Determinism and run-level property tests
   - [ ] 12.1 Write required test 1 in `tests/determinism.test.ts`: same seed same hash, different seed different hash
