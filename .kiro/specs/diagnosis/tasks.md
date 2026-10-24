@@ -99,12 +99,12 @@ Rules for every task:
     - _Requirements: 7.2, 7.3_
   - [x] 8.4 Check and commit: commit "add diagnosis benchmark runner"
 
-- [ ] 9. Web Worker wrapper
-  - [~] 9.1 Implement `src/diagnosis/worker.ts` (parse layout, run `diagnose`, post progress, done, error) and `diagnoseInWorker` in `src/diagnosis/client.ts` (optional `createWorker`, progress forwarding, abort terminates and rejects with `AbortError`)
+- [x] 9. Web Worker wrapper
+  - [x] 9.1 Implement `src/diagnosis/worker.ts` (parse layout, run `diagnose`, post progress, done, error) and `diagnoseInWorker` in `src/diagnosis/client.ts` (optional `createWorker`, progress forwarding, abort terminates and rejects with `AbortError`)
     - _Requirements: 8.3, 8.4_
-  - [~] 9.2 Write `tests/worker.test.ts` (required test 9): a fake worker emits two progress messages and a done result, and `onProgress` sees both; abort mid-run calls `terminate` once and rejects with `AbortError`; `diagnose` rejects with `AbortError` when aborted inside its first `onProgress`, with `replaysRun` stopped at 1
+  - [x] 9.2 Write `tests/worker.test.ts` (required test 9): a fake worker emits two progress messages and a done result, and `onProgress` sees both; abort mid-run calls `terminate` once and rejects with `AbortError`; `diagnose` rejects with `AbortError` when aborted inside its first `onProgress`, with `replaysRun` stopped at 1
     - _Requirements: 8.2, 8.3, 8.4_
-  - [~] 9.3 Check and commit: `npm run build` bundles the worker; commit "run diagnosis in a web worker with progress and abort"
+  - [x] 9.3 Check and commit: `npm run build` bundles the worker; commit "run diagnosis in a web worker with progress and abort"
 
 - [ ] 10. Tune on dev seeds, run and commit the benchmark
   - [~] 10.1 Run `BENCH_MODE=dev npm run benchmark`; if accuracy is poor, follow the debug rule in `docs/spec3-debug.md` (max 8 attempts, dev seeds only, never loosen pass criteria)

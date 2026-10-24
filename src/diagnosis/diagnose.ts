@@ -48,7 +48,8 @@ export function confidenceOf(score: number, gap: number): RankedFault['confidenc
   return 'low';
 }
 
-function abortError(): Error {
+/** The AbortError thrown by `diagnose` and `diagnoseInWorker` (design "Worker (task 9)"). */
+export function abortError(): Error {
   if (typeof DOMException !== 'undefined') return new DOMException('aborted', 'AbortError');
   const e = new Error('aborted');
   e.name = 'AbortError';
