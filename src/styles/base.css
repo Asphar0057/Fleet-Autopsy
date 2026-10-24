@@ -379,8 +379,8 @@ button.wordmark {
   border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-pill);
   transition:
-    background-color var(--dur) var(--ease),
-    border-color var(--dur) var(--ease);
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
 }
 
 .switch-thumb {
@@ -540,7 +540,7 @@ input[type='number']:hover:not(:disabled) {
   width: max-content;
   max-width: min(240px, calc(100vw - 32px));
   padding: var(--s-2) var(--s-3);
-  background: var(--surface);
+  background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
   font-size: var(--fs-ui);
@@ -549,14 +549,14 @@ input[type='number']:hover:not(:disabled) {
   text-align: left;
   white-space: normal;
   border: 1px solid var(--hairline-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card);
   transform: translateX(-50%);
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
   transition:
-    opacity var(--dur) var(--ease),
-    visibility var(--dur) var(--ease);
+    opacity var(--dur-fast) var(--ease),
+    visibility var(--dur-fast) var(--ease);
 }
 
 .infotip:hover .infotip-text,
@@ -631,7 +631,7 @@ input[type='number']::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* Range: 1px faint track, 12px round white thumb, no browser accent fill. */
+/* Range: 2px pill track, 14px round white thumb, no browser fill colour. */
 input[type='range'] {
   appearance: none;
   -webkit-appearance: none;
@@ -643,26 +643,28 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  height: 1px;
+  height: 2px;
   background: var(--hairline-strong);
   border: 0;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
-  margin-top: -5.5px; /* center on the 1px track */
+  width: 14px;
+  height: 14px;
+  margin-top: -6px; /* center on the 2px track */
   background: var(--fg);
   border: 0;
   border-radius: var(--radius-pill);
 }
 
 input[type='range']::-moz-range-track {
-  height: 1px;
+  height: 2px;
   background: var(--hairline-strong);
   border: 0;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']::-moz-range-progress {
@@ -670,8 +672,8 @@ input[type='range']::-moz-range-progress {
 }
 
 input[type='range']::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: var(--fg);
   border: 0;
   border-radius: var(--radius-pill);
@@ -690,7 +692,7 @@ input[type='range']:disabled {
   width: calc(10ch + 16px);
 }
 
-/* Select: hairline border, no fill; a text caret in a wrapper replaces the
+/* Select: hairline border, no fill; a CSS chevron in a wrapper replaces the
    native arrow (no images, no gradients). Natural width (~209px for the
    longest option), capped at the content width so it never forces overflow. */
 .select {
@@ -700,20 +702,23 @@ input[type='range']:disabled {
   max-width: 100%;
 }
 
+/* Chevron: a 6px square with right and bottom borders, turned 45deg; the
+   -75% lift centres the rotated point on the control's midline. */
 .select::after {
-  content: '▾';
+  content: '';
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
-  transform: translateY(-50%);
-  font-size: var(--fs-meta);
-  line-height: 1;
-  color: var(--fg-2);
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--fg-2);
+  border-bottom: 1.5px solid var(--fg-2);
+  transform: translateY(-75%) rotate(45deg);
   pointer-events: none;
 }
 
 .select select {
-  padding: 0 28px 0 12px;
+  padding: 0 32px 0 12px;
   max-width: 100%;
   cursor: pointer;
 }
@@ -1170,7 +1175,7 @@ input[type='range']:disabled {
   width: 100%;
 }
 
-/* Scrubber range: 1px track at .3 alpha; the 12px round white thumb comes from
+/* Scrubber range: 2px track at .3 alpha; the 14px round white thumb comes from
    the shared input[type='range'] rules. */
 .scrubber-input::-webkit-slider-runnable-track {
   background: var(--scrub-track);

@@ -62,14 +62,20 @@
   display: grid;
   grid-template-columns: var(--s-4) minmax(0, 1fr);
   gap: var(--s-2);
-  align-items: baseline;
+  align-items: start;
 }
 
+/* Same 24px circle as the landing .step-num. */
 .hiw-num {
-  font-family: var(--font-sans);
-  font-size: var(--fs-meta);
-  color: var(--fg-3);
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 50%;
+  font: 600 var(--fs-meta) / 1 var(--font-sans);
   font-variant-numeric: tabular-nums;
+  color: var(--fg);
 }
 
 .hiw-step-title {
@@ -77,7 +83,7 @@
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: var(--fs-h2);
-  line-height: 1.2;
+  line-height: 24px; /* matches the 24px number circle */
   letter-spacing: var(--tracking-tight);
 }
 
