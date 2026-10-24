@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest --run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "benchmark": "vitest --run --config vitest.scripts.config.ts benchmark",
+    "precompute": "vitest --run --config vitest.scripts.config.ts precompute"
   },
   "dependencies": {
     "@fontsource/geist": "5.3.0",
