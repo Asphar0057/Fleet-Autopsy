@@ -1,18 +1,17 @@
-// Right-hand panel (Requirement 6.5, 6.6, 7.5, 9.6, 9.9; Spec 2 D20): verifier
-// badge, metrics at the playhead with a throughput sparkline, telemetry and jam
-// badge, station queues, assumptions.
+// Right-hand panel (Requirement 3; Spec 1 6.5, 6.6, 7.5): verifier badge, metrics
+// at the playhead, telemetry and jam status, station queues, assumptions. Each
+// section has a serif title and one grey sentence saying what it shows.
 import { useMemo } from 'react';
 import type { Layout } from '../sim/layout';
 import { meanCycleTime, queueLengths, THROUGHPUT_WINDOW } from '../sim/metrics';
 import type { Recording } from '../sim/recorder';
 import { stationLabel } from '../render/labels';
 import type { Badge } from './badge';
-import { maxOf, polylinePoints } from './sparkline';
+import { SECTION_NOTES, TERMS } from './copy';
+import { InfoTip } from './InfoTip';
+import { SectionHead } from './SectionHead';
 import { TelemetryPanel } from './TelemetryPanel';
 import type { TelemetryView } from './TelemetryPanel';
-
-const SPARK_W = 240;
-const SPARK_H = 64;
 
 const ASSUMPTIONS = [
   'simulation only; results are not validated on real fleets',
@@ -32,7 +31,7 @@ export interface PanelProps {
   playhead: number;
   /** Recorded frames; with playhead, triggers recomputation (rec is mutated in place). */
   frames: number;
-  /** throughputSeries over 0..frames-1; its prefix up to the playhead is the series at the playhead. */
+  /** throughputSeries over 0..frames-1; its value at the playhead is the throughput shown. */
   series: Int16Array;
   badge: Badge | null;
   /** Telemetry and jam detection, published about 4 times a second. */
@@ -45,16 +44,9 @@ export function Panel({ layout, rec, playhead, frames, series, badge, telemetry,
 
   const metrics = useMemo(() => {
     if (!rec || !ready) return null;
-    const cycle = meanCycleTime(rec, playhead);
-    const n = Math.min(series.length, playhead + 1);
-    const peak = maxOf(series, n);
-    // y range 1..SPARK_H-1 so the 1px line is not clipped; zero sits on the baseline.
-    const spark = polylinePoints(series, n, SPARK_W, SPARK_H - 2, Math.max(1, maxOf(series)), 120, playhead);
     return {
-      peak,
       throughput: playhead < series.length ? series[playhead] : 0,
-      cycle,
-      spark,
+      cycle: meanCycleTime(rec, playhead),
       queues: Array.from(queueLengths(rec, playhead)),
     };
   }, [rec, ready, playhead, series]);
@@ -63,112 +55,79 @@ export function Panel({ layout, rec, playhead, frames, series, badge, telemetry,
     <aside className="panel" aria-label="run details">
       {error !== null && (
         <section className="section">
-          <h2 className="label">ERROR</h2>
+          <SectionHead title="Error" />
           <pre className="mono error" role="alert">
             {error}
           </pre>
         </section>
       )}
       <section className="section">
-        <h2 className="label">01&nbsp;&nbsp;VERIFIER</h2>
+        <SectionHead title="Verifier" note={SECTION_NOTES.verifier} />
         {badge ? (
           <p className={badge.alert ? 'badge badge--alert' : 'badge'} role="status">
             {badge.text}
           </p>
         ) : (
-          <p className="mono muted">verifying</p>
+          <p className="muted">Verifying</p>
         )}
       </section>
 
       <section className="section">
-        <h2 className="label">02&nbsp;&nbsp;METRICS</h2>
+        <SectionHead title="Metrics" note={SECTION_NOTES.metrics} />
         {metrics ? (
-          <>
-            <dl className="metrics">
-              <div className="metric">
-                <dt className="label">throughput</dt>
-                <dd className="mono value">
-                  {metrics.throughput} <span className="unit">deliveries / {THROUGHPUT_WINDOW} ticks</span>
-                </dd>
-              </div>
-              <div className="metric">
-                <dt className="label">mean cycle time</dt>
-                <dd className="mono value">
-                  {Number.isNaN(metrics.cycle) ? 'n/a' : metrics.cycle.toFixed(1)} <span className="unit">ticks</span>
-                </dd>
-              </div>
-            </dl>
-            <div className="spark-row">
-              <svg
-                className="sparkline"
-                viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
-                preserveAspectRatio="none"
-                role="img"
-                aria-label={`throughput over ticks 0 to ${playhead}, now ${metrics.throughput}, peak ${metrics.peak}`}
-              >
-                <line
-                  x1={0}
-                  x2={SPARK_W}
-                  y1={SPARK_H - 1}
-                  y2={SPARK_H - 1}
-                  stroke="var(--line-soft, rgba(0,0,0,.14))"
-                  strokeWidth={1}
-                  vectorEffect="non-scaling-stroke"
-                />
-                <polyline
-                  points={metrics.spark}
-                  transform="translate(0 1)"
-                  fill="none"
-                  stroke="var(--ink, #000)"
-                  strokeWidth={1}
-                  vectorEffect="non-scaling-stroke"
-                />
-              </svg>
-              <dl className="spark-values mono" aria-hidden="true">
-                <div>
-                  <dt className="label">now</dt>
-                  <dd className="value">{metrics.throughput}</dd>
-                </div>
-                <div>
-                  <dt className="label">peak</dt>
-                  <dd className="value">{metrics.peak}</dd>
-                </div>
-              </dl>
+          <dl className="bignums">
+            <div className="bignum">
+              <dt className="label">
+                Throughput <InfoTip label="throughput" text={TERMS.throughput} />
+              </dt>
+              <dd>
+                <span className="num">{metrics.throughput}</span>{' '}
+                <span className="unit">deliveries / {THROUGHPUT_WINDOW} ticks</span>
+              </dd>
             </div>
-          </>
+            <div className="bignum">
+              <dt className="label">Mean cycle time</dt>
+              <dd>
+                <span className="num">{Number.isNaN(metrics.cycle) ? 'n/a' : metrics.cycle.toFixed(1)}</span>{' '}
+                <span className="unit">ticks</span>
+              </dd>
+            </div>
+          </dl>
         ) : (
-          <p className="mono muted">no data</p>
+          <p className="muted">No data yet</p>
         )}
       </section>
 
       <TelemetryPanel view={telemetry} queueCap={layout ? layout.queueCap : 0} />
 
       <section className="section">
-        <h2 className="label">04&nbsp;&nbsp;STATIONS</h2>
+        <SectionHead title="Stations" note={SECTION_NOTES.stations} />
         {metrics && layout ? (
-          <table className="stations mono">
+          <table className="stations">
             <thead>
               <tr>
-                <th scope="col" className="label">station</th>
-                <th scope="col" className="label">queue</th>
+                <th scope="col">Station</th>
+                <th scope="col">Pods waiting</th>
               </tr>
             </thead>
             <tbody>
               {metrics.queues.map((q, s) => (
                 <tr key={s}>
-                  <td>{stationLabel(s)}</td>
-                  <td>{q}</td>
+                  <td>
+                    Station <span className="mono">{stationLabel(s)}</span>
+                  </td>
+                  <td className="mono">{q}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="mono muted">no data</p>
+          <p className="muted">No data yet</p>
         )}
       </section>
 
       <section className="section">
-        <h2 className="label">05&nbsp;&nbsp;ASSUMPTIONS</h2>
+        <SectionHead title="Assumptions and limits" note={SECTION_NOTES.assumptions} />
         <ul className="assumptions">
           {ASSUMPTIONS.map((a) => (
             <li key={a}>{a}</li>

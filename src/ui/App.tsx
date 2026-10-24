@@ -15,9 +15,9 @@ import type { FaultEvent, Scenario } from '../sim/types';
 import { detectJam } from '../sim/jam';
 import { createTelemetryTracker } from '../sim/telemetry';
 import { verifyRun } from '../sim/verify';
-import { badgeText } from './badge';
 import type { Badge } from './badge';
 import { Controls } from './Controls';
+import { verifierCopy } from './copy';
 import { faultLegend, faultTicks, revealMarks } from './legend';
 import { Panel } from './Panel';
 import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from './playback';
@@ -323,7 +323,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
       if (rec.frames !== verifiedFrames && now - lastVerify >= VERIFY_MS) {
         lastVerify = now;
         verifiedFrames = rec.frames;
-        setBadge(badgeText(verifyRun(rec, lay, simFaults).length, sim.tick));
+        setBadge(verifierCopy(verifyRun(rec, lay, simFaults).length, sim.tick));
       }
       if (r.playhead !== telemetryAt && now - lastTelemetry >= TELEMETRY_MS) {
         lastTelemetry = now;

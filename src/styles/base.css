@@ -763,11 +763,33 @@ input[type='range']:disabled {
   line-height: 22px;
 }
 
-.spark-row {
+/* Labels that carry an info tip keep the tip on the text baseline. */
+.metric dt,
+.bignum dt,
+.spark-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* Metrics: large serif numbers with grey units. */
+.bignums {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--s-3);
-  align-items: end;
+  margin: 0;
+}
+
+.bignum dd {
+  margin: 0;
+}
+
+.num {
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  line-height: 40px;
+  font-weight: 400;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
 }
 
 .sparkline {
@@ -776,21 +798,21 @@ input[type='range']:disabled {
   height: 64px;
 }
 
-.spark-values {
-  display: grid;
-  gap: var(--s-2);
-  margin: 0;
+.spark-label {
+  margin: 0 0 var(--s-2);
 }
 
-.spark-values div {
+/* Jam status: badge plus info tips for onset and severity. */
+.status-row {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--s-2);
 }
 
-.spark-values dd {
-  margin: 0;
-  text-align: right;
+.status-tips {
+  display: inline-flex;
+  gap: var(--s-1);
 }
 
 .stations {
@@ -846,7 +868,7 @@ input[type='range']:disabled {
 
 .queue {
   display: grid;
-  grid-template-columns: 4ch minmax(0, 1fr) 5ch;
+  grid-template-columns: 10ch minmax(0, 1fr) 5ch;
   align-items: center;
   gap: var(--s-2);
 }
