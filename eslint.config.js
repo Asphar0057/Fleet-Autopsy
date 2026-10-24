@@ -60,4 +60,36 @@ export default tseslint.config(
       ],
     },
   },
+  // Telemetry and jam detection read only Recording and Layout (Spec 2, Requirement 3.1).
+  // This block replaces the src/sim no-restricted-imports entry for these files, so it
+  // repeats the react / ui / render restrictions.
+  {
+    files: ['src/sim/telemetry.ts', 'src/sim/jam.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: 'src/sim is pure; no react' },
+            { name: 'react-dom', message: 'src/sim is pure; no react' },
+          ],
+          patterns: [
+            {
+              regex: '(^|/)(faults|sim|oracle|scenarios)(\\.[jt]s)?$',
+              message: 'telemetry and jam detection must not read faults or sim internals (Requirement 3.1)',
+            },
+            {
+              group: ['**/ui', '**/ui/*', '**/ui/**', 'src/ui', 'src/ui/**'],
+              message: 'src/sim must not import from src/ui',
+            },
+            {
+              group: ['**/render', '**/render/*', '**/render/**', 'src/render', 'src/render/**'],
+              message: 'src/sim must not import from src/render',
+            },
+            { group: ['react/*', 'react-dom/*'], message: 'src/sim is pure; no react' },
+          ],
+        },
+      ],
+    },
+  },
 );

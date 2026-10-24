@@ -26,54 +26,54 @@ Rules for every task:
     - **Validates: Requirements 1.6**
   - [x] 1.6 Check and commit: `npm test`, `npm run lint` pass; commit "add fault event union and fault validation"
 
-- [ ] 2. Apply freeze, slow-robot, and station-slowdown in the sim
-  - [-] 2.1 Implement `createFaultState` (`frozen`, `slowPin`, `factor`; no allocation in `update`) and wire step 0, task-phase skip, pinning, age, and factor into `src/sim/sim.ts`
+- [x] 2. Apply freeze, slow-robot, and station-slowdown in the sim
+  - [x] 2.1 Implement `createFaultState` (`frozen`, `slowPin`, `factor`; no allocation in `update`) and wire step 0, task-phase skip, pinning, age, and factor into `src/sim/sim.ts`
     - Gate all fault code on `faults.length > 0`; keep the `tieRot` draw unchanged (D3 to D6)
     - _Requirements: 1.1, 1.2, 1.3, 1.5, 1.9_
-  - [~] 2.2 Write example tests in `tests/faults.test.ts`: freeze keeps the robot in place and it is never pushed; slow robot moves only on multiples of the period; slowdown scales only services started in the window; a faults array that takes effect changes the hash
+  - [x] 2.2 Write example tests in `tests/faults.test.ts`: freeze keeps the robot in place and it is never pushed; slow robot moves only on multiples of the period; slowdown scales only services started in the window; a faults array that takes effect changes the hash
     - _Requirements: 1.2, 1.3, 1.5, 1.8_
-  - [~] 2.3 Write property test: **Property 3: Frozen robots stay put and pause their task** (`numRuns: 25`, 300 ticks)
+  - [x] 2.3 Write property test: **Property 3: Frozen robots stay put and pause their task** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 1.2**
-  - [~] 2.4 Write property test: **Property 4: Slow robots move only on period ticks** (`numRuns: 25`, 300 ticks)
+  - [x] 2.4 Write property test: **Property 4: Slow robots move only on period ticks** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 1.5**
-  - [~] 2.5 Write property test: **Property 5: Station slowdown scales only services started while active** (`numRuns: 25`, 300 ticks)
+  - [x] 2.5 Write property test: **Property 5: Station slowdown scales only services started while active** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 1.3**
-  - [~] 2.6 Check and commit: golden and health tests unchanged; commit "apply freeze, slow-robot, and station-slowdown faults"
+  - [x] 2.6 Check and commit: golden and health tests unchanged; commit "apply freeze, slow-robot, and station-slowdown faults"
 
-- [ ] 3. Blocked cells in distance cache, planner, and sim
-  - [~] 3.1 Add `setBlocked(mask)` with the versioned key to `src/sim/distance.ts` (D10)
+- [x] 3. Blocked cells in distance cache, planner, and sim
+  - [x] 3.1 Add `setBlocked(mask)` with the versioned key to `src/sim/distance.ts` (D10)
     - _Requirements: 1.4_
-  - [~] 3.2 Add the blocked mask and `refreshBlocked()` to `src/sim/pibt.ts` (D11)
+  - [x] 3.2 Add the blocked mask and `refreshBlocked()` to `src/sim/pibt.ts` (D11)
     - _Requirements: 1.4_
-  - [~] 3.3 Implement engagement in `FaultState.update` (D7) and the pod-selection guard (D9) in `src/sim/sim.ts`
+  - [x] 3.3 Implement engagement in `FaultState.update` (D7) and the pod-selection guard (D9) in `src/sim/sim.ts`
     - _Requirements: 1.4, 1.7_
-  - [~] 3.4 Write example test: a block whose cell is occupied engages only on the first tick the cell is empty, then no robot enters until the window ends
+  - [x] 3.4 Write example test: a block whose cell is occupied engages only on the first tick the cell is empty, then no robot enters until the window ends
     - _Requirements: 1.4_
-  - [~] 3.5 Write property test: **Property 6: Distance maps exclude blocked cells** (`numRuns: 100`)
+  - [x] 3.5 Write property test: **Property 6: Distance maps exclude blocked cells** (`numRuns: 100`)
     - **Validates: Requirements 1.4**
-  - [~] 3.6 Check and commit: golden tests unchanged; commit "add blocked cells to distance cache and planner"
+  - [x] 3.6 Check and commit: golden tests unchanged; commit "add blocked cells to distance cache and planner"
 
-- [ ] 4. Verifier block rule and headless seam
-  - [~] 4.1 Implement `blockWindows` and `blockedAt` in `src/sim/faults.ts`; add the optional `faults` argument and `blocked-cell` rule to `verifyRun`
+- [x] 4. Verifier block rule and headless seam
+  - [x] 4.1 Implement `blockWindows` and `blockedAt` in `src/sim/faults.ts`; add the optional `faults` argument and `blocked-cell` rule to `verifyRun`
     - _Requirements: 2.1, 2.2_
-  - [~] 4.2 Export `runHeadless` from `src/sim/sim.ts`; example test that it equals `createSim` + `run`; add a logged faulted 2,000-tick fulfillment-block run at 36 robots to `tests/perf.test.ts`
+  - [x] 4.2 Export `runHeadless` from `src/sim/sim.ts`; example test that it equals `createSim` + `run`; add a logged faulted 2,000-tick fulfillment-block run at 36 robots to `tests/perf.test.ts`
     - _Requirements: 7.1, 7.3_
-  - [~] 4.3 Write property test: **Property 1: Faulted runs are deterministic, order-independent, and removal-consistent** (`numRuns: 25`, 300 ticks)
+  - [x] 4.3 Write property test: **Property 1: Faulted runs are deterministic, order-independent, and removal-consistent** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 1.8, 7.2**
-  - [~] 4.4 Write property test: **Property 2: Faulted runs are verifier-clean** (`numRuns: 25`, 300 ticks)
+  - [x] 4.4 Write property test: **Property 2: Faulted runs are verifier-clean** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 1.4, 2.1, 2.2, 2.3**
-  - [~] 4.5 Write property test: **Property 8: Verifier detects blocked-cell entries** (`numRuns: 25`, 300 ticks)
+  - [x] 4.5 Write property test: **Property 8: Verifier detects blocked-cell entries** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 2.1**
-  - [~] 4.6 Check and commit: commit "add blocked-cell verifier rule and runHeadless"
+  - [x] 4.6 Check and commit: commit "add blocked-cell verifier rule and runHeadless"
 
 - [ ] 5. Telemetry
-  - [~] 5.1 Implement `src/sim/telemetry.ts` (`jamWindow`, `createTelemetryTracker`, `deriveTelemetry`) per design; add an ESLint `no-restricted-imports` block so `telemetry.ts` and `jam.ts` cannot import `faults`, `sim`, `oracle`, or `scenarios`
+  - [x] 5.1 Implement `src/sim/telemetry.ts` (`jamWindow`, `createTelemetryTracker`, `deriveTelemetry`) per design; add an ESLint `no-restricted-imports` block so `telemetry.ts` and `jam.ts` cannot import `faults`, `sim`, `oracle`, or `scenarios`
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
-  - [~] 5.2 Write `tests/telemetry.test.ts` examples: standstill resets on move, serving, and idle; service ring keeps the last 5; RangeError out of range; log the time to derive 2,000 ticks × 45 robots
+  - [x] 5.2 Write `tests/telemetry.test.ts` examples: standstill resets on move, serving, and idle; service ring keeps the last 5; RangeError out of range; log the time to derive 2,000 ticks × 45 robots
     - _Requirements: 3.2, 3.3, 3.5_
-  - [~] 5.3 Write property test: **Property 9: Telemetry matches a naive recount** (`numRuns: 25`, 300 ticks)
+  - [x] 5.3 Write property test: **Property 9: Telemetry matches a naive recount** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 3.2, 3.3, 3.4**
-  - [~] 5.4 Check and commit: `npm run lint` passes; commit "derive telemetry from recordings"
+  - [-] 5.4 Check and commit: `npm run lint` passes; commit "derive telemetry from recordings"
 
 - [ ] 6. Jam detector and healthy-baseline gate
   - [~] 6.1 Implement `src/sim/jam.ts` (`baselineAt`, `detectJam`, histogram median, latched detection, onset and severity per D16, D17)
