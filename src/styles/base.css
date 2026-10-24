@@ -763,9 +763,23 @@ input[type='range']:disabled {
   cursor: pointer;
 }
 
-.select option {
+.select option,
+.select optgroup {
   color: var(--fg);
   background: var(--surface);
+}
+
+/* Scenario select: the "Scenario" label, a selected failure scenario, and the
+   failure options in the open list (where the browser styles options) use Accent.
+   "Healthy fleet" and the group labels stay white. */
+.cluster-label.accent-text,
+.select select.select--failure,
+.select option.option--failure {
+  color: var(--accent);
+}
+
+.select select.select--failure option[value=''] {
+  color: var(--fg);
 }
 
 /* ---------- Main: one column, stage on top, panel below ---------- */

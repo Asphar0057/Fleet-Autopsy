@@ -97,6 +97,13 @@ export function shortLayoutName(name: string): string {
   return short === '' ? name : short;
 }
 
+/** Scenario select groups, in display order, keyed by layout id. */
+export const SCENARIO_GROUPS: readonly { layoutId: string; label: string }[] = [
+  { layoutId: 'fulfillment-block', label: 'Fulfillment block' },
+  { layoutId: 'chokepoint', label: 'Chokepoint' },
+  { layoutId: 'pocket-dc', label: 'Pocket DC' },
+];
+
 /** Run-details card titles, in display order (Requirement 4.2). */
 export const CARD_TITLES = ['Verifier', 'Metrics', 'Telemetry', 'Assumptions and limits'] as const;
 

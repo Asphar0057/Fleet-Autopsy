@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { LayoutMeta } from '../sim/layout';
 import type { Scenario } from '../sim/types';
-import { shortLayoutName } from './copy';
+import { SCENARIO_GROUPS, shortLayoutName } from './copy';
 import { InfoTip } from './InfoTip';
 import { SPEEDS } from './playback';
 import type { Speed } from './playback';
@@ -98,7 +98,7 @@ export function Controls(p: ControlsProps) {
     <div className="controls">
       <div className="cluster cluster--scenario" role="group" aria-label="scenario">
         <span className="field field--stacked">
-          <span className="cluster-label" aria-hidden="true">
+          <span className="cluster-label accent-text" aria-hidden="true">
             Scenario
           </span>
           <label className="sr-only" htmlFor="scenario">
@@ -107,15 +107,24 @@ export function Controls(p: ControlsProps) {
           <span className="select">
             <select
               id="scenario"
+              className={p.scenarioId === null ? undefined : 'select--failure'}
               value={p.scenarioId ?? ''}
               onChange={(e) => p.onScenario(e.target.value === '' ? null : e.target.value)}
             >
               <option value="">Healthy fleet</option>
-              {p.scenarios.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
+              {SCENARIO_GROUPS.map((g) => {
+                const items = p.scenarios.filter((s) => s.layoutId === g.layoutId);
+                if (items.length === 0) return null;
+                return (
+                  <optgroup key={g.layoutId} label={g.label}>
+                    {items.map((s) => (
+                      <option key={s.id} value={s.id} className="option--failure">
+                        {g.label} · {s.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
             </select>
           </span>
         </span>
