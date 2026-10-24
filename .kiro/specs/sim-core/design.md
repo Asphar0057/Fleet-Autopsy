@@ -139,15 +139,18 @@ Scratch arrays (`occ` per cell, `claimed` per cell, `order`, a 5-slot candidate 
 - Candidates: the 4 neighbors plus `pos[i]`, filtered by `allowed(i, c)`: walls never; an Access_Cell of station `s` only if `c == pos[i]` or `holds[i] == s`; an Endpoint only if `c == goal[i]` or `c == pos[i]`.
 - Order by `cache.get(goal[i], allowAccess[i])[c]`, equal distances by `tieRot[i]`.
 - Skip a candidate that is claimed, equals `pos[parent]`, or whose occupant `j` has already decided to move into `pos[i]` (that would be a forbidden same-tick cell exchange, Requirement 3.4).
-- Claim the candidate. If an undecided robot `j` occupies it, recurse `pibt(j, i)`; on failure, unclaim and try the next.
+- Claim the candidate. If an undecided robot `j` occupies it, recurse `pibt(j, i)`. If `j` fails, `j` stays on that cell, so the cell stays claimed (now by `j`); freeing it would let a third robot move onto `j`. `i` is marked undecided again and tries its next candidate.
 - If nothing works, stay: `out[i] = pos[i]`, claim it, return false.
 
 Priority inheritance is implicit: a pushed robot is planned inside the pusher's call, ahead of all lower-priority robots. Pinned robots are already decided, so they are never pushed.
 
 #### Corridor swap step and pushed-robot tie-break (D19)
 
-- Corridor swap (Okumura, "Engineering LaCAM*", 2024) is a role exchange in a corridor. `swapAgent(i, best)` returns a robot to pull when the robot ahead must pass `i` (`swapRequired`: no branch cell ahead, found by `walk`) and retreating reaches a branch cell (`swapPossible`). Then `i` reverses its candidate order and backs up toward the branch. If that retreat (its first candidate) succeeds, the other robot is assigned the cell `i` just freed, in the same tick, only if that cell is unclaimed, the other robot is undecided (so pinned robots are never pulled), and `allowed` permits the move for it.
-- This is not two robots exchanging cells in one tick. One robot moves away and the other follows into the vacated cell. The no-swap rule (Requirement 3.4) still holds, and `verifyRun` still checks it.
+- Corridor swap (Okumura, "Engineering LaCAM*", 2024) is a role exchange in a corridor. `swapAgent(i, best)`, where `best` is `i`'s top candidate, returns the robot to pull, or −1. It checks two cases in order:
+  - Case a, the robot ahead: the undecided robot `j` on `best` must pass `i`. `swapRequired(i, j, pos[i], best)` walks the corridor ahead (`walk`) and finds no branch cell, and `swapPossible(best, pos[i])` finds a branch cell behind `i`. Returns `j`.
+  - Case c, a robot beside `i`: for each other neighbor `u` of `pos[i]` (not `best`) holding a robot `k`, `swapRequired(k, i, pos[i], best)` says `k` needs to get past `i` through `i`'s cell with no branch for `i` to step aside, and `swapPossible(best, pos[i])` finds a branch. Returns `k`.
+- When a swap robot is found, `i` reverses its candidate order and so backs up toward the branch. If that retreat (its first candidate after reversal) succeeds, the swap robot is assigned the cell `i` just freed, in the same tick, only if that cell is still unclaimed, the swap robot is undecided (so pinned robots are never pulled), it is not already on that cell, and `allowed` permits the move for it.
+- In both cases this is not two robots exchanging cells in one tick. `i` moves away and the other robot follows into the cell `i` vacated; neither moves into the other's old cell. The no-swap rule (Requirement 3.4) still holds, and `verifyRun` still checks it.
 - Corridor graph for the check: plain floor cells, excluding Endpoints and Access_Cells. A dead-end cell holding a robot that sits on its goal counts as a wall (`goalSitter`).
 - Pushed-robot tie-break: candidates sort by (own distance asc, pusher's distance desc), then `tieRot`. A pushed robot steps out of the pusher's way, for example into a side pocket rather than down the pusher's dead-end goal aisle. At top level the second key is constant.
 - Why: plain PIBT is incomplete on tree-shaped corridors; two robots meeting head-on can block each other forever. The 50-case head-on test (all `tieRot` × both id orders) failed 40/50 without this step.
