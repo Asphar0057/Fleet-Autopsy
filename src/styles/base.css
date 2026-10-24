@@ -29,7 +29,7 @@ body {
   line-height: 22px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Guard only: the overflow sources themselves are fixed below (task 9.1). */
+  /* Guard only: the overflow sources themselves are fixed in the rules below. */
   overflow-x: hidden;
   overflow-x: clip;
 }
@@ -173,6 +173,7 @@ button {
 
 button.wordmark {
   appearance: none;
+  min-height: var(--control-h); /* 36px tap target */
   background: transparent;
   border: 0;
   padding: 0;
@@ -280,7 +281,13 @@ button.wordmark {
 }
 
 @media (max-width: 1359px) {
-  /* Scenario + fleet on row 1, the whole playback cluster on row 2. */
+  /* Scenario + fleet on row 1, the whole playback cluster on row 2. Row 1 is
+     packed left: with space-between the fleet cluster would end at the right
+     edge and the absolute robots note (about 250px from the slider's left)
+     would run past it. */
+  .controls {
+    justify-content: flex-start;
+  }
   .cluster.cluster--playback {
     flex: 1 1 100%;
     margin-left: 0;
@@ -316,12 +323,30 @@ button.wordmark {
   }
 }
 
+/* Slack for the one row at 1360-1439px, where the estimate (about 1,293px)
+   meets the content width (1,292px at 1360). Narrower separators and segment
+   and chip padding save about 48px; text and the 10-digit seed are unchanged.
+   From 1440px the default spacing has over 70px to spare. */
+@media (min-width: 1360px) and (max-width: 1439px) {
+  .cluster + .cluster {
+    margin-left: var(--s-2);
+    padding-left: var(--s-2);
+  }
+  .controls .segmented .btn {
+    padding: 0 var(--s-2);
+  }
+  .controls .chip {
+    padding: 0 10px;
+  }
+}
+
 /* Segmented control: joined buttons, outer corners rounded. */
 .segmented {
   display: inline-flex;
 }
 
 .segmented .btn {
+  min-width: var(--control-h); /* 36px tap target for "1x" and "4x" */
   padding: 0 10px;
   border-radius: 0;
 }
@@ -504,7 +529,9 @@ input[type='number']:hover:not(:disabled) {
   align-items: center;
 }
 
+/* 18px to look at, 36px to tap: the ::before extends the hit area 9px each side. */
 .infotip-btn {
+  position: relative;
   appearance: none;
   -webkit-appearance: none;
   display: inline-flex;
@@ -525,6 +552,12 @@ input[type='number']:hover:not(:disabled) {
   transition:
     border-color var(--dur-fast) var(--ease),
     color var(--dur-fast) var(--ease);
+}
+
+.infotip-btn::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
 }
 
 .infotip-btn:hover {
