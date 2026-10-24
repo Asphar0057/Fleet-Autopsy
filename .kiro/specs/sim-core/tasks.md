@@ -134,24 +134,24 @@ Bottom-up build of the pure sim (`src/sim`), then a minimal renderer and App so 
     - _Requirements: 10.5_
   - [x] 11.3 Commit: "add headless perf smoke test"
 
-- [ ] 12. Determinism and run-level property tests
-  - [ ] 12.1 Write required test 1 in `tests/determinism.test.ts`: same seed same hash, different seed different hash
+- [x] 12. Determinism and run-level property tests
+  - [x] 12.1 Write required test 1 in `tests/determinism.test.ts`: same seed same hash, different seed different hash
     - _Requirements: 2.3, 2.4_
-  - [ ] 12.2 Write property test in `tests/determinism.test.ts`: **Property 4: Same inputs, same recording** (`numRuns: 25`, 300 ticks)
+  - [x] 12.2 Write property test in `tests/determinism.test.ts`: **Property 4: Same inputs, same recording** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 2.3, 2.6, 5.6**
-  - [ ] 12.3 Write property test in `tests/determinism.test.ts`: **Property 5: Different seeds, different recordings** (`numRuns: 25`, 300 ticks)
+  - [x] 12.3 Write property test in `tests/determinism.test.ts`: **Property 5: Different seeds, different recordings** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 2.4**
-  - [ ] 12.4 Write property test in `tests/health.test.ts`: **Property 8: Runs are verifier-clean** (`numRuns: 25`, 300 ticks)
+  - [x] 12.4 Write property test in `tests/health.test.ts`: **Property 8: Runs are verifier-clean** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 2.1, 3.4, 3.5, 4.8, 10.1**
-  - [ ] 12.5 Write property test in `tests/health.test.ts`: **Property 9: Station exclusivity and queue cap** (`numRuns: 25`, 300 ticks)
+  - [x] 12.5 Write property test in `tests/health.test.ts`: **Property 9: Station exclusivity and queue cap** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 4.1, 4.2, 4.6, 4.7**
-  - [ ] 12.6 Write property test in `tests/health.test.ts`: **Property 10: Task cycle and pod exclusivity** (`numRuns: 25`, 300 ticks)
+  - [x] 12.6 Write property test in `tests/health.test.ts`: **Property 10: Task cycle and pod exclusivity** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 4.3, 4.4**
-  - [ ] 12.7 Write property test in `tests/health.test.ts`: **Property 12: Verifier detects injected faults** (`numRuns: 25`, 300 ticks)
+  - [x] 12.7 Write property test in `tests/health.test.ts`: **Property 12: Verifier detects injected faults** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 6.1, 6.2, 6.3, 6.4**
-  - [ ] 12.8 Write property test in `tests/health.test.ts`: **Property 14: Incremental wait counts match a recount** (`numRuns: 25`, 300 ticks)
+  - [x] 12.8 Write property test in `tests/health.test.ts`: **Property 14: Incremental wait counts match a recount** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 7.4**
-  - [ ] 12.9 Final check and commit
+  - [x] 12.9 Final check and commit
     - `npm test`, `npm run lint`, and `npm run build` pass; fix any sim bug a property exposes before committing
     - Commit: "add determinism and run-level property tests"
 
