@@ -448,7 +448,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
               aria-label="Fleet Autopsy, back to start"
               onClick={() => onHome?.()}
             >
-              Fleet Autopsy
+              Fleet Autopsy<span className="accent-dot">.</span>
             </button>
           </h1>
           <p className="scenario-name">{scenario?.name ?? 'Healthy fleet'}</p>
