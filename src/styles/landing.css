@@ -46,15 +46,12 @@
 
 .landing-wordmark {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(var(--fs-h1), 12vw, var(--fs-hero));
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--fs-hero);
   line-height: 1;
+  letter-spacing: var(--tracking-tight);
   color: var(--fg);
-}
-
-.landing-wordmark em {
-  font-style: italic;
 }
 
 .lede {
@@ -108,7 +105,7 @@
   background: transparent;
   border: 0;
   color: var(--fg-2);
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   font-size: var(--fs-ui);
   line-height: 20px;
   text-decoration: underline;

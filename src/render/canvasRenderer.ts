@@ -59,6 +59,9 @@ export const DEFAULT_COLORS: Colors = {
   ink: '#ffffff',
 };
 
+/** Mirrors --font-sans in tokens.css; canvas text cannot read CSS variables per frame. */
+export const CANVAS_FONT = `'Gotham', 'Montserrat', system-ui, sans-serif`;
+
 /**
  * Scratch for stallLabels ids. Module-level but never read across calls: it is
  * fully written before use in each frame, so drawFrame stays allocation-free
@@ -213,14 +216,14 @@ function drawEndpoints(ctx: CanvasRenderingContext2D, layout: Layout, cell: numb
   ctx.lineCap = 'butt';
   ctx.stroke();
 
-  // Stations: filled squares with the two-digit station label ("01".."06") in mono.
+  // Stations: filled squares with the two-digit station label ("01".."06") in the sans.
   if (stations.length === 0) return;
-  const sample = stationLabel(stations.length - 1); // mono: every label has the same width
+  const sample = stationLabel(stations.length - 1); // labels are centred, so small width differences do not show
   const size = stationFontSize(cell, (px) => {
-    ctx.font = monoFont(px);
+    ctx.font = stationFont(px);
     return ctx.measureText(sample).width;
   });
-  ctx.font = monoFont(size);
+  ctx.font = stationFont(size);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   // Center the digits' ink box vertically (digits have no descender).
@@ -239,12 +242,12 @@ function drawEndpoints(ctx: CanvasRenderingContext2D, layout: Layout, cell: numb
   }
 }
 
-function monoFont(px: number): string {
-  return `${Math.round(px * 10) / 10}px 'Geist Mono', ui-monospace, monospace`;
+function stationFont(px: number): string {
+  return `500 ${Math.round(px * 10) / 10}px ${CANVAS_FONT}`;
 }
 
-/** Canvas label font: Geist 11px, sentence case (constant string, no per-frame allocation). */
-const LABEL_FONT = `${LABEL_PX}px 'Geist', system-ui, sans-serif`;
+/** Canvas label font: sans 500 11px, sentence case (constant string, no per-frame allocation). */
+const LABEL_FONT = `500 ${LABEL_PX}px ${CANVAS_FONT}`;
 
 function drawRobots(
   ctx: CanvasRenderingContext2D,
@@ -362,7 +365,7 @@ function drawTrails(
 
 /**
  * Stalled robots: a grey 1px ring on every stalled robot without a reveal
- * marker, a Geist label `R{id} · stalled` on at most MAX_STALL_LABELS of them
+ * marker, a sans label `R{id} · stalled` on at most MAX_STALL_LABELS of them
  * (lowest ids first), and a count chip `{n} stalled` top-left when there are more.
  */
 function drawStalls(

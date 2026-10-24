@@ -90,10 +90,10 @@ export function Backdrop() {
         : null;
     observer?.observe(box);
 
-    // Station digits use Geist Mono; redraw once the font is ready.
+    // Station digits use Montserrat 500; redraw once the font is ready.
     const fonts = document.fonts as FontFaceSet | undefined;
     if (fonts) {
-      fonts.load(`11px 'Geist Mono'`).then(
+      fonts.load(`500 11px 'Montserrat'`).then(
         () => {
           if (!cancelled) redraw();
         },

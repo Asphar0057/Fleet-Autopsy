@@ -260,12 +260,13 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
     observer.observe(box);
     fitCanvas(canvas, lay);
 
-    // Canvas text does not trigger web font loading; request Geist Mono (station
-    // digits) and Geist (labels), and redraw once they are ready.
+    // Canvas text does not trigger web font loading; request Montserrat 500
+    // (station digits and labels), and redraw once it is ready.
     let cancelled = false;
     const fonts = document.fonts as FontFaceSet | undefined;
     if (fonts) {
-      Promise.all([fonts.load(`11px 'Geist Mono'`), fonts.load(`11px 'Geist'`)])
+      fonts
+        .load(`500 11px 'Montserrat'`)
         .then(() => fonts.ready)
         .then(
           () => {
@@ -447,7 +448,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
               aria-label="Fleet Autopsy, back to start"
               onClick={() => onHome?.()}
             >
-              Fleet <em>Autopsy</em>
+              Fleet Autopsy
             </button>
           </h1>
           <p className="scenario-name">{scenario?.name ?? 'Healthy fleet'}</p>

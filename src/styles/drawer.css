@@ -43,10 +43,11 @@
 
 .drawer-title {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: var(--fs-h1);
   line-height: 1.1;
+  letter-spacing: var(--tracking-tight);
 }
 
 .hiw-steps {
@@ -65,18 +66,19 @@
 }
 
 .hiw-num {
-  font-family: var(--font-mono);
-  font-size: var(--fs-mono);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
   color: var(--fg-3);
   font-variant-numeric: tabular-nums;
 }
 
 .hiw-step-title {
   margin: 0 0 var(--s-1);
-  font-family: var(--font-display);
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: var(--fs-h2);
   line-height: 1.2;
+  letter-spacing: var(--tracking-tight);
 }
 
 .hiw-step-body {
@@ -111,7 +113,7 @@
 
 .pipeline-label {
   fill: var(--fg);
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   font-size: var(--fs-ui);
 }
 

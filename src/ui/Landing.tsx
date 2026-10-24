@@ -21,7 +21,7 @@ export function Landing({ onEnter, onHowItWorks }: LandingProps) {
       <Backdrop />
       <div className="landing-content">
         <h1 className="landing-wordmark">
-          Fleet <em>Autopsy</em>
+          Fleet Autopsy
         </h1>
         <p className="lede">{LANDING.lede}</p>
         <ol className="steps">
