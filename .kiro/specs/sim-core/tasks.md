@@ -45,6 +45,7 @@ Bottom-up build of the pure sim (`src/sim`), then a minimal renderer and App so 
 - [x] 4. PIBT planner
   - [x] 4.1 Implement `createPlanner` / `plan` in `src/sim/pibt.ts`
     - Pinned robots claimed first, insertion sort by (−prio, id), recursive `pibt` with inheritance, backtracking, no swap, endpoint and access-cell filter, `tieRot` ordering, preallocated scratch
+    - Corridor swap step (role exchange: higher-priority robot backs up toward a branch, the other takes the freed cell; never a same-tick cell exchange) and pushed-robot tie-break (D19)
     - _Requirements: 3.1, 3.3, 3.4, 3.5, 3.9, 10.5_
   - [x] 4.2 Write example test (required test 4): head-on in a one-cell aisle with a side pocket
     - Small hand-built layout; loop `plan` until both robots reach goals; assert no swap and no shared cell each step

@@ -28,6 +28,7 @@ Source of truth: `docs/PROMPT_1_sim-core.md`. The movement and station rules fol
 | D16 | Pod choice draws the PRNG until it hits an unreserved pod. Reserved pods ≤ robots < pods for every preset at max robots, so it terminates. `createSim` throws if `robots >= pods` or `robots > floor cells - stations`. |
 | D17 | Stall fires once per standstill, when `tick - lastMove` reaches 200 while the robot is in to-pod, to-station, or returning. Queue-waiting robots (to-station) are not exempt, matching the prototype's "moving robot" idle measure. |
 | D18 | Holder selection (tick order step 3) for station `s` uses `d = cache.get(access[s], access[s])`, the BFS map toward that station's own Access_Cell computed with that same Access_Cell allowed. A queued robot `r` scores `d[pos[r]]`; ties by lower id. No other map (for example the station-cell map, or a map with `allowAccess = −1`) is used for holder selection. |
+| D19 | The planner adds the corridor swap step from Okumura, "Engineering LaCAM*" (2024): when the robot ahead must pass and no branch cell is ahead, the higher-priority robot backs up toward a branch and the other takes the freed cell in the same tick (only if unclaimed, undecided, and allowed). It is a role exchange, never a same-tick cell exchange; Requirement 3.4 and the verifier's swap check are unchanged. Pushed robots sort candidates by (own distance asc, pusher's distance desc), then `tieRot`. Without this, the 50-case head-on test failed 40/50. |
 
 ## Architecture
 
@@ -137,11 +138,19 @@ Scratch arrays (`occ` per cell, `claimed` per cell, `order`, a 5-slot candidate 
 `pibt(i, parent)`:
 - Candidates: the 4 neighbors plus `pos[i]`, filtered by `allowed(i, c)`: walls never; an Access_Cell of station `s` only if `c == pos[i]` or `holds[i] == s`; an Endpoint only if `c == goal[i]` or `c == pos[i]`.
 - Order by `cache.get(goal[i], allowAccess[i])[c]`, equal distances by `tieRot[i]`.
-- Skip a candidate that is claimed, equals `pos[parent]`, or whose occupant `j` has already decided to move into `pos[i]` (swap).
+- Skip a candidate that is claimed, equals `pos[parent]`, or whose occupant `j` has already decided to move into `pos[i]` (that would be a forbidden same-tick cell exchange, Requirement 3.4).
 - Claim the candidate. If an undecided robot `j` occupies it, recurse `pibt(j, i)`; on failure, unclaim and try the next.
 - If nothing works, stay: `out[i] = pos[i]`, claim it, return false.
 
 Priority inheritance is implicit: a pushed robot is planned inside the pusher's call, ahead of all lower-priority robots. Pinned robots are already decided, so they are never pushed.
+
+#### Corridor swap step and pushed-robot tie-break (D19)
+
+- Corridor swap (Okumura, "Engineering LaCAM*", 2024) is a role exchange in a corridor. `swapAgent(i, best)` returns a robot to pull when the robot ahead must pass `i` (`swapRequired`: no branch cell ahead, found by `walk`) and retreating reaches a branch cell (`swapPossible`). Then `i` reverses its candidate order and backs up toward the branch. If that retreat (its first candidate) succeeds, the other robot is assigned the cell `i` just freed, in the same tick, only if that cell is unclaimed, the other robot is undecided (so pinned robots are never pulled), and `allowed` permits the move for it.
+- This is not two robots exchanging cells in one tick. One robot moves away and the other follows into the vacated cell. The no-swap rule (Requirement 3.4) still holds, and `verifyRun` still checks it.
+- Corridor graph for the check: plain floor cells, excluding Endpoints and Access_Cells. A dead-end cell holding a robot that sits on its goal counts as a wall (`goalSitter`).
+- Pushed-robot tie-break: candidates sort by (own distance asc, pusher's distance desc), then `tieRot`. A pushed robot steps out of the pusher's way, for example into a side pocket rather than down the pusher's dead-end goal aisle. At top level the second key is constant.
+- Why: plain PIBT is incomplete on tree-shaped corridors; two robots meeting head-on can block each other forever. The 50-case head-on test (all `tieRot` × both id orders) failed 40/50 without this step.
 
 ### `src/sim/sim.ts`
 
