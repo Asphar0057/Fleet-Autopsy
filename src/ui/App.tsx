@@ -4,8 +4,7 @@
 // about 10 Hz so 16× playback does not re-render React on every tick.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { drawFrame, fitCanvas, readColors } from '../render/canvasRenderer';
-import { parseLayout } from '../sim/layout';
-import type { Layout, LayoutManifest, LayoutMeta } from '../sim/layout';
+import type { Layout, LayoutMeta } from '../sim/layout';
 import { blockedAt, blockWindows } from '../sim/faults';
 import { createWaitCounter, stalledAt, throughputSeries } from '../sim/metrics';
 import { SCENARIOS, scenarioConfig } from '../sim/scenarios';
@@ -20,6 +19,7 @@ import { CanvasLegend } from './CanvasLegend';
 import { Controls } from './Controls';
 import { verifierCopy } from './copy';
 import { faultLegend, faultTicks, revealMarks } from './legend';
+import { loadLayout, loadManifest } from './loaders';
 import { Panel } from './Panel';
 import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from './playback';
 import type { Speed } from './playback';
@@ -42,18 +42,6 @@ function findScenario(id: string | null): Scenario | null {
 
 function errorText(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
-}
-
-async function loadManifest(): Promise<LayoutMeta[]> {
-  const res = await fetch(`${import.meta.env.BASE_URL}layouts/layouts.json`);
-  if (!res.ok) throw new Error(`layouts.json: http ${res.status}`);
-  return ((await res.json()) as LayoutManifest).layouts;
-}
-
-async function loadLayout(meta: LayoutMeta): Promise<Layout> {
-  const res = await fetch(`${import.meta.env.BASE_URL}layouts/${meta.file}`);
-  if (!res.ok) throw new Error(`${meta.file}: http ${res.status}`);
-  return parseLayout(meta, await res.text());
 }
 
 /** Keyboard shortcuts are ignored while focus is in a field that uses the keys itself. */

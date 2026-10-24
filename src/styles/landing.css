@@ -1,0 +1,135 @@
+/* Landing view (visual-redesign Requirement 1). Every value comes from tokens.css.
+   Full-screen black page; the live backdrop sits behind the content at low contrast. */
+
+.landing {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  color: var(--fg);
+  overflow-x: hidden;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+/* Fitted like the app's canvas box: the canvas is absolutely positioned and
+   centered, so it never sizes its own container. */
+.backdrop-box {
+  position: absolute;
+  inset: var(--s-5);
+  overflow: hidden;
+}
+
+.backdrop-box canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+
+.landing-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--s-7) var(--s-4);
+}
+
+.landing-wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(var(--fs-h1), 12vw, var(--fs-hero));
+  line-height: 1;
+  color: var(--fg);
+}
+
+.landing-wordmark em {
+  font-style: italic;
+}
+
+.lede {
+  max-width: 40em;
+  margin: var(--s-5) 0 0;
+  font-size: var(--fs-body);
+  line-height: 22px;
+  color: var(--fg);
+}
+
+/* Three steps inline with · separators; wraps on narrow screens. */
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) 0;
+  margin: var(--s-4) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+}
+
+.steps li + li::before {
+  content: '·';
+  padding: 0 var(--s-2);
+  color: var(--fg-3);
+}
+
+.honesty {
+  margin: var(--s-4) 0 0;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-3);
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-4);
+  margin-top: var(--s-6);
+}
+
+/* Quiet text link styled button. */
+.link {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--fg-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  text-decoration: underline;
+  text-decoration-color: var(--hairline-strong);
+  text-underline-offset: var(--s-1);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    text-decoration-color var(--dur-fast) var(--ease);
+}
+
+.link:hover {
+  color: var(--fg);
+  text-decoration-color: var(--fg);
+}
+
+@media (max-width: 639px) {
+  .landing-content {
+    padding: var(--s-6) var(--s-3);
+  }
+  .backdrop-box {
+    inset: var(--s-3);
+  }
+}
