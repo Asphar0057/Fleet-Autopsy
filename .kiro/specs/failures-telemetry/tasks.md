@@ -85,28 +85,28 @@ Rules for every task:
     - _Requirements: 4.4_
   - [x] 6.4 Check and commit: commit "add jam detector with healthy-baseline gate"
 
-- [ ] 7. Oracle
-  - [~] 7.1 Implement `deliveries`, `scoreFaults`, `isValid` in `src/sim/oracle.ts` (D14) using `runHeadless`
+- [x] 7. Oracle
+  - [x] 7.1 Implement `deliveries`, `scoreFaults`, `isValid` in `src/sim/oracle.ts` (D14) using `runHeadless`
     - _Requirements: 6.1, 6.2_
-  - [~] 7.2 Write example test in `tests/scenarios.test.ts`: a single-fault config gives recovered exactly 1 (removed run equals baseline)
+  - [x] 7.2 Write example test in `tests/scenarios.test.ts`: a single-fault config gives recovered exactly 1 (removed run equals baseline)
     - _Requirements: 6.1_
-  - [~] 7.3 Write property test: **Property 11: Validity rule matches its formula** (`numRuns: 100`)
+  - [x] 7.3 Write property test: **Property 11: Validity rule matches its formula** (`numRuns: 100`)
     - **Validates: Requirements 6.2**
-  - [~] 7.4 Check and commit: commit "add fault oracle with recovered-fraction scoring"
+  - [x] 7.4 Check and commit: commit "add fault oracle with recovered-fraction scoring"
 
-- [ ] 8. Curated scenarios with verified ground truth
-  - [~] 8.1 Fill the `R?` / `station ?` placements from the fault-free runs with a throwaway helper (deleted before commit), then hard-code `SCENARIOS` and `scenarioConfig` in `src/sim/scenarios.ts`
+- [x] 8. Curated scenarios with verified ground truth
+  - [x] 8.1 Fill the `R?` / `station ?` placements from the fault-free runs with a throwaway helper (deleted before commit), then hard-code `SCENARIOS` and `scenarioConfig` in `src/sim/scenarios.ts`
     - Every curated fault must block through-traffic (one-cell aisle, door, station service slot); the decoy goes on open floor
     - _Requirements: 5.1, 5.2_
-  - [~] 8.2 Write tests in `tests/scenarios.test.ts`: ≥ 6 scenarios, 2 per layout, decoy tick before primary; placement predicates from the design table; each scenario `isValid` by `scoreFaults` and verifier-clean over 2,000 ticks
+  - [x] 8.2 Write tests in `tests/scenarios.test.ts`: ≥ 6 scenarios, 2 per layout, decoy tick before primary; placement predicates from the design table; each scenario `isValid` by `scoreFaults` and verifier-clean over 2,000 ticks
     - _Requirements: 2.3, 5.1, 5.2, 5.3, 6.2_
-  - [~] 8.3 Write tests in `tests/jam.test.ts`: each curated scenario detected within 200 ticks after its primary tick; decoy-first onset closer to the primary than to the decoy
+  - [x] 8.3 Write tests in `tests/jam.test.ts`: each curated scenario detected within 200 ticks after its primary tick; decoy-first onset closer to the primary than to the decoy
     - If a scenario fails, move the fault (debug rule applies to sim bugs); record final placements in the design.md Scenarios table
     - _Requirements: 4.5, 4.6_
-  - [~] 8.4 Check and commit: commit "add curated failure scenarios with oracle-verified ground truth"
+  - [x] 8.4 Check and commit: commit "add curated failure scenarios with oracle-verified ground truth"
 
 - [ ] 9. Scenario generator
-  - [~] 9.1 Implement `generateScenarios(layout, seed, count)` in `src/sim/oracle.ts` per D13 (seeded rejection sampling, decoy-first pairs, attempt bound `30 × count`, descriptive throw)
+  - [-] 9.1 Implement `generateScenarios(layout, seed, count)` in `src/sim/oracle.ts` per D13 (seeded rejection sampling, decoy-first pairs, attempt bound `30 × count`, descriptive throw)
     - _Requirements: 6.3, 6.4, 6.5_
   - [~] 9.2 Write tests: `generateScenarios(pocket-dc, 1, 3)` returns 3 scenarios that pass `isValid` and is deep-equal on a second call; an attempt bound of 0 (internal option) throws
     - _Requirements: 6.3, 6.4, 6.5_
