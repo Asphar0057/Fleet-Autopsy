@@ -1,13 +1,43 @@
-/* Design tokens, copied from .kiro/steering/design.md. */
+/* Design tokens: the single home of design CSS variables (.kiro/steering/design.md). */
 :root {
-  --bg: #ffffff;
-  --ink: #000000;
-  --ink-2: #6b6b6b;      /* secondary text, units */
-  --line: #000000;       /* structure: 1px */
-  --line-soft: rgba(0,0,0,.14);
-  --accent: #ff4a1c;     /* ONLY for alerts, violations, root-cause highlight */
-  --radius: 2px;
+  /* color */
+  --bg: #000000;
+  --surface: #0a0a0a;              /* panels, drawer */
+  --fg: #ffffff;                   /* primary text, 21:1 */
+  --fg-2: #a3a3a3;                 /* secondary text, ~8.6:1 on #000 */
+  --fg-3: #8a8a8a;                 /* tertiary text, minimum, ~6:1 on #000 */
+  --hairline: rgba(255,255,255,.10);
+  --hairline-strong: rgba(255,255,255,.24);
+  --track: rgba(255,255,255,.10);
+  --accent: #ff4a1c;               /* culprit marker, jam badge, onset marker ONLY; ~6.3:1 on #000 */
+  /* canvas */
+  --canvas-robot: #ffffff;
+  --canvas-carry: rgba(255,255,255,.6);
+  --canvas-wall: rgba(255,255,255,.30);
+  --canvas-pod: rgba(255,255,255,.15);
+  --canvas-station: rgba(255,255,255,.92);
+  --canvas-station-text: #000000;
+  --canvas-stall: rgba(255,255,255,.45);
+  --canvas-label: #a3a3a3;
+  /* type */
   --font-display: 'Instrument Serif', 'Times New Roman', serif;
   --font-body: 'Geist', system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --fs-hero: 88px; --fs-h1: 40px; --fs-h2: 24px; --fs-num: 32px;
+  --fs-body: 15px; --fs-ui: 13px; --fs-mono: 12px;
+  /* space (8px grid) */
+  --s-1: 4px; --s-2: 8px; --s-3: 16px; --s-4: 24px; --s-5: 32px; --s-6: 48px; --s-7: 64px;
+  --radius: 4px; --radius-pill: 999px;
+  /* motion */
+  --dur-fast: 150ms; --dur: 200ms; --dur-slow: 250ms; --ease: cubic-bezier(.2,.0,.0,1);
+  /* focus */
+  --focus: 2px solid #ffffff; --focus-offset: 2px;
+
+  /* Legacy aliases, transitional: current components and the renderer's
+     readColors still read these names. Literal values (not var()) so
+     getPropertyValue returns a color. Removed once tasks 2-5 switch over. */
+  --ink: #ffffff;                  /* = --fg */
+  --ink-2: #a3a3a3;                /* = --fg-2 */
+  --line: rgba(255,255,255,.24);   /* = --hairline-strong */
+  --line-soft: rgba(255,255,255,.10); /* = --hairline */
 }

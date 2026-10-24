@@ -1,8 +1,7 @@
-/* Base styles per .kiro/steering/design.md. Tokens live in tokens.css.
-   8px grid, 1px black hairlines, no shadows, gradients, or blur, radius <= 2px.
-   The accent color is used only for alerts (violation badge, jam badge and its
-   onset marker, loader error) and,
-   when ground truth is revealed, fault markers (canvas, scrubber ticks). */
+/* Base styles per .kiro/steering/design.md. Every value comes from tokens.css.
+   Black background, white type, hairlines, sentence case (no uppercase, no
+   letter-spacing). No shadows, gradients, or blur. Accent is reserved for the
+   culprit marker, the jam badge, and the throughput onset marker. */
 
 *,
 *::before,
@@ -16,14 +15,20 @@ body,
   height: 100%;
 }
 
+html {
+  color-scheme: dark;
+  background: var(--bg);
+}
+
 body {
   margin: 0;
   background: var(--bg);
-  color: var(--ink);
+  color: var(--fg);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: var(--fs-body);
   line-height: 22px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,
@@ -34,38 +39,73 @@ h3 {
   margin: 0;
 }
 
-/* Mono: labels, numbers, data, buttons. Numbers use tabular figures. */
+/* Geist Mono only for numbers and data; tabular figures. */
 .mono,
-.label,
 .value,
-.btn,
-.badge,
-input,
 output {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-.label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 16px;
+.badge,
+input,
+select,
+button {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Small UI label: Geist 13px, sentence case, grey. */
+.label,
+.field-label {
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
   font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--fg-2);
   margin: 0;
 }
 
 .muted,
 .unit,
 .note {
-  color: var(--ink-2);
+  color: var(--fg-2);
 }
 
 .unit,
 .note {
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+}
+
+/* Section header: serif title plus one grey sentence. */
+.section-head {
+  margin: 0 0 var(--s-3);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  line-height: 32px;
+  font-weight: 400;
+  color: var(--fg);
+}
+
+.section-note {
+  margin: var(--s-1) 0 0;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+}
+
+/* Shared focus ring: 2px white, 2px offset. Never Accent. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
 }
 
 /* ---------- App shell: full-height grid (header, controls, main) ---------- */
@@ -73,7 +113,7 @@ output {
 .app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--s-4);
   height: 100vh;
   height: 100dvh;
   display: grid;
@@ -85,17 +125,26 @@ output {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 16px;
-  padding: 16px 0 8px;
-  border-bottom: 1px solid var(--line);
+  gap: var(--s-3);
+  padding: var(--s-3) 0 var(--s-2);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .wordmark {
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: var(--fs-h1);
   line-height: 48px;
   font-weight: 400;
-  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+button.wordmark {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
 }
 
 .wordmark em {
@@ -104,10 +153,11 @@ output {
 
 .meta {
   margin: 0;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
   line-height: 16px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Controls ---------- */
@@ -116,20 +166,20 @@ output {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 24px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--line);
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .control-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .value {
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--fs-ui);
+  line-height: 20px;
   min-width: 3ch;
 }
 
@@ -140,42 +190,69 @@ output {
   -webkit-appearance: none;
   margin: 0;
   background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border: 1px solid var(--line);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius);
-  padding: 3px 8px; /* 16px line + 2 × 3px + 2 × 1px border = 24px tall */
-  min-height: 24px;
+  padding: 5px 12px; /* 20px line + 2 × 5px + 2 × 1px border = 32px tall */
+  min-height: 32px;
   cursor: pointer;
   transition:
-    background-color 120ms linear,
-    color 120ms linear;
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 
-.btn:hover:not(:disabled),
+.btn:hover:not(:disabled) {
+  border-color: var(--fg);
+}
+
 .btn:active:not(:disabled),
 .btn[aria-pressed='true'] {
-  background: var(--ink);
+  background: var(--fg);
+  border-color: var(--fg);
   color: var(--bg);
 }
 
-.btn:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-
 .btn:disabled {
-  opacity: 0.4;
+  color: var(--fg-3);
+  border-color: var(--hairline);
   cursor: default;
 }
 
 .btn--play {
   min-width: 7ch;
+}
+
+/* Primary: white fill, black text. */
+.btn--primary {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--fg-2);
+  border-color: var(--fg-2);
+}
+
+.btn--primary:disabled {
+  background: transparent;
+  border-color: var(--hairline-strong);
+  color: var(--fg-3);
+}
+
+/* Quiet: text-only button for secondary header actions. */
+.btn--quiet {
+  border-color: transparent;
+  color: var(--fg-2);
+}
+
+.btn--quiet:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--fg);
 }
 
 /* ---------- Inputs ---------- */
@@ -185,14 +262,20 @@ input[type='number'] {
   -moz-appearance: textfield;
   width: 12ch;
   margin: 0;
-  padding: 3px 8px;
-  min-height: 24px;
-  font-size: 11px;
-  line-height: 16px;
-  color: var(--ink);
+  padding: 5px 8px;
+  min-height: 32px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg);
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius);
+  transition: border-color var(--dur) var(--ease);
+}
+
+input[type='number']:hover {
+  border-color: var(--fg-2);
 }
 
 input[type='number']::-webkit-outer-spin-button,
@@ -201,12 +284,7 @@ input[type='number']::-webkit-inner-spin-button {
   margin: 0;
 }
 
-input[type='number']:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-
-/* Range: 1px black track, 12px square black thumb, no browser accent fill. */
+/* Range: 1px faint track, 12px round white thumb, no browser accent fill. */
 input[type='range'] {
   appearance: none;
   -webkit-appearance: none;
@@ -219,7 +297,7 @@ input[type='range'] {
 
 input[type='range']::-webkit-slider-runnable-track {
   height: 1px;
-  background: var(--ink);
+  background: var(--hairline-strong);
   border: 0;
 }
 
@@ -229,14 +307,14 @@ input[type='range']::-webkit-slider-thumb {
   width: 12px;
   height: 12px;
   margin-top: -5.5px; /* center on the 1px track */
-  background: var(--ink);
+  background: var(--fg);
   border: 0;
-  border-radius: 0;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']::-moz-range-track {
   height: 1px;
-  background: var(--ink);
+  background: var(--hairline-strong);
   border: 0;
 }
 
@@ -247,18 +325,9 @@ input[type='range']::-moz-range-progress {
 input[type='range']::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  background: var(--ink);
+  background: var(--fg);
   border: 0;
-  border-radius: 0;
-}
-
-input[type='range']:focus {
-  outline: none;
-}
-
-input[type='range']:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']:disabled {
@@ -270,8 +339,8 @@ input[type='range']:disabled {
   width: 160px;
 }
 
-/* Select: 1px line, no fill, mono 11px uppercase like buttons; a text caret
-   in a wrapper replaces the native arrow (no images, no gradients). */
+/* Select: hairline border, no fill; a text caret in a wrapper replaces the
+   native arrow (no images, no gradients). */
 .select {
   position: relative;
   display: inline-block;
@@ -280,12 +349,12 @@ input[type='range']:disabled {
 .select::after {
   content: '▾';
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   line-height: 1;
+  color: var(--fg-2);
   pointer-events: none;
 }
 
@@ -293,30 +362,30 @@ input[type='range']:disabled {
   appearance: none;
   -webkit-appearance: none;
   margin: 0;
-  padding: 3px 24px 3px 8px;
-  min-height: 24px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink);
+  padding: 5px 28px 5px 12px;
+  min-height: 32px;
+  max-width: 100%;
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg);
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius);
   cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
 }
 
-.select select:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+.select select:hover {
+  border-color: var(--fg-2);
 }
 
 .select option {
-  text-transform: none;
+  color: var(--fg);
+  background: var(--surface);
 }
 
-/* ---------- Main: canvas column | 1px rule | panel ---------- */
+/* ---------- Main: canvas column | hairline | panel ---------- */
 
 .main {
   display: grid;
@@ -329,7 +398,7 @@ input[type='range']:disabled {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: 24px 24px 16px 0;
+  padding: var(--s-4) var(--s-4) var(--s-3) 0;
 }
 
 /* The box takes the layout's aspect ratio (inline style) and shrinks to the
@@ -355,12 +424,12 @@ input[type='range']:disabled {
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--hairline);
 }
 
 .section {
-  padding: 16px 0 16px 24px;
-  border-bottom: 1px solid var(--line);
+  padding: var(--s-4) 0 var(--s-4) var(--s-4);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .section:last-child {
@@ -368,23 +437,23 @@ input[type='range']:disabled {
 }
 
 .section > .label {
-  margin-bottom: 8px;
+  margin-bottom: var(--s-2);
 }
 
 .section p {
   margin: 0;
 }
 
-/* Verifier badge: 1px border, mono. Violation: accent text and border. */
+/* Status badge: hairline border. Alert (jam): Accent text and border. */
 .badge {
   display: inline-block;
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: 1px solid var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius);
-  padding: 3px 8px;
+  padding: 2px 8px;
 }
 
 .badge--alert {
@@ -394,27 +463,27 @@ input[type='range']:disabled {
 
 .metrics {
   display: grid;
-  gap: 8px;
-  margin: 0 0 16px;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-3);
 }
 
 .metric {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .metric dd {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--fs-body);
   line-height: 22px;
 }
 
 .spark-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
+  gap: var(--s-3);
   align-items: end;
 }
 
@@ -426,14 +495,14 @@ input[type='range']:disabled {
 
 .spark-values {
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
   margin: 0;
 }
 
 .spark-values div {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .spark-values dd {
@@ -443,16 +512,22 @@ input[type='range']:disabled {
 
 .stations {
   border-collapse: collapse;
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--fs-ui);
+  line-height: 20px;
   width: 100%;
+}
+
+.stations th {
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--fg-2);
 }
 
 .stations th,
 .stations td {
   text-align: left;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--line-soft);
+  padding: var(--s-1) 0;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .stations th:last-child,
@@ -460,26 +535,22 @@ input[type='range']:disabled {
   text-align: right;
 }
 
-/* ---------- Telemetry (section 03) ---------- */
-
-/* Primary: ink fill, white text (the inverted button state). */
-.btn--primary {
-  background: var(--ink);
-  color: var(--bg);
-  width: 100%;
-  min-height: 32px;
-}
+/* ---------- Telemetry ---------- */
 
 .find-cause {
-  margin: 16px 0;
+  margin: var(--s-3) 0;
+}
+
+.find-cause .btn--primary {
+  width: 100%;
 }
 
 .find-cause .note {
-  margin-top: 4px;
+  margin-top: var(--s-1);
 }
 
 .telemetry-metrics {
-  margin: 16px 0 8px;
+  margin: var(--s-3) 0 var(--s-2);
 }
 
 .queues {
@@ -487,31 +558,33 @@ input[type='range']:disabled {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .queue {
   display: grid;
   grid-template-columns: 4ch minmax(0, 1fr) 5ch;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .queue .value {
   text-align: right;
 }
 
-/* 1px outlined bar, ink fill proportional to queue / queueCap. */
+/* Thin bar: faint track, white fill proportional to queue / queueCap. */
 .qbar {
   display: block;
-  height: 8px;
-  border: 1px solid var(--line);
+  height: 4px;
+  background: var(--track);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
 }
 
 .qbar-fill {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--fg);
 }
 
 .sr-only {
@@ -530,31 +603,36 @@ input[type='range']:disabled {
   margin: 0;
   padding: 0;
   list-style: none;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
 }
 
 .assumptions li {
-  padding: 0 0 8px;
+  padding: 0 0 var(--s-2);
 }
 
-.assumptions li::before {
-  content: '— ';
-  color: var(--ink-2);
+.assumptions li::first-letter {
+  text-transform: uppercase;
 }
 
+/* Errors are not alerts in the Accent sense: grey text, mono message. */
 .error {
   margin: 0;
   white-space: pre-wrap;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
   line-height: 16px;
-  color: var(--accent);
+  color: var(--fg-2);
 }
 
-/* Ground-truth legend under the canvas: one mono line, shown only when revealed. */
+/* Ground-truth legend under the canvas: one line, shown only when revealed. */
 .legend {
   flex: 0 0 auto;
-  margin: 8px 0 0;
-  font-size: 11px;
-  line-height: 16px;
+  margin: var(--s-2) 0 0;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -564,7 +642,7 @@ input[type='range']:disabled {
 
 .scrubber {
   flex: 0 0 auto;
-  padding-top: 16px;
+  padding-top: var(--s-3);
 }
 
 .scrubber-track {
@@ -581,9 +659,10 @@ input[type='range']:disabled {
 .scrubber-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
   line-height: 16px;
-  color: var(--ink-2);
+  color: var(--fg-2);
 }
 
 /* ---------- Narrow screens: stack the panel under the canvas ---------- */
@@ -598,7 +677,7 @@ input[type='range']:disabled {
     grid-template-columns: minmax(0, 1fr);
   }
   .stage {
-    padding: 24px 0 16px;
+    padding: var(--s-4) 0 var(--s-3);
   }
   .canvas-box {
     max-height: 80vh;
@@ -606,7 +685,7 @@ input[type='range']:disabled {
   .panel {
     overflow: visible;
     border-left: 0;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--hairline);
   }
   .section {
     padding-left: 0;
