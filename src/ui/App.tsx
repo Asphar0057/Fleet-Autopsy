@@ -17,7 +17,7 @@ import { verifyRun } from '../sim/verify';
 import type { Badge } from './badge';
 import { CanvasLegend } from './CanvasLegend';
 import { Controls } from './Controls';
-import { verifierCopy } from './copy';
+import { SCENARIO_CLEARED_NOTE, verifierCopy } from './copy';
 import { faultLegend, faultTicks, revealMarks } from './legend';
 import { loadLayout, loadManifest } from './loaders';
 import { Panel } from './Panel';
@@ -32,6 +32,7 @@ const PUBLISH_MS = 100; // React state updates at about 10 Hz
 const VERIFY_MS = 250; // re-verify the growing recording at most 4 times a second
 const TELEMETRY_MS = 250; // telemetry and jam detection at most 4 times a second (Requirement 9.4)
 const MAX_STEPS_PER_FRAME = 32; // cap catch-up after a background tab
+const SCENARIO_NOTE_MS = 3000; // how long "Scenario cleared…" stays visible
 
 const EMPTY_SERIES = new Int16Array(0);
 const NO_FAULTS: readonly FaultEvent[] = [];
@@ -82,6 +83,8 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
   // Scenario (D19): null is healthy (faults []); faults are derived from the scenario.
   const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [reveal, setReveal] = useState(false);
+  const [scenarioNote, setScenarioNote] = useState<string | null>(null);
+  const noteTimer = useRef<number | undefined>(undefined);
   const [loadError, setLoadError] = useState<string | null>(null);
   // Published at about 10 Hz by the loop, immediately by user actions.
   const [playhead, setPlayhead] = useState(0);
@@ -382,31 +385,43 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
     return () => window.removeEventListener('keydown', onKey);
   }, [togglePlay, onStepBack, onStepForward]);
 
-  // Any manual change to layout, robots, or seed returns to healthy (D19).
+  // Any manual change to layout, robots, or seed returns to healthy (D19); if a
+  // scenario was active, a grey note says so for SCENARIO_NOTE_MS.
+  const clearScenario = useCallback(() => {
+    if (scenarioRef.current === null) return;
+    scenarioRef.current = null;
+    setScenarioId(null);
+    setScenarioNote(SCENARIO_CLEARED_NOTE);
+    window.clearTimeout(noteTimer.current);
+    noteTimer.current = window.setTimeout(() => setScenarioNote(null), SCENARIO_NOTE_MS);
+  }, []);
+
+  useEffect(() => () => window.clearTimeout(noteTimer.current), []);
+
   const onLayout = useCallback(
     (id: string) => {
       if (id === layoutId) return;
-      scenarioRef.current = null;
-      setScenarioId(null);
+      clearScenario();
       setLayoutId(id);
     },
-    [layoutId],
+    [layoutId, clearScenario],
   );
 
-  const onRobots = useCallback((n: number) => {
-    scenarioRef.current = null;
-    setScenarioId(null);
-    setRobots(n);
-  }, []);
+  const onRobots = useCallback(
+    (n: number) => {
+      clearScenario();
+      setRobots(n);
+    },
+    [clearScenario],
+  );
 
   const onSeed = useCallback(
     (n: number) => {
       if (n === seed) return;
-      scenarioRef.current = null;
-      setScenarioId(null);
+      clearScenario();
       setSeed(n);
     },
-    [seed],
+    [seed, clearScenario],
   );
 
   // Choosing a scenario sets layout, robots, seed, and faults together (D19).
@@ -415,6 +430,8 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
     (id: string | null) => {
       const s = findScenario(id);
       scenarioRef.current = s;
+      window.clearTimeout(noteTimer.current);
+      setScenarioNote(null);
       setScenarioId(s ? s.id : null);
       if (!s) return;
       setSeed(s.seed);
@@ -486,6 +503,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
         scenarios={SCENARIOS}
         scenarioId={scenarioId}
         onScenario={onScenario}
+        scenarioNote={scenarioNote}
         reveal={reveal}
         onReveal={setReveal}
         disabled={!sim}

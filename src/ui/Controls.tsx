@@ -37,6 +37,8 @@ export interface ControlsProps {
   /** Selected scenario id, or null for healthy. */
   scenarioId: string | null;
   onScenario(id: string | null): void;
+  /** Transient grey note under the select, e.g. after a fleet change cleared the scenario. */
+  scenarioNote?: string | null;
   reveal: boolean;
   onReveal(on: boolean): void;
   disabled: boolean;
@@ -97,7 +99,7 @@ export function Controls(p: ControlsProps) {
   return (
     <div className="controls">
       <div className="cluster cluster--scenario" role="group" aria-label="scenario">
-        <span className="field field--stacked">
+        <span className="field field--stacked field--scenario">
           <span className="cluster-label accent-text" aria-hidden="true">
             Scenario
           </span>
@@ -126,6 +128,9 @@ export function Controls(p: ControlsProps) {
                 );
               })}
             </select>
+          </span>
+          <span className="note" role="status">
+            {p.scenarioNote ?? ''}
           </span>
         </span>
         <span className="field">

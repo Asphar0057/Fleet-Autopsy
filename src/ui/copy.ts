@@ -97,6 +97,9 @@ export function shortLayoutName(name: string): string {
   return short === '' ? name : short;
 }
 
+/** Shown for a few seconds when a manual fleet change clears the active scenario. */
+export const SCENARIO_CLEARED_NOTE = 'Scenario cleared because the fleet changed';
+
 /** Scenario select groups, in display order, keyed by layout id. */
 export const SCENARIO_GROUPS: readonly { layoutId: string; label: string }[] = [
   { layoutId: 'fulfillment-block', label: 'Fulfillment block' },
