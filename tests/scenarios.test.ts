@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { computeRecovered, deliveries, isValid, scoreFaults } from '../src/sim/oracle';
+import { computeRecovered, deliveries, generateScenarios, isValid, scoreFaults } from '../src/sim/oracle';
 import type { OracleResult } from '../src/sim/oracle';
 import type { Layout } from '../src/sim/layout';
 import type { Recording } from '../src/sim/recorder';
@@ -182,4 +182,38 @@ describe('curated scenarios', () => {
     },
     120_000,
   );
+});
+
+// ---- scenario generator (Requirements 6.3 to 6.5; design.md D13) ----
+
+describe('generateScenarios', () => {
+  it('returns 3 valid decoy-first pocket-dc scenarios, deep-equal on a second call', () => {
+    const l = loadPreset('pocket-dc');
+    const t0 = performance.now();
+    const a = generateScenarios(l, 1, 3);
+    console.log(`generateScenarios(pocket-dc, 1, 3): ${(performance.now() - t0).toFixed(0)} ms`);
+    expect(a).toHaveLength(3);
+    for (const s of a) {
+      expect(s.layoutId).toBe('pocket-dc');
+      expect(s.robots).toBe(l.recommendedRobots);
+      expect(s.groundTruth).toEqual({ primaryFaultIndex: 1, decoyIndices: [0] });
+      const [decoy, primary] = s.faults;
+      expect(decoy.tick).toBeLessThan(primary.tick);
+      expect(primary.duration).toBeNull();
+      expect(decoy.duration).toBeGreaterThanOrEqual(20);
+      expect(decoy.duration).toBeLessThanOrEqual(40);
+      const r = scoreFaults(l, scenarioConfig(s, l));
+      console.log(`${s.id} (${s.name}): ${JSON.stringify(s.faults)} recovered ${r.recovered.map((x) => x.toFixed(3)).join(', ')}`);
+      expect(isValid(r, s.groundTruth)).toBe(true);
+    }
+    expect(new Set(a.map((s) => s.id)).size).toBe(3);
+    expect(generateScenarios(l, 1, 3)).toEqual(a);
+  }, 120_000);
+
+  it('throws a descriptive error when the attempt bound is reached', () => {
+    const l = loadPreset('pocket-dc');
+    expect(() => generateScenarios(l, 1, 3, { maxAttempts: 0 })).toThrow(
+      'generateScenarios: pocket-dc seed 1: found 0 of 3 valid scenarios in 0 attempts',
+    );
+  });
 });
