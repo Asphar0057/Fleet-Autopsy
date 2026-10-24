@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { LayoutMeta } from '../sim/layout';
 import type { Scenario } from '../sim/types';
+import { shortLayoutName } from './copy';
 import { InfoTip } from './InfoTip';
 import { SPEEDS } from './playback';
 import type { Speed } from './playback';
@@ -96,38 +97,43 @@ export function Controls(p: ControlsProps) {
   return (
     <div className="controls">
       <div className="cluster cluster--scenario" role="group" aria-label="scenario">
-        <label className="field-label" htmlFor="scenario">
-          Choose a failure scenario
-        </label>
-        <span className="select">
-          <select
-            id="scenario"
-            value={p.scenarioId ?? ''}
-            onChange={(e) => p.onScenario(e.target.value === '' ? null : e.target.value)}
-          >
-            <option value="">Healthy fleet</option>
-            {p.scenarios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+        <span className="field field--stacked">
+          <span className="cluster-label" aria-hidden="true">
+            Scenario
+          </span>
+          <label className="sr-only" htmlFor="scenario">
+            Failure scenario
+          </label>
+          <span className="select">
+            <select
+              id="scenario"
+              value={p.scenarioId ?? ''}
+              onChange={(e) => p.onScenario(e.target.value === '' ? null : e.target.value)}
+            >
+              <option value="">Healthy fleet</option>
+              {p.scenarios.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </span>
         </span>
         <span className="field">
           <button type="button" className="switch" aria-pressed={p.reveal} onClick={() => p.onReveal(!p.reveal)}>
             <span className="switch-track" aria-hidden="true">
               <span className="switch-thumb" />
             </span>
-            Reveal ground truth
+            Ground truth
           </button>
           <InfoTip label="ground truth" text="Shows which injected fault is the real cause." />
         </span>
       </div>
 
       <div className="cluster cluster--fleet" role="group" aria-label="fleet">
-        <span className="field">
-          <span className="field-label" aria-hidden="true">
-            Layout
+        <span className="field field--stacked">
+          <span className="cluster-label" aria-hidden="true">
+            Fleet
           </span>
           <span className="segmented" role="group" aria-label="layout">
             {p.layouts.map((m) => (
@@ -138,16 +144,19 @@ export function Controls(p: ControlsProps) {
                 aria-pressed={m.id === p.layoutId}
                 onClick={() => p.onLayout(m.id)}
               >
-                {m.name}
+                {shortLayoutName(m.name)}
               </button>
             ))}
           </span>
         </span>
 
-        <span className="field">
-          <label className="field-label" htmlFor="robots">
-            Robots
-          </label>
+        <span className="field field--stacked field--robots">
+          <span className="field-caption">
+            <label htmlFor="robots">Robots</label>
+            <output className="mono value" htmlFor="robots">
+              {p.robots}
+            </output>
+          </span>
           <input
             id="robots"
             type="range"
@@ -158,16 +167,13 @@ export function Controls(p: ControlsProps) {
             disabled={p.disabled}
             onChange={(e) => p.onRobots(Number(e.target.value))}
           />
-          <output className="mono value" htmlFor="robots">
-            {p.robots}
-          </output>
           {p.robots > p.recommendedRobots && (
             <span className="note">Above recommended {p.recommendedRobots} · jams expected</span>
           )}
         </span>
 
-        <span className="field">
-          <label className="field-label" htmlFor="seed">
+        <span className="field field--stacked">
+          <label className="field-caption" htmlFor="seed">
             Seed
           </label>
           <input
@@ -186,57 +192,57 @@ export function Controls(p: ControlsProps) {
       </div>
 
       <div className="cluster cluster--playback" role="group" aria-label="playback">
-        <span className="field">
-          <button
-            type="button"
-            className="btn-icon"
-            aria-label="step back"
-            title="Step back (←)"
-            onClick={p.onStepBack}
-            disabled={p.disabled}
-          >
-            <StepBackIcon />
-          </button>
-          <button
-            type="button"
-            className="btn-icon btn-icon--primary"
-            aria-label={p.playing ? 'pause' : 'play'}
-            title="Play or pause (space)"
-            onClick={p.onTogglePlay}
-            disabled={p.disabled}
-          >
-            {p.playing ? <PauseIcon /> : <PlayIcon />}
-          </button>
-          <button
-            type="button"
-            className="btn-icon"
-            aria-label="step forward"
-            title="Step forward (→)"
-            onClick={p.onStepForward}
-            disabled={p.disabled}
-          >
-            <StepForwardIcon />
-          </button>
+        <span className="field field--stacked">
+          <span className="cluster-label" aria-hidden="true">
+            Playback
+          </span>
+          <span className="icon-row">
+            <button
+              type="button"
+              className="btn-icon"
+              aria-label="step back"
+              title="Step back (←)"
+              onClick={p.onStepBack}
+              disabled={p.disabled}
+            >
+              <StepBackIcon />
+            </button>
+            <button
+              type="button"
+              className="btn-icon btn-icon--primary"
+              aria-label={p.playing ? 'pause' : 'play'}
+              title="Play or pause (space)"
+              onClick={p.onTogglePlay}
+              disabled={p.disabled}
+            >
+              {p.playing ? <PauseIcon /> : <PlayIcon />}
+            </button>
+            <button
+              type="button"
+              className="btn-icon"
+              aria-label="step forward"
+              title="Step forward (→)"
+              onClick={p.onStepForward}
+              disabled={p.disabled}
+            >
+              <StepForwardIcon />
+            </button>
+          </span>
         </span>
 
-        <span className="field">
-          <span className="field-label" aria-hidden="true">
-            Speed
-          </span>
-          <span className="segmented" role="group" aria-label="speed">
-            {SPEEDS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className="btn mono"
-                aria-label={`speed ${s}x`}
-                aria-pressed={s === p.speed}
-                onClick={() => p.onSpeed(s)}
-              >
-                {s}x
-              </button>
-            ))}
-          </span>
+        <span className="segmented" role="group" aria-label="speed">
+          {SPEEDS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className="btn mono"
+              aria-label={`speed ${s}x`}
+              aria-pressed={s === p.speed}
+              onClick={() => p.onSpeed(s)}
+            >
+              {s}x
+            </button>
+          ))}
         </span>
 
         <span className="field" role="group" aria-label="overlays">

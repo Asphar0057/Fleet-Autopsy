@@ -191,42 +191,129 @@ button.wordmark {
 
 /* ---------- Controls ---------- */
 
-/* Three clusters (scenario, fleet, playback) separated by thin vertical rules.
-   Every cluster carries its rule on the left and is pulled left by its padding
-   plus 1px, so the rule of a cluster that starts a line sits outside the bar and
-   is clipped; between clusters on a line it sits in the middle of the 48px gap.
-   The clip keeps 4px on each side for focus outlines. clip-path makes a stacking
-   context, so the bar is lifted above the main area for its tooltips. */
+/* Three labelled clusters (scenario, fleet, playback). One row from 1360px,
+   Playback on its own row at 1100-1359px, stacked full-width rows below 1100px
+   (media queries at the end of this section). Separators are a left border on
+   .cluster + .cluster; the breakpoints swap it for a top hairline where a
+   cluster starts a row. The bar sits above the main area for its tooltips. */
 .controls {
   position: relative;
   z-index: 2;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-2) var(--s-6);
-  padding: var(--s-3) 0;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--s-4) 0;
+  padding-block: var(--s-3) var(--s-4);
   border-bottom: 1px solid var(--hairline);
-  clip-path: inset(-100vh calc(-1 * var(--s-1)));
 }
 
 .cluster {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-2) var(--s-3);
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: var(--s-2);
   min-width: 0;
-  max-width: 100%;
-  margin-left: calc(-1 * var(--s-4) - 1px);
-  padding-left: var(--s-4);
+}
+
+.cluster + .cluster {
+  margin-left: 12px;
+  padding-left: 12px;
   border-left: 1px solid var(--hairline);
 }
 
-/* One label + control pair inside a cluster. */
+/* One control (or caption + control) inside a cluster. Never stretched. */
 .field {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: var(--s-2);
+  gap: var(--s-1);
+}
+
+/* Caption row (16px) above the control (36px). */
+.field--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cluster-label,
+.field-caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.field-caption {
+  display: inline-flex;
+  gap: var(--s-1);
+  font-weight: 500;
+}
+
+.field-caption output {
   min-width: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.icon-row {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+
+/* Robots note: under the slider, in the bar's bottom padding (or the row gap),
+   so it never widens a cluster or adds a row. Static and wrapping below 1100px. */
+.field--robots {
+  position: relative;
+}
+
+.field--robots .note {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  left: 0;
+  font-size: var(--fs-meta);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1359px) {
+  /* Scenario + fleet on row 1, the whole playback cluster on row 2. */
+  .cluster.cluster--playback {
+    flex: 1 1 100%;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--hairline);
+  }
+}
+
+@media (max-width: 1099px) {
+  /* Clusters stacked; their controls flow and wrap as rows of controls. */
+  .cluster {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    row-gap: var(--s-2);
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .cluster + .cluster {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--hairline);
+  }
+  .field--robots .note {
+    position: static;
+    width: max-content;
+    max-width: calc(100vw - 2 * var(--gutter));
+    white-space: normal;
+  }
 }
 
 /* Segmented control: joined buttons, outer corners rounded. */
@@ -235,6 +322,7 @@ button.wordmark {
 }
 
 .segmented .btn {
+  padding: 0 10px;
   border-radius: 0;
 }
 
@@ -271,21 +359,23 @@ button.wordmark {
   gap: var(--s-2);
   margin: 0;
   padding: 0;
-  min-height: 32px;
+  min-height: var(--control-h);
   background: transparent;
   border: 0;
   color: var(--fg);
   font-family: var(--font-sans);
   font-size: var(--fs-ui);
   line-height: 20px;
+  font-weight: 500;
   cursor: pointer;
 }
 
+/* Track 32×18 pill, thumb 12px. */
 .switch-track {
   position: relative;
   flex: 0 0 auto;
-  width: 28px;
-  height: 16px;
+  width: 32px;
+  height: 18px;
   border: 1px solid var(--hairline-strong);
   border-radius: var(--radius-pill);
   transition:
@@ -297,8 +387,8 @@ button.wordmark {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: var(--radius-pill);
   background: var(--fg-2);
   transition:
@@ -317,74 +407,76 @@ button.wordmark {
 
 .switch[aria-pressed='true'] .switch-thumb {
   background: var(--bg);
-  transform: translateX(12px);
+  transform: translateX(14px);
 }
 
-/* Chip: pill toggle for overlays. */
-.chip {
+/* ---------- Shared control style ----------
+   Buttons, chips, icon buttons, the select and the number input: 36px tall,
+   6px radius, hairline border, faint hover fill, white fill when pressed.
+   Hover and pressed rules are written per selector (not one :is() list) so the
+   primary and quiet variants below can override them at equal specificity. */
+.btn,
+.chip,
+.btn-icon,
+.select select,
+input[type='number'] {
   appearance: none;
   -webkit-appearance: none;
   margin: 0;
-  padding: 1px 12px;
-  min-height: 24px;
+  height: var(--control-h);
   background: transparent;
-  color: var(--fg-2);
+  color: var(--fg);
   font-family: var(--font-sans);
   font-size: var(--fs-ui);
   line-height: 20px;
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition:
-    background-color var(--dur) var(--ease),
-    border-color var(--dur) var(--ease),
-    color var(--dur) var(--ease);
-}
-
-.chip:hover {
-  border-color: var(--fg);
-  color: var(--fg);
-}
-
-.chip[aria-pressed='true'] {
-  background: var(--fg);
-  border-color: var(--fg);
-  color: var(--bg);
-}
-
-/* Icon button: 32px square, 16px inline SVG in currentColor. */
-.btn-icon {
-  appearance: none;
-  -webkit-appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  color: var(--fg);
-  border: 1px solid var(--hairline-strong);
+  font-weight: 500;
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease),
     border-color var(--dur-fast) var(--ease),
     color var(--dur-fast) var(--ease);
 }
 
-.btn-icon svg {
-  display: block;
+.btn:hover:not(:disabled),
+.chip:hover:not(:disabled),
+.btn-icon:hover:not(:disabled),
+.select select:hover:not(:disabled),
+input[type='number']:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--hairline-strong);
 }
 
-.btn-icon:hover:not(:disabled) {
-  border-color: var(--fg);
-}
-
+.btn[aria-pressed='true'],
+.btn[aria-pressed='true']:hover,
+.chip[aria-pressed='true'],
+.chip[aria-pressed='true']:hover,
+.btn:active:not(:disabled),
 .btn-icon:active:not(:disabled) {
   background: var(--fg);
+  border-color: var(--fg);
   color: var(--bg);
+}
+
+/* Chip: pill toggle for overlays. */
+.chip {
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+/* Icon button: 36px square, 16px inline SVG in currentColor. */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: var(--control-h);
+  cursor: pointer;
+}
+
+.btn-icon svg {
+  display: block;
 }
 
 .btn-icon--primary {
@@ -481,35 +573,10 @@ button.wordmark {
 
 /* ---------- Buttons ---------- */
 
+/* Base look, hover and pressed come from the shared control style above. */
 .btn {
-  appearance: none;
-  -webkit-appearance: none;
-  margin: 0;
-  background: transparent;
-  color: var(--fg);
-  font-family: var(--font-sans);
-  font-size: var(--fs-ui);
-  line-height: 20px;
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--radius);
-  padding: 5px 12px; /* 20px line + 2 × 5px + 2 × 1px border = 32px tall */
-  min-height: 32px;
+  padding: 0 12px;
   cursor: pointer;
-  transition:
-    background-color var(--dur) var(--ease),
-    border-color var(--dur) var(--ease),
-    color var(--dur) var(--ease);
-}
-
-.btn:hover:not(:disabled) {
-  border-color: var(--fg);
-}
-
-.btn:active:not(:disabled),
-.btn[aria-pressed='true'] {
-  background: var(--fg);
-  border-color: var(--fg);
-  color: var(--bg);
 }
 
 .btn:disabled {
@@ -543,6 +610,7 @@ button.wordmark {
 }
 
 .btn--quiet:hover:not(:disabled) {
+  background: transparent;
   border-color: transparent;
   color: var(--fg);
 }
@@ -554,21 +622,7 @@ input[type='number'] {
   -moz-appearance: textfield;
   width: 12ch;
   max-width: 100%;
-  margin: 0;
-  padding: 5px 8px;
-  min-height: 32px;
-  font-family: var(--font-sans);
-  font-size: var(--fs-ui);
-  line-height: 20px;
-  color: var(--fg);
-  background: transparent;
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--radius);
-  transition: border-color var(--dur) var(--ease);
-}
-
-input[type='number']:hover {
-  border-color: var(--fg-2);
+  padding: 0 7px; /* with the 1px border, #seed's calc(10ch + 16px) leaves exactly 10ch for digits */
 }
 
 input[type='number']::-webkit-outer-spin-button,
@@ -581,7 +635,7 @@ input[type='number']::-webkit-inner-spin-button {
 input[type='range'] {
   appearance: none;
   -webkit-appearance: none;
-  height: 16px;
+  height: var(--control-h); /* 36px hit area, lines up with the other controls */
   margin: 0;
   padding: 0;
   background: transparent;
@@ -629,14 +683,16 @@ input[type='range']:disabled {
 }
 
 #robots {
-  width: 160px;
-  min-width: 0;
-  max-width: 100%;
+  width: 80px;
+}
+
+#seed {
+  width: calc(10ch + 16px);
 }
 
 /* Select: hairline border, no fill; a text caret in a wrapper replaces the
-   native arrow (no images, no gradients). The wrapper may shrink below the
-   longest option (a select's min-content), so it never forces overflow. */
+   native arrow (no images, no gradients). Natural width (~209px for the
+   longest option), capped at the content width so it never forces overflow. */
 .select {
   position: relative;
   display: inline-block;
@@ -657,25 +713,9 @@ input[type='range']:disabled {
 }
 
 .select select {
-  appearance: none;
-  -webkit-appearance: none;
-  margin: 0;
-  padding: 5px 28px 5px 12px;
-  min-height: 32px;
+  padding: 0 28px 0 12px;
   max-width: 100%;
-  font-family: var(--font-sans);
-  font-size: var(--fs-ui);
-  line-height: 20px;
-  color: var(--fg);
-  background: transparent;
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--radius);
   cursor: pointer;
-  transition: border-color var(--dur) var(--ease);
-}
-
-.select select:hover {
-  border-color: var(--fg-2);
 }
 
 .select option {
@@ -1066,28 +1106,9 @@ input[type='range']:disabled {
   color: var(--fg-2);
 }
 
-/* ---------- Narrow screens: control clusters as rows, tooltips as a strip ---------- */
+/* ---------- Narrow screens: tooltips as a strip ---------- */
 
 @media (max-width: 1023px) {
-  /* Clusters become full-width rows; the vertical rules become hairlines
-     between rows. No clipping needed, so the bar is a plain block again. */
-  .controls {
-    position: static;
-    z-index: auto;
-    clip-path: none;
-    row-gap: var(--s-3);
-  }
-  .cluster {
-    flex: 1 1 100%;
-    margin-left: 0;
-    padding-left: 0;
-    border-left: 0;
-  }
-  .cluster + .cluster {
-    padding-top: var(--s-3);
-    border-top: 1px solid var(--hairline);
-  }
-
   /* Info tips open as a fixed strip at the bottom of the viewport, so they
      never extend past either edge (and never add scroll width while hidden). */
   .infotip-text,
@@ -1104,30 +1125,16 @@ input[type='range']:disabled {
   }
 }
 
-/* ---------- Phones: shrink and wrap controls ---------- */
+/* ---------- Phones ---------- */
 
 @media (max-width: 639px) {
   .header-right {
     justify-content: flex-start;
   }
-  /* Label and control pairs may wrap; segmented groups wrap their buttons. */
+  /* Guard: a field never exceeds the content width (controls keep their
+     natural width; nothing is stretched or truncated). */
   .field {
-    flex-wrap: wrap;
     max-width: 100%;
-  }
-  .segmented {
-    flex-wrap: wrap;
-    max-width: 100%;
-  }
-  .select {
-    flex: 1 1 100%;
-  }
-  .select select {
-    width: 100%;
-  }
-  #robots {
-    flex: 1 1 96px;
-    width: auto;
   }
 }
 

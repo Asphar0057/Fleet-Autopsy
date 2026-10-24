@@ -89,3 +89,9 @@ export const LEGEND_ITEMS: readonly { mark: 'robot' | 'carry' | 'station' | 'sta
   { mark: 'station', text: 'square = station' },
   { mark: 'stall', text: 'grey ring = stalled' },
 ];
+
+/** Display name for a layout button: drops a trailing generic word ("Fulfillment Block" -> "Fulfillment"). */
+export function shortLayoutName(name: string): string {
+  const short = name.replace(/\s+Block$/, '');
+  return short === '' ? name : short;
+}
