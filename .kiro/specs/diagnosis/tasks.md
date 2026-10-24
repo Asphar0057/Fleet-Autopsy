@@ -90,14 +90,14 @@ Rules for every task:
     - **Validates: Requirements 6.3**
   - [x] 7.5 Check and commit: commit "verify proposed fixes in simulation"
 
-- [ ] 8. Benchmark runner
-  - [~] 8.1 Implement `buildBenchmarkSet` (20 scenarios per layout from seeds ≥ 1000, skip seeds that throw; decoy and primary-only cases), `runBenchmark` (detect, diagnose, both baselines, reason codes, medians), and `renderResultsMd` in `src/diagnosis/benchmark.ts`; `BENCH_MODE` = `full` | `dev` (seeds 100 to 120) | `fast` (6 curated)
+- [x] 8. Benchmark runner
+  - [x] 8.1 Implement `buildBenchmarkSet` (20 scenarios per layout from seeds ≥ 1000, skip seeds that throw; decoy and primary-only cases), `runBenchmark` (detect, diagnose, both baselines, reason codes, medians), and `renderResultsMd` in `src/diagnosis/benchmark.ts`; `BENCH_MODE` = `full` | `dev` (seeds 100 to 120) | `fast` (6 curated)
     - _Requirements: 7.1, 7.2, 7.3_
-  - [~] 8.2 Write `scripts/benchmark.run.ts` that loads layouts with `fs`, runs the selected mode, and writes `benchmark/results.json` and `benchmark/RESULTS.md` (`dev` writes `benchmark/dev-results.json`, gitignored)
+  - [x] 8.2 Write `scripts/benchmark.run.ts` that loads layouts with `fs`, runs the selected mode, and writes `benchmark/results.json` and `benchmark/RESULTS.md` (`dev` writes `benchmark/dev-results.json`, gitignored)
     - _Requirements: 7.1, 7.3_
-  - [~] 8.3 Write `tests/benchmark.test.ts` (required test 8): fast mode on the 6 curated scenarios returns 12 case results with every field, accuracy by kind and overall, not-detected count, median replays and ms, failure reasons; RESULTS.md text contains those numbers; no files written
+  - [x] 8.3 Write `tests/benchmark.test.ts` (required test 8): fast mode on the 6 curated scenarios returns 12 case results with every field, accuracy by kind and overall, not-detected count, median replays and ms, failure reasons; RESULTS.md text contains those numbers; no files written
     - _Requirements: 7.2, 7.3_
-  - [~] 8.4 Check and commit: commit "add diagnosis benchmark runner"
+  - [x] 8.4 Check and commit: commit "add diagnosis benchmark runner"
 
 - [ ] 9. Web Worker wrapper
   - [~] 9.1 Implement `src/diagnosis/worker.ts` (parse layout, run `diagnose`, post progress, done, error) and `diagnoseInWorker` in `src/diagnosis/client.ts` (optional `createWorker`, progress forwarding, abort terminates and rejects with `AbortError`)

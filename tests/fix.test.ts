@@ -67,7 +67,7 @@ describe('verifyFix on curated scenarios', () => {
 describe('verifyFix rejects wrong fixes', () => {
   it('pd-decoy-first: blaming the decoy R6 fails', async () => {
     const { s, layout, world, diagnosis } = curated('pd-decoy-first');
-    const decoy = s.faults.find((f, i) => i !== s.groundTruth.primaryFaultIndex);
+    const decoy = s.faults.find((_f, i) => i !== s.groundTruth.primaryFaultIndex);
     if (!decoy || decoy.kind !== 'robot-freeze') throw new Error('expected a robot-freeze decoy');
     expect(decoy.robot).toBe(6);
     const r = verifyFix(layout, world, withRootFault(await diagnosis, decoy));
