@@ -53,37 +53,37 @@ Bottom-up build of the pure sim (`src/sim`), then a minimal renderer and App so 
     - **Validates: Requirements 3.3, 3.4, 3.5, 3.9**
   - [x] 4.4 Commit: "add pibt planner with priority inheritance and pinned robots"
 
-- [ ] 5. Recorder and sim tick loop
-  - [ ] 5.1 Implement `src/sim/recorder.ts` (doubling typed buffers, `positionsAt`, `statesAt`, FNV-1a `hashRecording`)
+- [x] 5. Recorder and sim tick loop
+  - [x] 5.1 Implement `src/sim/recorder.ts` (doubling typed buffers, `positionsAt`, `statesAt`, FNV-1a `hashRecording`)
     - _Requirements: 5.1, 5.2, 5.3, 5.5, 5.6_
-  - [ ] 5.2 Write property test in `tests/verify.test.ts`: **Property 11: Recorder round trip** (`numRuns: 100`)
+  - [x] 5.2 Write property test in `tests/verify.test.ts`: **Property 11: Recorder round trip** (`numRuns: 100`)
     - Push enough frames to force growth; `positionsAt` / `statesAt` throw `RangeError` out of range
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.5, 7.3**
-  - [ ] 5.3 Implement `createSim` in `src/sim/sim.ts`
+  - [x] 5.3 Implement `createSim` in `src/sim/sim.ts`
     - Seeded spawn (D2), tick order steps 1 to 5, task selection with admission and Queue_Cap, seeded pod draw (D16), service 8 to 14 ticks, pod slot reservation, effective priority tiers (idle −2, queued non-holder −1)
     - Release only after the holder left both station cell and Access_Cell; holder selection via exported `pickHolder` with `accessDist = cache.get(access[s], access[s])` (D18)
     - Exported `stallDue` (D17); stall events; `faults` accepted and ignored; `createSim` input checks
     - _Requirements: 2.1, 2.3, 2.5, 2.6, 2.8, 3.2, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 5.4_
-  - [ ] 5.4 Write unit tests in `tests/pibt.test.ts`
+  - [x] 5.4 Write unit tests in `tests/pibt.test.ts`
     - Required test 6: hand-built station hand-off, departing holder and next robot at the access cell, no deadlock within 100 ticks
     - `pickHolder` with `dist(access[s], allowAccess = access[s])` picks the nearest queued robot, ties by lower id
     - Effective-priority tiers; `stallDue` fires once at 200 ticks and never for serving or idle robots; `createSim` rejects bad configs
     - _Requirements: 3.7, 3.8, 4.5, 4.7, 5.4_
-  - [ ] 5.5 Implement `verifyRun` in `src/sim/verify.ts` (same-cell, swap, jump, illegal-cell per D5, stamp array)
+  - [x] 5.5 Implement `verifyRun` in `src/sim/verify.ts` (same-cell, swap, jump, illegal-cell per D5, stamp array)
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
-  - [ ] 5.6 Write required test 5 in `tests/health.test.ts` and run it before committing
+  - [x] 5.6 Write required test 5 in `tests/health.test.ts` and run it before committing
     - Each preset at recommended robots and queue cap, seeds 1 to 3, 2,000 ticks: 0 violations (via `verifyRun`), every robot ≥ 1 deliver, no stall events; log throughput per 100 ticks
     - If it fails, stop and report the failing preset and seed. Do not commit and do not continue to task 6.
     - _Requirements: 10.1, 10.2, 10.3_
-  - [ ] 5.7 Commit: "add sim tick loop, station hand-off, recorder, verifier, and health test"
+  - [x] 5.7 Commit: "add sim tick loop, station hand-off, recorder, verifier, and health test"
 
-- [ ] 6. Minimal renderer and App showing moving robots
-  - [ ] 6.1 Implement `fitCanvas` and `drawFrame` in `src/render/canvasRenderer.ts` (walls as edges, pod slots, stations with numbers, chargers with plus, robot dots, carry ring)
+- [x] 6. Minimal renderer and App showing moving robots
+  - [x] 6.1 Implement `fitCanvas` and `drawFrame` in `src/render/canvasRenderer.ts` (walls as edges, pod slots, stations with numbers, chargers with plus, robot dots, carry ring)
     - _Requirements: 1.9, 8.1, 8.2, 8.3, 8.4_
-  - [ ] 6.2 Implement a minimal `src/ui/App.tsx` + `main.tsx`
+  - [x] 6.2 Implement a minimal `src/ui/App.tsx` + `main.tsx`
     - Fetch `layouts.json` and the grid, `parseLayout`, create fulfillment-block with 36 robots and a default seed, rAF loop at 10 ticks/s calling `step()` and `drawFrame`
     - _Requirements: 9.1_
-  - [ ] 6.3 Visible check and commit
+  - [x] 6.3 Visible check and commit
     - `npm run build` passes; `npm run dev` shows robots moving on fulfillment-block
     - Commit: "add canvas renderer and app loop with moving robots"
 
