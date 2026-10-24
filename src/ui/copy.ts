@@ -13,11 +13,11 @@ export function verifierCopy(violations: number, ticks: number): Badge {
   return { text: `${violations} ${noun} · ${ticks} ticks`, alert: true };
 }
 
-/** 'Healthy', or 'Jam detected · started around tick 704 · severity 100%' as an alert. */
+/** 'Healthy', or 'Jam detected · started around tick 704 · throughput down 100%' as an alert. */
 export function jamCopy(jam: Jam | null): Badge {
   if (jam === null) return { text: 'Healthy', alert: false };
   return {
-    text: `Jam detected · started around tick ${jam.onsetTick} · severity ${Math.round(jam.severity * 100)}%`,
+    text: `Jam detected · started around tick ${jam.onsetTick} · throughput down ${Math.round(jam.severity * 100)}%`,
     alert: true,
   };
 }
@@ -81,7 +81,7 @@ export const TERMS: { throughput: string; stalled: string; onset: string; severi
   throughput: `Deliveries completed in the last ${THROUGHPUT_WINDOW} ticks.`,
   stalled: `A robot is stalled when it has not moved for ${STANDSTILL_SHORT} ticks or more while it has work.`,
   onset: 'The last tick where throughput still looked healthy before the drop.',
-  severity: 'How far throughput has fallen below the healthy baseline, from 0% to 100%.',
+  severity: 'How far throughput has fallen below the healthy baseline, from 0% (no drop) to 100% (no deliveries).',
 };
 
 export const LEGEND_ITEMS: readonly { mark: 'robot' | 'carry' | 'station' | 'stall'; text: string }[] = [

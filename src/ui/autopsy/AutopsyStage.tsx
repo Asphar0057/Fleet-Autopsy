@@ -154,7 +154,7 @@ export default function AutopsyStage(p: AutopsyStageProps) {
             </dd>
           </div>
           <div className="bignum">
-            <dt className="label">Severity</dt>
+            <dt className="label">Throughput down</dt>
             <dd>
               <span className="num">{Math.round(a.jam.severity * 100)}</span> <span className="unit">%</span>
             </dd>

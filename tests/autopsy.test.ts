@@ -91,7 +91,15 @@ describe('curated autopsies', () => {
       };
       walk(JSON.parse(text));
       const report = templateReport(data);
-      for (const tok of report.match(/\d+(?:\.\d+)?/g) ?? []) {
+      expect(report).toContain('throughput down');
+      expect(report).not.toContain('severity');
+      for (const tok of report.match(/\d+(?:\.\d+)?%?/g) ?? []) {
+        if (tok.endsWith('%')) {
+          // A percentage is a JSON fraction × 100, rounded.
+          const v = Number(tok.slice(0, -1));
+          expect(numbers.some((n) => n >= 0 && n <= 1 && Math.round(n * 100) === v), `report percent ${tok}`).toBe(true);
+          continue;
+        }
         const dec = tok.includes('.') ? tok.split('.')[1].length : 0;
         const ok = numbers.some((n) => n.toFixed(dec) === tok) || strings.some((s) => s.includes(tok));
         expect(ok, `report number ${tok}`).toBe(true);

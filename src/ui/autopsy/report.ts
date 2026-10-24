@@ -19,7 +19,7 @@ export function templateReport(a: AutopsyData): string {
   L.push('Timeline');
   if (rc) L.push(`- tick ${rc.fault.tick}: ${faultLabel(rc.fault)} (diagnosed start)`);
   L.push(`- tick ${a.jam.onsetTick}: throughput starts to fall (onset)`);
-  L.push(`- tick ${a.jam.detectedTick}: jam detected, severity ${a.jam.severity.toFixed(2)}`);
+  L.push(`- tick ${a.jam.detectedTick}: jam detected, throughput down ${Math.round(a.jam.severity * 100)}%`);
   L.push(`- ${d.replaysRun} alternate timelines replayed up to tick ${d.window.endTick}`);
   L.push('');
   L.push('Root cause');
