@@ -6,7 +6,9 @@ import { parseLayout } from '../src/sim/layout';
 import type { Layout } from '../src/sim/layout';
 import { createPlanner } from '../src/sim/pibt';
 import type { PlanInput } from '../src/sim/pibt';
-import { CellKind } from '../src/sim/types';
+import { effectivePriority, createSim, pickHolder, stallDue } from '../src/sim/sim';
+import { verifyRun } from '../src/sim/verify';
+import { CellKind, EKind, RState } from '../src/sim/types';
 import { loadPreset, metaFor, PRESET_IDS } from './helpers';
 
 function makeInput(n: number): PlanInput {
@@ -180,6 +182,109 @@ describe('pibt planner', () => {
     inp.prio.set([0, 1]);
     planner.plan(inp, out);
     expect(out[1]).toBe(at(4, 1)); // higher priority first
+  });
+});
+
+describe('sim station rules', () => {
+  // One station in a one-cell notch: station (4,1), access (4,2), corridor row 3, pods on row 4.
+  const grid = ['#########', '####S####', '####.####', '#.......#', '#p.p.p.p#', '#########'].join('\n') + '\n';
+  const l = parseLayout(metaFor(grid, 'notch'), grid);
+  const station = l.stations[0];
+  const acc = l.access[0];
+
+  // Required test 6. Three robots share one station: each hand-off has a departing
+  // holder leaving the notch while the next robot waits at the access cell's mouth.
+  it.each([1, 2, 3, 4, 5])('hands off the station without deadlock within 100 ticks (seed %i)', (seed) => {
+    const sim = createSim(l, { seed, robots: 3, queueCap: 3, faults: [] });
+    sim.run(100);
+    const rec = sim.recording;
+    expect(verifyRun(rec, l)).toEqual([]);
+    // At most one robot on the station cell plus its access cell, every frame.
+    for (let t = 0; t < rec.frames; t++) {
+      let onStation = 0;
+      for (let r = 0; r < 3; r++) {
+        const c = rec.positions[t * 3 + r];
+        if (c === station || c === acc) onStation++;
+      }
+      expect(onStation).toBeLessThanOrEqual(1);
+    }
+    const starts: { tick: number; robot: number }[] = [];
+    const ends: { tick: number; robot: number }[] = [];
+    for (let e = 0; e < rec.events; e++) {
+      expect(rec.evKind[e]).not.toBe(EKind.Stall);
+      const ev = { tick: rec.evTick[e], robot: rec.evRobot[e] };
+      if (rec.evKind[e] === EKind.ServiceStart) starts.push(ev);
+      if (rec.evKind[e] === EKind.ServiceEnd) ends.push(ev);
+    }
+    // The reservation passed between different robots several times.
+    expect(new Set(starts.map((s) => s.robot)).size).toBeGreaterThanOrEqual(2);
+    expect(starts.length).toBeGreaterThanOrEqual(4);
+    // Each service-end is followed by the next service-start promptly: the departing
+    // robot clears the notch and the waiting robot enters, with no deadlock.
+    for (let k = 0; k + 1 < starts.length; k++) {
+      expect(ends[k].robot).toBe(starts[k].robot);
+      expect(starts[k + 1].tick - ends[k].tick).toBeLessThanOrEqual(15);
+    }
+  });
+
+  it('pickHolder picks the queued robot nearest the access cell, ties by lower id', () => {
+    const d = createDistanceCache(l).get(acc, acc);
+    const at = (x: number, y: number) => y * l.width + x;
+    // Robots 0 and 2 are both 2 steps from the access cell; robot 1 is 4 steps away.
+    const pos = Int16Array.of(at(3, 3), at(1, 3), at(5, 3));
+    expect(d[pos[0]]).toBe(2);
+    expect(d[pos[2]]).toBe(2);
+    expect(pickHolder(Int16Array.of(2, 1, 0), 3, pos, d)).toBe(0);
+    expect(pickHolder(Int16Array.of(2, 1), 2, pos, d)).toBe(2);
+    expect(pickHolder(Int16Array.of(9, 1, 2), 2, pos, d, 1)).toBe(2); // offset into a shared buffer
+    expect(pickHolder(Int16Array.of(), 0, pos, d)).toBe(-1);
+  });
+
+  it('createSim rejects bad configs', () => {
+    const ok = { seed: 1, robots: 3, queueCap: 3, faults: [] };
+    expect(() => createSim(l, ok)).not.toThrow();
+    expect(() => createSim(l, { ...ok, robots: 0 })).toThrow(/robots/);
+    expect(() => createSim(l, { ...ok, robots: 4 })).toThrow(/pods/); // robots >= pods
+    expect(() => createSim(l, { ...ok, queueCap: 0 })).toThrow(/queueCap/);
+    const tiny = ['#####', '#S.p#', '##.p#', '##.p#', '##p##', '#####'].join('\n') + '\n';
+    const t = parseLayout(metaFor(tiny, 'tiny'), tiny);
+    // 3 floor cells, 1 station, 4 pods: 3 robots are fewer than pods but exceed floor - stations.
+    expect(() => createSim(t, { ...ok, robots: 2 })).not.toThrow();
+    expect(() => createSim(t, { ...ok, robots: 3 })).toThrow(/floor/);
+  });
+});
+
+describe('effective priority and stalls', () => {
+  it('puts idle robots lowest, queued non-holders next, others by age', () => {
+    expect(effectivePriority(RState.Idle, false, 50)).toBe(-2);
+    expect(effectivePriority(RState.ToStation, false, 50)).toBe(-1);
+    expect(effectivePriority(RState.ToStation, true, 5)).toBe(5);
+    expect(effectivePriority(RState.ToPod, false, 7)).toBe(7);
+    expect(effectivePriority(RState.Returning, true, 0)).toBe(0);
+    expect(effectivePriority(RState.Returning, false, 3)).toBe(3);
+  });
+
+  it('stallDue fires once at 200 ticks, never for serving or idle robots', () => {
+    for (const st of [RState.ToPod, RState.ToStation, RState.Returning]) {
+      expect(stallDue(199, 0, st, 0)).toBe(false);
+      expect(stallDue(200, 0, st, 0)).toBe(true);
+      expect(stallDue(260, 60, st, 0)).toBe(true);
+      expect(stallDue(201, 0, st, 1)).toBe(false); // already fired for this standstill
+    }
+    expect(stallDue(500, 0, RState.Serving, 0)).toBe(false);
+    expect(stallDue(500, 0, RState.Idle, 0)).toBe(false);
+  });
+
+  it('stallDue fires once over a long standstill', () => {
+    let fired = 0;
+    let count = 0;
+    for (let t = 1; t <= 600; t++) {
+      if (stallDue(t, 0, RState.ToPod, fired)) {
+        fired = 1;
+        count++;
+      }
+    }
+    expect(count).toBe(1);
   });
 });
 
