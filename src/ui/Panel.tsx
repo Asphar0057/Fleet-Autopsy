@@ -4,11 +4,12 @@ import { useMemo } from 'react';
 import type { Layout } from '../sim/layout';
 import { meanCycleTime, queueLengths, THROUGHPUT_WINDOW } from '../sim/metrics';
 import type { Recording } from '../sim/recorder';
+import { stationLabel } from '../render/labels';
 import type { Badge } from './badge';
 import { maxOf, polylinePoints } from './sparkline';
 
 const SPARK_W = 240;
-const SPARK_H = 40;
+const SPARK_H = 64;
 
 const ASSUMPTIONS = [
   'validated in simulation only',
@@ -39,8 +40,11 @@ export function Panel({ layout, rec, playhead, frames, series, badge, error }: P
     if (!rec || !ready) return null;
     const cycle = meanCycleTime(rec, playhead);
     const n = Math.min(series.length, playhead + 1);
+    const peak = maxOf(series, n);
+    // y range 1..SPARK_H-1 so the 1px line is not clipped; zero sits on the baseline.
     const spark = polylinePoints(series, n, SPARK_W, SPARK_H - 2, Math.max(1, maxOf(series)), 120, playhead);
     return {
+      peak,
       throughput: playhead < series.length ? series[playhead] : 0,
       cycle,
       spark,
@@ -87,21 +91,43 @@ export function Panel({ layout, rec, playhead, frames, series, badge, error }: P
                 </dd>
               </div>
             </dl>
-            <svg
-              className="sparkline"
-              viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
-              preserveAspectRatio="none"
-              role="img"
-              aria-label={`throughput over ticks 0 to ${playhead}`}
-            >
-              <polyline
-                points={metrics.spark}
-                fill="none"
-                stroke="var(--ink, #000)"
-                strokeWidth={1}
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
+            <div className="spark-row">
+              <svg
+                className="sparkline"
+                viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
+                preserveAspectRatio="none"
+                role="img"
+                aria-label={`throughput over ticks 0 to ${playhead}, now ${metrics.throughput}, peak ${metrics.peak}`}
+              >
+                <line
+                  x1={0}
+                  x2={SPARK_W}
+                  y1={SPARK_H - 1}
+                  y2={SPARK_H - 1}
+                  stroke="var(--line-soft, rgba(0,0,0,.14))"
+                  strokeWidth={1}
+                  vectorEffect="non-scaling-stroke"
+                />
+                <polyline
+                  points={metrics.spark}
+                  transform="translate(0 1)"
+                  fill="none"
+                  stroke="var(--ink, #000)"
+                  strokeWidth={1}
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+              <dl className="spark-values mono" aria-hidden="true">
+                <div>
+                  <dt className="label">now</dt>
+                  <dd className="value">{metrics.throughput}</dd>
+                </div>
+                <div>
+                  <dt className="label">peak</dt>
+                  <dd className="value">{metrics.peak}</dd>
+                </div>
+              </dl>
+            </div>
           </>
         ) : (
           <p className="mono muted">no data</p>
@@ -121,7 +147,7 @@ export function Panel({ layout, rec, playhead, frames, series, badge, error }: P
             <tbody>
               {metrics.queues.map((q, s) => (
                 <tr key={s}>
-                  <td>{String(s + 1).padStart(2, '0')}</td>
+                  <td>{stationLabel(s)}</td>
                   <td>{q}</td>
                 </tr>
               ))}

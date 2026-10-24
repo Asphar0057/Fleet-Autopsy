@@ -183,6 +183,22 @@ export function App() {
     observer.observe(box);
     fitCanvas(canvas, lay);
 
+    // Canvas text does not trigger web font loading; request Geist Mono and
+    // redraw once it (and any other pending font) is ready.
+    let cancelled = false;
+    const fonts = document.fonts as FontFaceSet | undefined;
+    if (fonts) {
+      fonts
+        .load(`11px 'Geist Mono'`)
+        .then(() => fonts.ready)
+        .then(
+          () => {
+            if (!cancelled) r.dirty = true;
+          },
+          () => undefined,
+        );
+    }
+
     let last = performance.now();
     let acc = 0;
     let lastPublish = -Infinity;
@@ -225,6 +241,7 @@ export function App() {
     raf = requestAnimationFrame(frame);
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
@@ -332,12 +349,19 @@ export function App() {
       />
 
       <main className="main">
-        <div className="canvas-box" ref={boxRef}>
-          <canvas
-            ref={canvasRef}
-            role="img"
-            aria-label={layout ? `${layout.name} floor, ${robots} robots, tick ${shownPlayhead}` : 'warehouse floor'}
-          />
+        <div className="stage">
+          <div
+            className="canvas-box"
+            ref={boxRef}
+            style={layout ? { aspectRatio: `${layout.width} / ${layout.height}` } : undefined}
+          >
+            <canvas
+              ref={canvasRef}
+              role="img"
+              aria-label={layout ? `${layout.name} floor, ${robots} robots, tick ${shownPlayhead}` : 'warehouse floor'}
+            />
+          </div>
+          <Scrubber rec={rec} frames={shownFrames} playhead={shownPlayhead} series={series} onSeek={seek} />
         </div>
         <Panel
           layout={layout}
@@ -349,8 +373,6 @@ export function App() {
           error={error}
         />
       </main>
-
-      <Scrubber rec={rec} frames={shownFrames} playhead={shownPlayhead} series={series} onSeek={seek} />
     </div>
   );
 }

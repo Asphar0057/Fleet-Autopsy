@@ -1,0 +1,13 @@
+/* Design tokens, copied from .kiro/steering/design.md. */
+:root {
+  --bg: #ffffff;
+  --ink: #000000;
+  --ink-2: #6b6b6b;      /* secondary text, units */
+  --line: #000000;       /* structure: 1px */
+  --line-soft: rgba(0,0,0,.14);
+  --accent: #ff4a1c;     /* ONLY for alerts, violations, root-cause highlight */
+  --radius: 2px;
+  --font-display: 'Instrument Serif', 'Times New Roman', serif;
+  --font-body: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}

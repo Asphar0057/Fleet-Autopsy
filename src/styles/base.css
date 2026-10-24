@@ -1,46 +1,122 @@
-/* Minimal functional layout for the playback UI. Full styling per design.md is task 10. */
-* {
+/* Base styles per .kiro/steering/design.md. Tokens live in tokens.css.
+   8px grid, 1px black hairlines, no shadows, gradients, or blur, radius <= 2px.
+   The accent color is used only for alerts (violation badge, loader error). */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  background: var(--bg, #fff);
-  color: var(--ink, #000);
-  font-family: var(--font-body, system-ui, sans-serif);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 22px;
+  -webkit-font-smoothing: antialiased;
 }
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  margin: 0;
+}
+
+/* Mono: labels, numbers, data, buttons. Numbers use tabular figures. */
+.mono,
+.label,
+.value,
+.btn,
+.badge,
+input,
+output {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.muted,
+.unit,
+.note {
+  color: var(--ink-2);
+}
+
+.unit,
+.note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* ---------- App shell: full-height grid (header, controls, main) ---------- */
 
 .app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 16px;
-}
-
-.mono,
-.label,
-.btn,
-.badge {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-variant-numeric: tabular-nums;
+  padding: 0 24px;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  border-bottom: 1px solid var(--line, #000);
+  gap: 16px;
+  padding: 16px 0 8px;
+  border-bottom: 1px solid var(--line);
 }
 
 .wordmark {
-  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 48px;
   font-weight: 400;
+  letter-spacing: -0.01em;
 }
+
+.wordmark em {
+  font-style: italic;
+}
+
+.meta {
+  margin: 0;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------- Controls ---------- */
 
 .controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  padding: 8px 0;
+  align-items: center;
+  gap: 8px 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .control-group {
@@ -49,79 +125,321 @@ body {
   gap: 8px;
 }
 
-.label {
+.value {
   font-size: 11px;
+  line-height: 16px;
+  min-width: 3ch;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-weight: 400;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 3px 8px; /* 16px line + 2 × 3px + 2 × 1px border = 24px tall */
+  min-height: 24px;
+  cursor: pointer;
+  transition:
+    background-color 120ms linear,
+    color 120ms linear;
+}
+
+.btn:hover:not(:disabled),
+.btn:active:not(:disabled),
+.btn[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn--play {
+  min-width: 7ch;
+}
+
+/* ---------- Inputs ---------- */
+
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  width: 12ch;
+  margin: 0;
+  padding: 3px 8px;
+  min-height: 24px;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
 }
 
-.btn {
-  font-size: 11px;
-  text-transform: uppercase;
-  border: 1px solid var(--line, #000);
-  border-radius: var(--radius, 2px);
+input[type='number']:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Range: 1px black track, 12px square black thumb, no browser accent fill. */
+input[type='range'] {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 16px;
+  margin: 0;
+  padding: 0;
   background: transparent;
-  color: inherit;
-  padding: 4px 8px;
   cursor: pointer;
 }
 
-.btn[aria-pressed='true'] {
-  background: var(--ink, #000);
-  color: var(--bg, #fff);
+input[type='range']::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--ink);
+  border: 0;
 }
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5.5px; /* center on the 1px track */
+  background: var(--ink);
+  border: 0;
+  border-radius: 0;
+}
+
+input[type='range']::-moz-range-track {
+  height: 1px;
+  background: var(--ink);
+  border: 0;
+}
+
+input[type='range']::-moz-range-progress {
+  background: transparent;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--ink);
+  border: 0;
+  border-radius: 0;
+}
+
+input[type='range']:focus {
+  outline: none;
+}
+
+input[type='range']:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+input[type='range']:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#robots {
+  width: 160px;
+}
+
+/* ---------- Main: canvas column | 1px rule | panel ---------- */
 
 .main {
-  display: flex;
-  border-top: 1px solid var(--line, #000);
-  border-bottom: 1px solid var(--line, #000);
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  min-height: 0;
 }
 
-.canvas-box {
-  flex: 2 1 0;
+.stage {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  height: calc(100vh - 280px);
-  min-height: 320px;
+  min-height: 0;
+  padding: 24px 24px 16px 0;
+}
+
+/* The box takes the layout's aspect ratio (inline style) and shrinks to the
+   available height. The canvas is absolutely positioned inside it, so the
+   canvas never sizes its own container (no ResizeObserver loop). */
+.canvas-box {
+  position: relative;
+  flex: 0 1 auto;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 39 / 23;
+  overflow: hidden;
 }
 
 .canvas-box canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
 }
 
 .panel {
-  flex: 1 1 0;
   min-width: 0;
-  border-left: 1px solid var(--line, #000);
+  min-height: 0;
+  overflow: auto;
+  border-left: 1px solid var(--line);
 }
 
 .section {
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--line, #000);
+  padding: 16px 0 16px 24px;
+  border-bottom: 1px solid var(--line);
 }
 
+.section:last-child {
+  border-bottom: 0;
+}
+
+.section > .label {
+  margin-bottom: 8px;
+}
+
+.section p {
+  margin: 0;
+}
+
+/* Verifier badge: 1px border, mono. Violation: accent text and border. */
 .badge {
   display: inline-block;
   font-size: 11px;
-  border: 1px solid var(--ink, #000);
-  padding: 4px 8px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 3px 8px;
 }
 
 .badge--alert {
-  color: var(--accent, #ff4a1c);
-  border-color: var(--accent, #ff4a1c);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.metrics {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.metric dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.spark-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
 }
 
 .sparkline {
   display: block;
   width: 100%;
-  height: 40px;
+  height: 64px;
 }
 
+.spark-values {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.spark-values div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.spark-values dd {
+  margin: 0;
+  text-align: right;
+}
+
+.stations {
+  border-collapse: collapse;
+  font-size: 11px;
+  line-height: 16px;
+  width: 100%;
+}
+
+.stations th,
+.stations td {
+  text-align: left;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.stations th:last-child,
+.stations td:last-child {
+  text-align: right;
+}
+
+.assumptions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.assumptions li {
+  padding: 0 0 8px;
+}
+
+.assumptions li::before {
+  content: '— ';
+  color: var(--ink-2);
+}
+
+.error {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--accent);
+}
+
+/* ---------- Scrubber: directly under the canvas ---------- */
+
 .scrubber {
-  position: relative;
-  padding: 8px 0;
+  flex: 0 0 auto;
+  padding-top: 16px;
 }
 
 .scrubber-track {
@@ -133,26 +451,40 @@ body {
 .scrubber-input {
   display: block;
   width: 100%;
-  margin: 0;
 }
 
 .scrubber-meta {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
+  line-height: 16px;
+  color: var(--ink-2);
 }
 
-.error {
-  white-space: pre-wrap;
-}
+/* ---------- Narrow screens: stack the panel under the canvas ---------- */
 
 @media (max-width: 1023px) {
+  .app {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
   .main {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stage {
+    padding: 24px 0 16px;
+  }
+  .canvas-box {
+    max-height: 80vh;
   }
   .panel {
+    overflow: visible;
     border-left: 0;
-    border-top: 1px solid var(--line, #000);
+    border-top: 1px solid var(--line);
+  }
+  .section {
+    padding-left: 0;
   }
 }
 

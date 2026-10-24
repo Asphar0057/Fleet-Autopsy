@@ -6,6 +6,7 @@ import type { Layout } from '../sim/layout';
 import { positionsAt, statesAt } from '../sim/recorder';
 import type { Recording } from '../sim/recorder';
 import { CellKind, RState } from '../sim/types';
+import { stationFontSize, stationLabel } from './labels';
 
 export interface Colors {
   ink: string;
@@ -51,8 +52,11 @@ export function readColors(el: Element = document.documentElement): Colors {
 
 /**
  * Sizes the canvas to fit its parent element while keeping the layout's aspect
- * ratio. CSS size = grid × cell; backing size = CSS size × devicePixelRatio;
- * the context is scaled so drawing uses CSS pixels.
+ * ratio: cell = min(boxWidth / W, boxHeight / H). CSS size = grid × cell; backing
+ * size = CSS size × devicePixelRatio; the context is scaled so drawing uses CSS
+ * pixels. The canvas is expected to be absolutely positioned inside the box so
+ * its size never feeds back into the box size (no ResizeObserver loop); it is
+ * centered horizontally and vertically in the box.
  */
 export function fitCanvas(canvas: HTMLCanvasElement, layout: Layout): { cell: number; dpr: number } {
   const dpr = window.devicePixelRatio || 1;
@@ -62,11 +66,13 @@ export function fitCanvas(canvas: HTMLCanvasElement, layout: Layout): { cell: nu
   const byW = cw / layout.width;
   const byH = ch / layout.height;
   // A container without a definite height constrains by width only.
-  const cell = Math.max(1, ch > 0 ? Math.min(byW, byH) : byW);
+  const cell = Math.max(1, ch >= 1 ? Math.min(byW, byH) : byW);
   const cssW = layout.width * cell;
   const cssH = layout.height * cell;
   canvas.style.width = `${cssW}px`;
   canvas.style.height = `${cssH}px`;
+  canvas.style.left = `${Math.max(0, (cw - cssW) / 2)}px`;
+  canvas.style.top = `${ch >= 1 ? Math.max(0, (ch - cssH) / 2) : 0}px`;
   canvas.width = Math.round(cssW * dpr);
   canvas.height = Math.round(cssH * dpr);
   const ctx = canvas.getContext('2d');
@@ -155,10 +161,21 @@ function drawEndpoints(ctx: CanvasRenderingContext2D, layout: Layout, cell: numb
   ctx.lineCap = 'butt';
   ctx.stroke();
 
-  // Stations: solid squares with the station number (index + 1) in mono.
-  ctx.font = `${Math.max(6, Math.round(cell * 0.5))}px 'Geist Mono', ui-monospace, monospace`;
+  // Stations: solid squares with the two-digit station label ("01".."06") in white mono.
+  if (stations.length === 0) return;
+  const sample = stationLabel(stations.length - 1); // mono: every label has the same width
+  const size = stationFontSize(cell, (px) => {
+    ctx.font = monoFont(px);
+    return ctx.measureText(sample).width;
+  });
+  ctx.font = monoFont(size);
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textBaseline = 'alphabetic';
+  // Center the digits' ink box vertically (digits have no descender).
+  const m = ctx.measureText(sample);
+  const ascent = m.actualBoundingBoxAscent || size * 0.7;
+  const descent = m.actualBoundingBoxDescent || 0;
+  const dy = (ascent - descent) / 2;
   for (let s = 0; s < stations.length; s++) {
     const i = stations[s];
     const x0 = (i % width) * cell;
@@ -166,8 +183,12 @@ function drawEndpoints(ctx: CanvasRenderingContext2D, layout: Layout, cell: numb
     ctx.fillStyle = c.ink;
     ctx.fillRect(x0, y0, cell, cell);
     ctx.fillStyle = c.bg;
-    ctx.fillText(String(s + 1), x0 + cell / 2, y0 + cell / 2 + 0.5);
+    ctx.fillText(stationLabel(s), x0 + cell / 2, y0 + cell / 2 + dy);
   }
+}
+
+function monoFont(px: number): string {
+  return `${Math.round(px * 10) / 10}px 'Geist Mono', ui-monospace, monospace`;
 }
 
 function drawRobots(
@@ -300,7 +321,7 @@ function drawStalls(
   ctx.strokeStyle = accent;
   ctx.fillStyle = accent;
   ctx.lineWidth = 1;
-  ctx.font = `${Math.max(9, Math.round(cell * 0.42))}px 'Geist Mono', ui-monospace, monospace`;
+  ctx.font = monoFont(Math.max(9, Math.round(cell * 0.42)));
   ctx.textBaseline = 'bottom';
   const n = Math.min(rec.robots, stalled.length);
   for (let r = 0; r < n; r++) {
