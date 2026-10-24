@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { mulberry32, randInt } from '../src/sim/rng';
 import { hashRecording } from '../src/sim/recorder';
-import { runCase, runCaseArb, seedArb } from './helpers';
+import { faultArb, loadPreset, runCase, runCaseArb, seedArb } from './helpers';
 
 const RUN_TICKS = 300;
 
@@ -21,13 +21,17 @@ describe('sim determinism (required test 1)', () => {
 
   // Feature: sim-core, Property 4: Same inputs, same recording
   // **Validates: Requirements 2.3, 2.6, 5.6**
+  // Spec 2 edit (failures-telemetry design D22): faults whose tick is after the
+  // run end must not perturb the run, so the hash equals the `faults: []` hash.
   it('Property 4: Same inputs, same recording', () => {
-    const faultsArb = fc.array(
-      fc.record({ tick: fc.integer({ min: 0, max: RUN_TICKS }), kind: fc.constantFrom('stop', 'slow', 'block') }),
-      { minLength: 1, maxLength: 4 },
+    const caseArb = runCaseArb().chain((c) =>
+      fc.tuple(
+        fc.constant(c),
+        faultArb(loadPreset(c.id), c.robots).map((fs) => fs.map((f) => ({ ...f, tick: f.tick + RUN_TICKS }))),
+      ),
     );
     fc.assert(
-      fc.property(runCaseArb(), faultsArb, (c, faults) => {
+      fc.property(caseArb, ([c, faults]) => {
         const h1 = hashRecording(runCase(c, RUN_TICKS).recording);
         const h2 = hashRecording(runCase(c, RUN_TICKS).recording);
         const h3 = hashRecording(runCase(c, RUN_TICKS, faults).recording);

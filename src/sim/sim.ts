@@ -4,6 +4,7 @@
 // Each Sim owns all of its state in typed arrays sized at creation.
 
 import { createDistanceCache } from './distance';
+import { validateFaults } from './faults';
 import type { Layout } from './layout';
 import { createPlanner } from './pibt';
 import type { PlanInput } from './pibt';
@@ -98,7 +99,8 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
     throw new Error(`createSim: queueCap must be an integer >= 1, got ${config.queueCap}`);
   }
   if (S < 1) throw new Error(`createSim: layout ${layout.id} has no stations`);
-  // config.faults is accepted and ignored in this spec (D13).
+  // Field ranges and the D8 blocked-cell union check; throws before any PRNG draw.
+  validateFaults(layout, n, config.faults);
 
   const rng = mulberry32(config.seed);
   const cache = createDistanceCache(layout);

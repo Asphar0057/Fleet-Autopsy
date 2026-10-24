@@ -6,6 +6,7 @@ import { parseLayout } from '../src/sim/layout';
 import type { Layout, LayoutManifest, LayoutMeta } from '../src/sim/layout';
 import { createSim } from '../src/sim/sim';
 import type { Sim } from '../src/sim/sim';
+import { blockableCells, validateFaults } from '../src/sim/faults';
 import type { FaultEvent } from '../src/sim/types';
 
 const dir = fileURLToPath(new URL('../public/layouts/', import.meta.url));
@@ -65,6 +66,70 @@ export function runCaseArb(minRobots = 1): fc.Arbitrary<RunCase> {
       robots: fc.integer({ min: minRobots, max: loadPreset(id).recommendedRobots }),
     }),
   );
+}
+
+const blockable = new Map<string, Int16Array>();
+
+/** blockableCells(layout), computed once per layout id. */
+export function blockableFor(layout: Layout): Int16Array {
+  let b = blockable.get(layout.id);
+  if (!b) {
+    b = blockableCells(layout);
+    blockable.set(layout.id, b);
+  }
+  return b;
+}
+
+/** True when validateFaults accepts the faults (for fc.pre or filter). */
+export function faultsValid(layout: Layout, robots: number, faults: FaultEvent[]): boolean {
+  try {
+    validateFaults(layout, robots, faults);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const durationArb = fc.option(fc.integer({ min: 1, max: 100 }), { nil: null });
+const tickArb = fc.integer({ min: 1, max: 250 });
+const paramArb = fc.integer({ min: 2, max: 4 });
+
+/** One fault of a random kind with valid fields; blocked cells come from blockableCells. */
+export function oneFaultArb(layout: Layout, robots: number): fc.Arbitrary<FaultEvent> {
+  const robotArb = fc.integer({ min: 0, max: robots - 1 });
+  const cells = blockableFor(layout);
+  const kinds: fc.Arbitrary<FaultEvent>[] = [
+    fc.record({ kind: fc.constant('robot-freeze' as const), tick: tickArb, robot: robotArb, duration: durationArb }),
+    fc.record({
+      kind: fc.constant('station-slowdown' as const),
+      tick: tickArb,
+      station: fc.integer({ min: 0, max: layout.stations.length - 1 }),
+      factor: paramArb,
+      duration: durationArb,
+    }),
+    fc.record({ kind: fc.constant('slow-robot' as const), tick: tickArb, robot: robotArb, period: paramArb, duration: durationArb }),
+  ];
+  if (cells.length > 0) {
+    kinds.push(
+      fc.record({
+        kind: fc.constant('blocked-cell' as const),
+        tick: tickArb,
+        cell: fc.constantFrom(...cells),
+        duration: durationArb,
+      }),
+    );
+  }
+  return fc.oneof(...kinds);
+}
+
+/**
+ * 1 to 3 valid faults of random kinds (design.md Correctness Properties). Each
+ * blocked cell is blockable alone; the union is rechecked by validateFaults.
+ */
+export function faultArb(layout: Layout, robots: number): fc.Arbitrary<FaultEvent[]> {
+  return fc
+    .array(oneFaultArb(layout, robots), { minLength: 1, maxLength: 3 })
+    .filter((fs) => faultsValid(layout, robots, fs));
 }
 
 /** Runs a case for `ticks` ticks at the preset's queue cap and returns the sim. */

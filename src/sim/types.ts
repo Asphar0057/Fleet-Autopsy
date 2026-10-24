@@ -1,8 +1,17 @@
 // Shared simulation types. Plain `as const` objects (not const enums) keep
 // isolated-module builds simple.
 
-/** Stub for Spec 2 failure injection. Accepted and ignored in this spec (D13). */
-export type FaultEvent = { tick: number; kind: string };
+/**
+ * Injected fault (Spec 2). `tick` is the first frame index the fault affects;
+ * the window is `tick <= t < tick + duration`, unbounded when `duration` is null.
+ */
+export type FaultEvent =
+  | { kind: 'robot-freeze'; tick: number; robot: number; duration: number | null }
+  | { kind: 'station-slowdown'; tick: number; station: number; factor: number; duration: number | null }
+  | { kind: 'blocked-cell'; tick: number; cell: number; duration: number | null }
+  | { kind: 'slow-robot'; tick: number; robot: number; period: number; duration: number | null };
+
+export type FaultKind = FaultEvent['kind'];
 
 export interface SimConfig {
   seed: number;
@@ -21,7 +30,7 @@ export const CellKind = { Wall: 0, Floor: 1, Pod: 2, Station: 3, Charger: 4 } as
 export type CellKind = (typeof CellKind)[keyof typeof CellKind];
 
 export interface Violation {
-  kind: 'same-cell' | 'swap' | 'jump' | 'illegal-cell';
+  kind: 'same-cell' | 'swap' | 'jump' | 'illegal-cell' | 'blocked-cell';
   tick: number;
   robots: number[];
 }
