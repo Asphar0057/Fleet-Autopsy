@@ -66,18 +66,18 @@ Rules for every task:
     - **Validates: Requirements 4.3**
   - [x] 5.5 Check and commit: commit "diagnose jams by greedy counterfactual selection"
 
-- [ ] 6. Baselines and the decoy headline
-  - [~] 6.1 Implement `blameFirstAlarm`, `blameMostSevere`, `matchesGroundTruth`, `targetOf` in `src/diagnosis/baselines.ts`
+- [x] 6. Baselines and the decoy headline
+  - [x] 6.1 Implement `blameFirstAlarm`, `blameMostSevere`, `matchesGroundTruth`, `targetOf` in `src/diagnosis/baselines.ts`
     - _Requirements: 5.1, 5.2, 5.3_
-  - [~] 6.2 Add to `tests/diagnose.test.ts` (required test 4): on `pd-decoy-first`, `blameFirstAlarm` names the decoy R6 (does not match the Primary) and `diagnose` names R3
+  - [x] 6.2 Add to `tests/diagnose.test.ts` (required test 4): on `pd-decoy-first`, `blameFirstAlarm` names the decoy R6 (does not match the Primary) and `diagnose` names R3
     - _Requirements: 4.2, 5.1_
-  - [~] 6.3 Add to `tests/diagnose.test.ts` (required test 5): on `pd-decoy-first`, assert both faults are selected; if the greedy loop selects only the Primary, change the test to assert the Primary only and record the multi-fault miss in `docs/spec3-debug.md` for honest reporting in RESULTS.md (do not loosen `GAIN_MIN` outside dev-seed tuning)
+  - [x] 6.3 Add to `tests/diagnose.test.ts` (required test 5): on `pd-decoy-first`, assert both faults are selected; if the greedy loop selects only the Primary, change the test to assert the Primary only and record the multi-fault miss in `docs/spec3-debug.md` for honest reporting in RESULTS.md (do not loosen `GAIN_MIN` outside dev-seed tuning)
     - _Requirements: 4.1_
-  - [~] 6.4 Write property test: **Property 8: Baselines match a reference model** (`numRuns: 100`)
+  - [x] 6.4 Write property test: **Property 8: Baselines match a reference model** (`numRuns: 100`)
     - **Validates: Requirements 5.1, 5.2**
-  - [~] 6.5 Write property test: **Property 9: Ground-truth matching rule** (`numRuns: 100`)
+  - [x] 6.5 Write property test: **Property 9: Ground-truth matching rule** (`numRuns: 100`)
     - **Validates: Requirements 5.3**
-  - [~] 6.6 Check and commit: commit "add naive baselines and ground-truth matching"
+  - [x] 6.6 Check and commit: commit "add naive baselines and ground-truth matching"
 
 - [ ] 7. Verified fix
   - [~] 7.1 Implement `fixOutcome`, `verifyFix` (ticks = 2000, baseline = no-fault run, removes world faults matching the root cause, `verifiedBy: 'simulation'`) and `proposeFix` sentences in `src/diagnosis/fix.ts`
