@@ -1,11 +1,12 @@
-// Landing view: label and actions on top; title, subtitle and honesty line
-// bottom left; the three steps stacked bottom right; a frozen-robot effect above
-// the title. Over the faint live Backdrop, a vignette and a film-grain overlay.
+// Landing view: actions top right; the jam scene upper left; bottom left the
+// label, title, subtitle lines and honesty note; steps stacked bottom right.
+// A CSS-timed intro (landing.css) plays on mount; reduced motion shows the
+// final state. Over the faint live Backdrop, a vignette and a film-grain overlay.
 import { useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Backdrop } from './Backdrop';
 import { LANDING } from './copy';
-import { FrozenRobot } from './landing/FrozenRobot';
+import { JamScene } from './landing/JamScene';
 
 export interface LandingProps {
   onEnter(): void;
@@ -13,7 +14,6 @@ export interface LandingProps {
 }
 
 const WORDMARK = 'Fleet Autopsy';
-
 /** The lede in two lines: the problem, then what the tool does. */
 const LEDE_PROBLEM = 'When a warehouse robot fleet jams, the alarm says something went wrong, not what caused it.';
 const LEDE_ANSWER = 'Fleet Autopsy replays alternate timelines to find out.';
@@ -31,6 +31,9 @@ function accentWord(text: string, word: string): ReactNode {
   );
 }
 
+/** Stagger index for intro animations. */
+const k = (i: number): CSSProperties => ({ '--i': i }) as CSSProperties;
+
 export function Landing({ onEnter, onHowItWorks }: LandingProps) {
   const enterRef = useRef<HTMLButtonElement>(null);
 
@@ -44,36 +47,54 @@ export function Landing({ onEnter, onHowItWorks }: LandingProps) {
         <Backdrop />
       </div>
       <div className="landing-vignette" aria-hidden="true" />
-      <div className="landing-grain" aria-hidden="true" />
 
-      <header className="landing-top">
-        <p className="eyebrow">{LANDING.eyebrow}</p>
-        <div className="landing-actions">
-          <button ref={enterRef} type="button" className="btn btn--primary btn--pill" onClick={onEnter}>
-            Enter the simulator
-          </button>
-          <button type="button" className="link" onClick={(e) => onHowItWorks(e.currentTarget)}>
-            How it works
-          </button>
-        </div>
-      </header>
+      <div className="landing-actions">
+        <button ref={enterRef} type="button" className="btn btn--primary btn--pill" onClick={onEnter}>
+          Enter the simulator
+        </button>
+        <button type="button" className="link" onClick={(e) => onHowItWorks(e.currentTarget)}>
+          How it works
+        </button>
+      </div>
+
+      <JamScene />
 
       <div className="landing-bottom">
         <div className="landing-hero">
-          <FrozenRobot />
+          <p className="eyebrow">{LANDING.eyebrow}</p>
           <h1 className="landing-wordmark" aria-label={`${WORDMARK}.`}>
             <span aria-hidden="true">
-              {WORDMARK}
-              <span className="accent-text">.</span>
+              {WORDMARK.split(' ').map((word, wi, words) => {
+                const offset = words.slice(0, wi).reduce((n, w) => n + w.length + 1, 0);
+                return (
+                  <span key={wi}>
+                    {wi > 0 && ' '}
+                    <span className="wordmark-word">
+                      {Array.from(word).map((ch, ci) => (
+                        <span key={ci} className="wordmark-letter" style={k(offset + ci)}>
+                          {ch}
+                        </span>
+                      ))}
+                      {wi === words.length - 1 && <span className="accent-dot">.</span>}
+                    </span>
+                  </span>
+                );
+              })}
             </span>
           </h1>
-          <p className="lede">{accentWord(LEDE_PROBLEM, 'wrong')}</p>
-          <p className="lede-answer">{LEDE_ANSWER}</p>
-          <p className="honesty">{LANDING.honesty}</p>
+          <p className="lede intro-up" style={k(0)}>
+            {accentWord(LEDE_PROBLEM, 'wrong')}
+          </p>
+          <p className="lede-answer intro-up" style={k(1)}>
+            {LEDE_ANSWER}
+          </p>
+          <p className="honesty intro-up" style={k(2)}>
+            {LANDING.honesty}
+          </p>
         </div>
         <ol className="steps">
           {LANDING.steps.map((s, i) => (
-            <li key={s} className="step">
+            <li key={s} className="step" style={k(i)}>
               <span className="step-num" aria-hidden="true">
                 {i + 1}
               </span>
@@ -82,6 +103,8 @@ export function Landing({ onEnter, onHowItWorks }: LandingProps) {
           ))}
         </ol>
       </div>
+
+      <div className="landing-grain" aria-hidden="true" />
     </main>
   );
 }
