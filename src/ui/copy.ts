@@ -27,14 +27,15 @@ export function jamAnnouncement(jam: Jam | null): string {
   return jam === null ? 'healthy' : `jam detected, started around tick ${jam.onsetTick}`;
 }
 
-export const LANDING: { lede: string; steps: readonly string[]; honesty: string } = {
+export const LANDING: { eyebrow: string; lede: string; steps: readonly string[]; honesty: string } = {
+  eyebrow: 'Robotics and hardware',
   lede:
     'When a warehouse robot fleet jams, the alarm tells you something went wrong, not what caused it. ' +
     'Fleet Autopsy replays alternate timelines to find out.',
   steps: [
-    '1 Inject a failure',
-    '2 Detect the jam from telemetry',
-    '3 Replay timelines to find the cause and verify the fix',
+    'Inject a failure',
+    'Detect the jam from telemetry',
+    'Replay timelines to find the cause and verify the fix',
   ],
   honesty: 'Simulation only. The faults are injected, so the ground truth is known.',
 };

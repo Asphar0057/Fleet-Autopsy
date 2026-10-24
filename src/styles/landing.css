@@ -1,22 +1,24 @@
-/* Landing view (visual-redesign Requirement 1). Every value comes from tokens.css.
-   Full-screen black page; the live backdrop sits behind the content at low contrast. */
+/* Landing view (visual-redesign Requirement 1, visual-polish Requirement 5).
+   Every value comes from tokens.css. A centred column over a blurred, faint
+   live backdrop and a radial vignette. Grey text uses --fg-2 only (7:1 or more). */
 
 .landing {
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
-  display: flex;
-  align-items: center;
+  display: grid;
+  place-items: center;
   background: var(--bg);
   color: var(--fg);
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
-  opacity: 0.28;
+  opacity: 0.3;
+  filter: blur(3px);
   pointer-events: none;
 }
 
@@ -35,98 +37,173 @@
   display: block;
 }
 
-.landing-content {
+/* The one allowed gradient: darkens the backdrop toward the edges. */
+.landing-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, #000 100%);
+}
+
+.landing-content--center {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: var(--s-7) var(--s-4);
+  max-width: 960px;
+  padding: var(--s-7) var(--gutter);
+  text-align: center;
+  animation: landing-in 400ms var(--ease) both;
+}
+
+.eyebrow {
+  margin: 0;
+  font: 600 var(--fs-eyebrow) / 16px var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--fg-2);
 }
 
 .landing-wordmark {
   margin: 0;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--fs-hero);
-  line-height: 1;
+  font: 700 var(--fs-hero) / 1 var(--font-sans);
   letter-spacing: var(--tracking-tight);
   color: var(--fg);
 }
 
 .lede {
-  max-width: 40em;
-  margin: var(--s-5) 0 0;
-  font-size: var(--fs-body);
-  line-height: 22px;
+  max-width: 640px;
+  margin: var(--s-2) 0 0;
+  font-size: var(--fs-lede);
+  line-height: 30px;
   color: var(--fg);
 }
 
-/* Three steps inline with · separators; wraps on narrow screens. */
+/* Three steps in a row: number in a small circle, text below. */
 .steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-1) 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 200px));
+  justify-content: center;
+  gap: var(--s-5);
+  width: 100%;
   margin: var(--s-4) 0 0;
   padding: 0;
   list-style: none;
-  font-size: var(--fs-ui);
-  line-height: 20px;
-  color: var(--fg-2);
 }
 
-.steps li + li::before {
-  content: '·';
-  padding: 0 var(--s-2);
-  color: var(--fg-3);
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.step-num {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 50%;
+  font: 600 var(--fs-meta) / 1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.step-text {
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg);
 }
 
 .honesty {
-  margin: var(--s-4) 0 0;
+  margin: var(--s-2) 0 0;
   font-size: var(--fs-ui);
   line-height: 20px;
-  color: var(--fg-3);
+  color: var(--fg-2);
 }
 
 .landing-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-3) var(--s-4);
-  margin-top: var(--s-6);
+  justify-content: center;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
 }
 
-/* Quiet text link styled button. */
+/* Large primary button: loaded after base.css, so it overrides the 36px control size. */
+.btn--lg {
+  height: 48px;
+  padding: 0 var(--s-5);
+  border-radius: var(--radius-card);
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+/* Quiet text button: grey, white and underlined on hover or focus. */
 .link {
   appearance: none;
   -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
   margin: 0;
-  padding: 0;
+  padding: 0 var(--s-2);
   background: transparent;
   border: 0;
+  border-radius: var(--radius);
   color: var(--fg-2);
   font-family: var(--font-sans);
   font-size: var(--fs-ui);
   line-height: 20px;
-  text-decoration: underline;
-  text-decoration-color: var(--hairline-strong);
+  font-weight: 500;
+  text-decoration: none;
   text-underline-offset: var(--s-1);
   cursor: pointer;
-  transition:
-    color var(--dur-fast) var(--ease),
-    text-decoration-color var(--dur-fast) var(--ease);
+  transition: color var(--dur-fast) var(--ease);
 }
 
-.link:hover {
+.link:hover,
+.link:focus-visible {
   color: var(--fg);
-  text-decoration-color: var(--fg);
+  text-decoration: underline;
+}
+
+@keyframes landing-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 759px) {
+  .steps {
+    grid-template-columns: minmax(0, 320px);
+    gap: var(--s-4);
+  }
 }
 
 @media (max-width: 639px) {
-  .landing-content {
-    padding: var(--s-6) var(--s-3);
+  .landing-content--center {
+    padding-block: var(--s-6);
   }
   .backdrop-box {
     inset: var(--s-3);
+  }
+}
+
+/* The global reduced-motion block in base.css also removes the animation;
+   this keeps the content fully visible without relying on it. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-content--center {
+    animation: none;
+    opacity: 1;
   }
 }
