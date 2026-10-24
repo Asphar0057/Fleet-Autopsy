@@ -198,6 +198,9 @@ export function App() {
     r.playhead = 0;
     r.dirty = true;
     const stalled = new Uint8Array(sim.config.robots);
+    // 1 per robot with a reveal marker (filled only while revealed); the renderer
+    // skips its stall ring and label so the culprit shows one accent marker.
+    const revealSkip = new Uint8Array(sim.config.robots);
     const waits = createWaitCounter(lay);
     const colors = readColors();
     const simFaults = sim.config.faults;
@@ -235,13 +238,21 @@ export function App() {
         }
         blockedAt(simFaults, windows, ph, blocked);
       }
+      const marks = r.reveal ? revealMarks(simFaults, ph) : null;
+      if (marks) {
+        revealSkip.fill(0);
+        for (const m of marks) {
+          if (m.target === 'robot' && m.index >= 0 && m.index < revealSkip.length) revealSkip[m.index] = 1;
+        }
+      }
       drawFrame(ctx, lay, rec, ph, {
         trails: r.trails,
         congestion: r.congestion,
         waitCounts: r.congestion ? waits.at(rec, ph) : null,
         stalled,
         blocked,
-        reveal: r.reveal ? revealMarks(simFaults, ph) : null,
+        reveal: marks,
+        revealSkip: marks ? revealSkip : null,
         colors,
       });
     };
@@ -253,13 +264,12 @@ export function App() {
     observer.observe(box);
     fitCanvas(canvas, lay);
 
-    // Canvas text does not trigger web font loading; request Geist Mono and
-    // redraw once it (and any other pending font) is ready.
+    // Canvas text does not trigger web font loading; request Geist Mono (station
+    // digits) and Geist (labels), and redraw once they are ready.
     let cancelled = false;
     const fonts = document.fonts as FontFaceSet | undefined;
     if (fonts) {
-      fonts
-        .load(`11px 'Geist Mono'`)
+      Promise.all([fonts.load(`11px 'Geist Mono'`), fonts.load(`11px 'Geist'`)])
         .then(() => fonts.ready)
         .then(
           () => {
