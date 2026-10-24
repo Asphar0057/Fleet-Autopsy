@@ -1,5 +1,5 @@
-/* Landing view. Black ground, Montserrat, accent #ff4a1c (--accent).
-   Desktop: actions pinned top right; jam scene in the upper left / centre;
+﻿/* Landing view. Black ground, Montserrat, accent #ff4a1c (--accent).
+   Desktop: actions pinned top right; the backdrop jam in the upper right;
    label, title and lines bottom left; steps stacked bottom right.
    Intro timeline (s from mount): label 0.2, title letters 0.5+, full stop pop
    1.0-1.4, frozen robot and first ripple 1.4, lines 1.6+, steps 2.2+, actions 2.6.
@@ -23,19 +23,22 @@
   overflow-x: clip;
 }
 
-/* Faint live sim behind everything; dimmer than the jam scene. */
+/* The jam backdrop (Backdrop.tsx): blurred and dimmed, in the upper right, away from the title block. */
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
-  opacity: 0.14;
-  filter: blur(3px);
+  opacity: 0.55;
+  filter: blur(2.5px);
   pointer-events: none;
 }
 
 .backdrop-box {
   position: absolute;
-  inset: var(--s-5);
+  top: 10vh;
+  right: 3vw;
+  width: 64vw;
+  height: 56vh;
   overflow: hidden;
 }
 
@@ -270,132 +273,6 @@
   }
 }
 
-/* ---------- Jam scene ----------
-   Box: x 8% to 55%, y 12% to 62% of the viewport, clipped, so nothing reaches
-   the title block or the actions. The cluster centre sits at 55% / 55% of the box. */
-
-.jam-scene {
-  position: absolute;
-  left: 8%;
-  top: 12vh;
-  width: 47%;
-  height: 50vh;
-  z-index: 1;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.jam-centre {
-  position: absolute;
-  left: 55%;
-  top: 55%;
-  width: 0;
-  height: 0;
-}
-
-.jam-glow,
-.jam-ring,
-.jam-frozen,
-.jam-robot {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-.jam-glow {
-  width: 340px;
-  height: 340px;
-  margin: -170px 0 0 -170px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 74, 28, 0.35) 0%, rgba(255, 74, 28, 0) 70%);
-  animation: lp-fade 1.2s ease-out 1.4s both;
-}
-
-.jam-ring {
-  width: 100px;
-  height: 100px;
-  margin: -50px 0 0 -50px;
-  border: 1px solid var(--accent);
-  border-radius: 50%;
-  opacity: 0;
-  animation: jam-ripple 7s ease-out var(--k) infinite backwards;
-}
-
-.jam-frozen {
-  width: 14px;
-  height: 14px;
-  margin: -7px 0 0 -7px;
-  border-radius: 50%;
-  background: var(--fg);
-  animation: lp-fade 500ms ease-out var(--k) both;
-}
-
-/* A robot: placed at its parking cell; drives in from its start offset, slowing down. */
-.jam-robot {
-  width: 0;
-  height: 0;
-  transform: translate(var(--px), var(--py));
-  animation:
-    jam-drive var(--dur) cubic-bezier(0.25, 0.6, 0.3, 1) var(--start) both,
-    lp-fade 400ms linear var(--start) both;
-}
-
-.jam-dot {
-  position: absolute;
-  left: -4px;
-  top: -4px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--fg);
-  opacity: 0.85;
-}
-
-/* Short faint trail pointing back toward the start; fades on arrival. */
-.jam-trail {
-  position: absolute;
-  left: 0;
-  top: -0.5px;
-  width: 64px;
-  height: 1px;
-  transform-origin: 0 50%;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
-  opacity: 0;
-  animation: jam-trail 700ms ease-out var(--at) both;
-}
-
-/* Thin grey stall ring, fades in on arrival. */
-.stalled {
-  position: absolute;
-  left: -13px;
-  top: -13px;
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--canvas-stall);
-  border-radius: 50%;
-  animation: lp-fade 500ms ease-out var(--at) both;
-}
-
-/* "n stalled" badge, like the simulator's count chip; shown from the third stall. */
-.jam-count {
-  position: absolute;
-  left: 112px;
-  top: -132px;
-  padding: 3px 8px;
-  border: 1px solid var(--canvas-stall);
-  font: 500 11px / 16px var(--font-sans);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  color: var(--fg-2);
-  background: var(--bg);
-  opacity: 0;
-  transition: opacity var(--dur) var(--ease);
-}
-
-.jam-count--on {
-  opacity: 1;
-}
-
 /* ---------- Keyframes ---------- */
 
 @keyframes lp-fade {
@@ -440,56 +317,24 @@
   }
 }
 
-@keyframes jam-ripple {
-  from {
-    opacity: 0.55;
-    transform: scale(0.3);
-  }
-  to {
-    opacity: 0;
-    transform: scale(3.4);
-  }
-}
-
-@keyframes jam-drive {
-  from {
-    transform: translate(var(--sx), var(--sy));
-  }
-}
-
-@keyframes jam-trail {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
 /* ---------- One column below 900px ---------- */
 
 @media (max-width: 899px) {
   .landing {
     --edge: 24px;
     justify-content: flex-start;
-    padding-top: 96px;
+    padding-top: calc(96px + 34vh);
   }
   .landing-actions {
     top: 24px;
     gap: var(--s-2);
   }
-  .jam-scene {
-    position: relative;
-    left: auto;
-    top: auto;
-    width: 100%;
-    height: 300px;
-    margin-bottom: var(--s-4);
-  }
-  .jam-centre {
-    left: 50%;
-    top: 50%;
-    transform: scale(0.72);
+  .backdrop-box {
+    top: 72px;
+    right: 0;
+    left: 0;
+    width: auto;
+    height: 34vh;
   }
   .landing-bottom {
     flex-direction: column;
@@ -514,19 +359,5 @@
     animation: none !important;
     transition: none !important;
   }
-  .jam-ring {
-    opacity: 0;
-  }
-  .jam-ring:nth-of-type(2) {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  .jam-ring:nth-of-type(3) {
-    opacity: 0.3;
-    transform: scale(1.9);
-  }
-  .jam-ring:nth-of-type(4) {
-    opacity: 0.15;
-    transform: scale(2.8);
-  }
+  /* Backdrop.tsx draws the final tick with three still rings. */
 }

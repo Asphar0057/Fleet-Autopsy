@@ -1,12 +1,11 @@
-// Landing view: actions top right; the jam scene upper left; bottom left the
-// label, title, subtitle lines and honesty note; steps stacked bottom right.
-// A CSS-timed intro (landing.css) plays on mount; reduced motion shows the
-// final state. Over the faint live Backdrop, a vignette and a film-grain overlay.
+// Landing view: actions top right; bottom left the label, title, subtitle lines
+// and honesty note; steps stacked bottom right. The Backdrop behind plays the
+// real decoy jam in the upper right. A CSS-timed intro (landing.css) plays on
+// mount; reduced motion shows the final state. Vignette and film grain on top.
 import { useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Backdrop } from './Backdrop';
 import { LANDING } from './copy';
-import { JamScene } from './landing/JamScene';
 
 export interface LandingProps {
   onEnter(): void;
@@ -56,8 +55,6 @@ export function Landing({ onEnter, onHowItWorks }: LandingProps) {
           How it works
         </button>
       </div>
-
-      <JamScene />
 
       <div className="landing-bottom">
         <div className="landing-hero">

@@ -1,46 +1,100 @@
-// Landing backdrop (visual-redesign Requirement 1.5, 1.6): a healthy seeded fleet
-// on the fulfillment-block layout, drawn at low contrast behind the landing text.
-// Own Sim and rAF loop; the loop pauses while the document is hidden. Under
-// prefers-reduced-motion it draws one static frame. Any load failure renders nothing.
+﻿// Landing backdrop: the curated jam "Pocket DC · decoy, then frozen holder"
+// (pd-decoy-first) played from tick 0 to END_TICK at about 3x, then held. Stalled
+// robots get the simulator's grey rings; once the playhead passes the primary
+// fault's tick, accent ripples and a glow spread from the frozen robot's cell,
+// drawn on the same canvas with the same cell size. Own rAF loop, paused while
+// the document is hidden. Reduced motion: one static frame at END_TICK with three
+// still rings. Any load failure renders nothing.
 import { useEffect, useRef, useState } from 'react';
 import { drawFrame, fitCanvas, readColors } from '../render/canvasRenderer';
+import type { Colors } from '../render/canvasRenderer';
 import type { Layout } from '../sim/layout';
+import { stalledAt } from '../sim/metrics';
+import { positionsAt } from '../sim/recorder';
+import { SCENARIOS, scenarioConfig } from '../sim/scenarios';
 import { createSim } from '../sim/sim';
 import type { Sim } from '../sim/sim';
 import { loadLayout, loadManifest } from './loaders';
+import { BASE_TICKS_PER_SECOND } from './playback';
+import {
+  BACKDROP_SCENARIO,
+  backdropCulprit,
+  END_TICK,
+  GLOW_R,
+  RINGS,
+  ringAt,
+  SPEED,
+  staticRings,
+} from './landing/backdropJam';
+import type { Culprit } from './landing/backdropJam';
 
-const BACKDROP_LAYOUT = 'fulfillment-block';
-const BACKDROP_SEED = 42;
-const STEP_MS = 160; // about 6 ticks per second
-const STATIC_TICKS = 120; // reduced motion: advance headless, then draw once
+const STEP_MS = 1000 / (BASE_TICKS_PER_SECOND * SPEED);
+const MAX_STEPS_PER_FRAME = 2;
+const MAX_DPR = 1.5;
 
 function prefersReducedMotion(): boolean {
   return typeof window.matchMedia !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+/** fitCanvas, then the backing store at a device pixel ratio capped at MAX_DPR. Returns the cell size. */
+function fitCapped(canvas: HTMLCanvasElement, layout: Layout): number {
+  const { cell } = fitCanvas(canvas, layout);
+  const dpr = Math.min(MAX_DPR, window.devicePixelRatio || 1);
+  canvas.width = Math.round(layout.width * cell * dpr);
+  canvas.height = Math.round(layout.height * cell * dpr);
+  canvas.getContext('2d')?.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return cell;
+}
+
+/** Glow and rings around the culprit's cell, in canvas CSS pixels. */
+function drawRipples(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cell: number,
+  colors: Colors,
+  rings: readonly { r: number; alpha: number }[],
+): void {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, GLOW_R * cell);
+  g.addColorStop(0, 'rgba(255, 74, 28, 0.35)');
+  g.addColorStop(1, 'rgba(255, 74, 28, 0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(x - GLOW_R * cell, y - GLOW_R * cell, 2 * GLOW_R * cell, 2 * GLOW_R * cell);
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1;
+  for (const ring of rings) {
+    ctx.globalAlpha = ring.alpha;
+    ctx.beginPath();
+    ctx.arc(x, y, ring.r * cell, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
 export function Backdrop() {
-  const [sim, setSim] = useState<Sim | null>(null);
+  const [state, setState] = useState<{ sim: Sim; culprit: Culprit | null } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Manifest, layout, and a healthy Sim, once.
+  // Manifest, layout, and the scenario's Sim (same scenarioConfig as the app), once.
   useEffect(() => {
     let cancelled = false;
+    const scenario = SCENARIOS.find((s) => s.id === BACKDROP_SCENARIO);
+    if (!scenario) return;
     loadManifest()
       .then(async (metas) => {
-        const meta = metas.find((m) => m.id === BACKDROP_LAYOUT);
-        if (!meta) throw new Error(`missing layout ${BACKDROP_LAYOUT}`);
-        const layout: Layout = await loadLayout(meta);
-        return createSim(layout, {
-          seed: BACKDROP_SEED,
-          robots: meta.recommendedRobots,
-          queueCap: layout.queueCap,
-          faults: [],
-        });
+        const meta = metas.find((m) => m.id === scenario.layoutId);
+        if (!meta) throw new Error(`missing layout ${scenario.layoutId}`);
+        const layout = await loadLayout(meta);
+        const config = scenarioConfig(scenario, layout);
+        return {
+          sim: createSim(layout, config),
+          culprit: backdropCulprit(config.faults, scenario.groundTruth.primaryFaultIndex),
+        };
       })
       .then(
         (s) => {
-          if (!cancelled) setSim(s);
+          if (!cancelled) setState(s);
         },
         () => undefined, // the landing page works without the backdrop
       );
@@ -49,14 +103,18 @@ export function Backdrop() {
     };
   }, []);
 
-  // Draw loop for the Sim.
+  // Draw loop.
   useEffect(() => {
     const canvas = canvasRef.current;
     const box = boxRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!sim || !canvas || !box || !ctx) return;
+    if (!state || !canvas || !box || !ctx) return;
+    const { sim, culprit } = state;
     const lay = sim.layout;
-    const stalled = new Uint8Array(sim.config.robots); // always zero: no stall rings or labels
+    const stalled = new Uint8Array(sim.config.robots);
+    // The culprit shows only its ripples, no grey stall ring or label (Accent rules).
+    const skip = new Uint8Array(sim.config.robots);
+    if (culprit) skip[culprit.robot] = 1;
     const colors = readColors();
     const opts = {
       trails: false,
@@ -65,68 +123,86 @@ export function Backdrop() {
       stalled,
       blocked: null,
       reveal: null,
+      revealSkip: skip,
       colors,
     };
-    const draw = () => drawFrame(ctx, lay, sim.recording, sim.tick, opts);
+    const reduced = prefersReducedMotion();
+    let cell = fitCapped(canvas, lay);
+    let rippleStart = -1; // performance.now() when the playhead passed the fault tick
+    const rings: { r: number; alpha: number }[] = [];
+
+    const draw = (now: number) => {
+      const t = sim.tick;
+      stalledAt(sim.recording, t, stalled);
+      drawFrame(ctx, lay, sim.recording, t, opts);
+      if (!culprit || t < culprit.tick) return;
+      rings.length = 0;
+      if (reduced) {
+        rings.push(...staticRings());
+      } else {
+        if (rippleStart < 0) rippleStart = now;
+        for (let i = 0; i < RINGS; i++) {
+          const ring = ringAt(now - rippleStart, i);
+          if (ring) rings.push(ring);
+        }
+      }
+      const c = positionsAt(sim.recording, t)[culprit.robot];
+      drawRipples(ctx, ((c % lay.width) + 0.5) * cell, (Math.floor(c / lay.width) + 0.5) * cell, cell, colors, rings);
+    };
 
     let cancelled = false;
     let raf = 0;
-    let dirty = true;
-    const reduced = prefersReducedMotion();
-    if (reduced) sim.run(Math.max(0, STATIC_TICKS - sim.tick));
+    if (reduced) sim.run(Math.max(0, END_TICK - sim.tick));
 
-    const redraw = () => {
-      if (reduced) draw();
-      else dirty = true;
-    };
-
-    fitCanvas(canvas, lay);
     const observer =
       typeof ResizeObserver === 'function'
         ? new ResizeObserver(() => {
-            fitCanvas(canvas, lay);
-            redraw();
+            cell = fitCapped(canvas, lay);
+            if (reduced) draw(0);
           })
         : null;
     observer?.observe(box);
 
-    // Station digits use Montserrat 500; redraw once the font is ready.
+    // Station digits use Montserrat 500; redraw once the font is ready (reduced motion only; the loop redraws anyway).
     const fonts = document.fonts as FontFaceSet | undefined;
-    if (fonts) {
+    if (fonts && reduced) {
       fonts.load(`500 11px 'Montserrat'`).then(
         () => {
-          if (!cancelled) redraw();
+          if (!cancelled) draw(0);
         },
         () => undefined,
       );
     }
 
     if (reduced) {
-      draw();
+      draw(0);
       return () => {
         cancelled = true;
         observer?.disconnect();
       };
     }
 
-    let lastStep = -1;
+    // Every frame redraws (the ripples move); the sim advances about 30 ticks/s until END_TICK.
+    let acc = 0;
+    let last = -1;
     const frame = (now: number) => {
-      if (lastStep < 0) lastStep = now;
-      // At most one tick per frame, so a long pause never causes a burst.
-      if (now - lastStep >= STEP_MS) {
-        lastStep = now;
-        sim.step();
-        dirty = true;
+      if (last >= 0 && sim.tick < END_TICK) {
+        acc += now - last;
+        let steps = 0;
+        while (acc >= STEP_MS && steps < MAX_STEPS_PER_FRAME && sim.tick < END_TICK) {
+          sim.step();
+          acc -= STEP_MS;
+          steps++;
+        }
+        if (steps === MAX_STEPS_PER_FRAME) acc = 0;
       }
-      if (dirty) {
-        dirty = false;
-        draw();
-      }
+      last = now;
+      draw(now);
       raf = requestAnimationFrame(frame);
     };
     const start = () => {
       if (raf !== 0) return;
-      lastStep = -1;
+      last = -1;
       raf = requestAnimationFrame(frame);
     };
     const stop = () => {
@@ -147,9 +223,9 @@ export function Backdrop() {
       document.removeEventListener('visibilitychange', onVisibility);
       observer?.disconnect();
     };
-  }, [sim]);
+  }, [state]);
 
-  if (!sim) return null;
+  if (!state) return null;
   return (
     <div className="backdrop" aria-hidden="true">
       <div className="backdrop-box" ref={boxRef}>

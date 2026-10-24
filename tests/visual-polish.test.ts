@@ -62,19 +62,16 @@ describe('Card_Grid render (Requirement 4.2, 4.5, 8.4)', () => {
 });
 
 describe('Landing render (Requirement 5.1, 5.2, 8.4)', () => {
-  it('renders the label, title block, jam scene, three steps and both actions', async () => {
+  it('renders the label, title block, three steps and both actions, with no overlay scene', async () => {
     const Landing = await component('Landing', 'Landing');
     const html = renderToString(createElement(Landing, { onEnter: noop, onHowItWorks: noop }));
     expect(html).toContain('class="landing-hero"');
-    expect(html).toContain('class="jam-scene"');
-    expect(count(html, 'class="jam-frozen"')).toBe(1);
-    expect(count(html, 'class="jam-ring"')).toBe(7);
-    expect(count(html, 'class="jam-robot"')).toBe(10);
-    expect(count(html, 'class="stalled"')).toBe(10);
+    // The jam lives in the Backdrop canvas now; no standalone overlay.
+    expect(html).not.toContain('jam-scene');
     // The label sits in the title block, directly above the h1.
     expect(html).toMatch(/class="landing-hero"><p class="eyebrow">[^<]+<\/p><h1/);
-    // The actions come before the scene and the title block (pinned top right).
-    expect(html.indexOf('landing-actions')).toBeLessThan(html.indexOf('jam-scene'));
+    // The actions come before the title block (pinned top right).
+    expect(html.indexOf('landing-actions')).toBeLessThan(html.indexOf('landing-hero'));
     // Deterministic markup: two renders are identical.
     expect(renderToString(createElement(Landing, { onEnter: noop, onHowItWorks: noop }))).toBe(html);
     expect(html).toContain(LANDING.eyebrow);
