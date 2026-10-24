@@ -7,8 +7,9 @@ export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',
-    // Diagnosis files replay many timelines in parallel workers; under that load the
-    // ESLint cold start and run-level properties exceed the 5 s default.
+    // Diagnosis files replay many timelines; with one worker per core they starve the
+    // other files (ESLint cold start, run-level properties) past their timeouts.
+    maxWorkers: '50%',
     testTimeout: 60_000,
     hookTimeout: 60_000,
   },

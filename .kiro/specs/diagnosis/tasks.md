@@ -124,7 +124,7 @@ Rules for every task:
     - _Requirements: 9.3, 9.4_
   - [x] 11.4 Visible check and commit: `npm run build` passes; `npm run dev` with `?debug=diagnose&scenario=pd-decoy-first` shows R3 as root cause and a passing fix; the app without the flag is unchanged. Commit "precompute curated autopsies and add diagnosis debug readout"
 
-- [~] 12. Final checkpoint
+- [x] 12. Final checkpoint
   - Ensure `npm test`, `npm run lint`, and `npm run build` pass, Spec 1 golden hashes unchanged, `git diff --stat` shows no change under `src/sim` or `src/ui`; ask the user if questions arise
   - Commit any remaining fixes: "fix final spec 3 checks" (skip if nothing changed)
 

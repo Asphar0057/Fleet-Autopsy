@@ -368,7 +368,7 @@ serialized as `JSON.stringify(obj, null, 2) + '\n'`. Key order is fixed by objec
 
 `src/diagnosis/DebugPanel.tsx`:
 - A labelled `<select>` of the 6 curated scenarios, initially `?scenario=<id>` when it names one, else the first; a `<button>` `run` and a `<button>` `cancel`.
-- On run: fetch the manifest and grid (same `BASE_URL` paths as the app), `runHeadless(world, 2000)`, `detectJam`, then `diagnoseInWorker` with the observed config only. Changing the scenario or pressing cancel aborts the running diagnosis.
+- On run: fetch the manifest and grid (same `BASE_URL` paths as the app; the loaders in `src/ui/App.tsx` are not exported, so the panel keeps local copies and `src/ui` stays untouched), `runHeadless(world, 2000)`, `detectJam`, then `diagnoseInWorker` with the observed config only. Changing the scenario or pressing cancel aborts the running diagnosis.
 - Output, mono, lowercase: `replaying n of m timelines`; then one line per ranked fault (`01  R3 · robot-freeze · tick 550 · score 1.000 · gain 0.284 · impact 4.2 · high`) with its evidence strings; then `verifyFix` on the main thread: the fix sentence and `sim-verified · recovered 0.93 · pass` (or `fail`); `no jam detected` or `error: <message>` otherwise.
 - Design system: white background, 1px black rules, Geist Mono 11px uppercase labels (`01  FAULTS`, `02  FIX`), buttons per the button rules (1px border, hover inverts, 2px focus outline). Accent only on the root-cause line. Styles inline with the token custom properties; no new CSS file.
 
