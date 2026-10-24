@@ -504,7 +504,6 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
               aria-label={layout ? `${layout.name} floor, ${robots} robots, tick ${shownPlayhead}` : 'warehouse floor'}
             />
           </div>
-          <CanvasLegend reveal={legend} />
           <Scrubber
             rec={rec}
             frames={shownFrames}
@@ -513,6 +512,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
             faultTicks={shownFaultTicks}
             onSeek={seek}
           />
+          <CanvasLegend reveal={legend} />
         </div>
         <Panel
           layout={layout}

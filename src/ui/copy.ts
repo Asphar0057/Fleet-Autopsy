@@ -95,3 +95,9 @@ export function shortLayoutName(name: string): string {
   const short = name.replace(/\s+Block$/, '');
   return short === '' ? name : short;
 }
+
+/** Run-details card titles, in display order (Requirement 4.2). */
+export const CARD_TITLES = ['Verifier', 'Metrics', 'Telemetry', 'Assumptions and limits'] as const;
+
+/** Class on the landing content container that centres it (Requirement 5.1). */
+export const LANDING_CENTER_CLASS = 'landing-content--center';

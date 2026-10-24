@@ -82,9 +82,9 @@ button {
   line-height: 20px;
 }
 
-/* Section header: serif title plus one grey sentence. */
+/* Card header: title plus one grey sentence. No margin: the card's gap spaces it. */
 .section-head {
-  margin: 0 0 var(--s-3);
+  margin: 0;
 }
 
 .section-title {
@@ -732,9 +732,11 @@ input[type='range']:disabled {
   padding-block: var(--s-4) var(--s-6);
 }
 
+/* Canvas, then the scrubber across the full width, then the legend row. */
 .stage {
   display: flex;
   flex-direction: column;
+  gap: var(--s-2);
   min-width: 0;
 }
 
@@ -758,33 +760,104 @@ input[type='range']:disabled {
   display: block;
 }
 
-/* Run details under the stage; the page scrolls, so no inner scroll box. */
+/* ---------- Run details: four cards under the stage ----------
+   4 equal columns from 1280px, 2 from 760px, 1 below; cards in a row share a
+   height. The page scrolls, so no inner scroll box. */
 .panel {
+  min-width: 0;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+  align-items: stretch;
+}
+
+@media (max-width: 1279px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 759px) {
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Title, grey note, content; the flex gap is the only vertical rhythm. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  overflow-wrap: break-word;
+}
+
+/* Error card: spans every column, above the four cards. */
+.card--wide {
+  grid-column: 1 / -1;
+}
+
+/* Zero specificity, so .section-note and other classed margins still apply. */
+:where(.card) :where(p, dl, ul, table) {
+  margin: 0;
+}
+
+/* Stations: a native disclosure at the end of the telemetry card. */
+.disclosure {
   min-width: 0;
   border-top: 1px solid var(--hairline);
 }
 
-.section {
-  min-width: 0;
-  padding: var(--s-4) 0;
-  border-bottom: 1px solid var(--hairline);
+.disclosure-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--control-h);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--fg);
+  list-style: none;
+  border-radius: var(--radius);
 }
 
-.section:last-child {
-  border-bottom: 0;
+.disclosure-summary::-webkit-details-marker {
+  display: none;
 }
 
-.section > .label {
-  margin-bottom: var(--s-2);
+/* Text caret, turned down when open (no images). */
+.disclosure-summary::before {
+  content: '▸';
+  font-size: var(--fs-meta);
+  line-height: 1;
+  color: var(--fg-2);
+  transition: transform var(--dur-fast) var(--ease);
 }
 
-.section p {
-  margin: 0;
+.disclosure[open] > .disclosure-summary::before {
+  transform: rotate(90deg);
 }
 
-/* Status badge: hairline border. Alert (jam): Accent text and border. */
+.disclosure > .section-note {
+  margin: 0 0 var(--s-2);
+}
+
+/* Status badge: hairline border. Alert (jam): Accent text and border.
+   Wraps inside narrow cards instead of overflowing. */
 .badge {
   display: inline-block;
+  align-self: flex-start;
+  max-width: 100%;
+  white-space: normal;
   font-family: var(--font-sans);
   font-size: var(--fs-ui);
   line-height: 20px;
@@ -807,7 +880,7 @@ input[type='range']:disabled {
 .metrics {
   display: grid;
   gap: var(--s-2);
-  margin: 0 0 var(--s-3);
+  margin: 0;
 }
 
 .metric {
@@ -859,8 +932,9 @@ input[type='range']:disabled {
   height: 64px;
 }
 
+/* The sparkline follows in the card gap; pull it up to its label. */
 .spark-label {
-  margin: 0 0 var(--s-2);
+  margin: 0 0 calc(var(--s-2) - var(--s-3));
 }
 
 /* Jam status: badge plus info tips for onset and severity. */
@@ -911,7 +985,7 @@ input[type='range']:disabled {
 /* ---------- Telemetry ---------- */
 
 .find-cause {
-  margin: var(--s-3) 0;
+  margin: 0;
 }
 
 .find-cause .btn--primary {
@@ -923,7 +997,7 @@ input[type='range']:disabled {
 }
 
 .telemetry-metrics {
-  margin: var(--s-3) 0 var(--s-2);
+  margin: 0;
 }
 
 .queues {
@@ -985,6 +1059,10 @@ input[type='range']:disabled {
   padding: 0 0 var(--s-2);
 }
 
+.assumptions li:last-child {
+  padding-bottom: 0;
+}
+
 .assumptions li::first-letter {
   text-transform: uppercase;
 }
@@ -1001,15 +1079,21 @@ input[type='range']:disabled {
 
 /* ---------- Canvas legend: always-visible key under the canvas ---------- */
 
+/* One centred row; wrapping only so it never overflows a narrow screen. */
 .legend-block {
   flex: 0 0 auto;
-  margin: var(--s-2) 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
   min-width: 0;
 }
 
 .canvas-legend {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
   gap: var(--s-1) var(--s-4);
   margin: 0;
   padding: 0;
@@ -1045,6 +1129,7 @@ input[type='range']:disabled {
   gap: var(--s-2);
   margin: var(--s-1) 0 0;
   min-width: 0;
+  max-width: 100%;
   font-family: var(--font-sans);
   font-size: var(--fs-ui);
   line-height: 20px;
@@ -1067,11 +1152,11 @@ input[type='range']:disabled {
   }
 }
 
-/* ---------- Scrubber: directly under the canvas ---------- */
+/* ---------- Scrubber: directly under the canvas, full stage width ---------- */
 
 .scrubber {
   flex: 0 0 auto;
-  padding-top: var(--s-3);
+  width: 100%;
 }
 
 .scrubber-track {

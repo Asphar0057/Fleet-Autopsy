@@ -1,12 +1,14 @@
 // Telemetry section (Requirement 3.1 to 3.5; Spec 2 9.1 to 9.3): jam status with a
 // polite live region, the disabled "Find the cause" button (Spec 3 seam), the one
 // throughput sparkline with the detected onset in Accent, the stalled count, and
-// per-station queue bars.
+// per-station queue bars. Rendered as one card of the run-details grid; the
+// Stations disclosure arrives as children.
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import type { Jam } from '../sim/jam';
 import { STANDSTILL_SHORT } from '../sim/telemetry';
 import { stationLabel } from '../render/labels';
-import { jamAnnouncement, jamCopy, SECTION_NOTES, TERMS } from './copy';
+import { CARD_TITLES, jamAnnouncement, jamCopy, SECTION_NOTES, TERMS } from './copy';
 import { InfoTip } from './InfoTip';
 import { SectionHead } from './SectionHead';
 import { maxOf, polylinePoints } from './sparkline';
@@ -50,9 +52,11 @@ export function JamBadge({ jam }: { jam: Jam | null }) {
 export interface TelemetryPanelProps {
   view: TelemetryView | null;
   queueCap: number;
+  /** Rendered at the end of the card, after the queue bars (the Stations disclosure). */
+  children?: ReactNode;
 }
 
-export function TelemetryPanel({ view, queueCap }: TelemetryPanelProps) {
+export function TelemetryPanel({ view, queueCap, children }: TelemetryPanelProps) {
   const spark = useMemo(() => {
     if (!view) return null;
     const n = view.throughput.length;
@@ -63,8 +67,8 @@ export function TelemetryPanel({ view, queueCap }: TelemetryPanelProps) {
   }, [view]);
 
   return (
-    <section className="section">
-      <SectionHead title="Telemetry" note={SECTION_NOTES.telemetry} />
+    <section className="card">
+      <SectionHead title={CARD_TITLES[2]} note={SECTION_NOTES.telemetry} />
       <JamBadge jam={view ? view.jam : null} />
       <div className="find-cause">
         <button type="button" className="btn btn--primary" disabled aria-describedby="find-cause-note">
@@ -147,6 +151,7 @@ export function TelemetryPanel({ view, queueCap }: TelemetryPanelProps) {
       ) : (
         <p className="muted telemetry-empty">No data yet</p>
       )}
+      {children}
     </section>
   );
 }

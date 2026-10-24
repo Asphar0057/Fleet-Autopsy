@@ -1,13 +1,15 @@
-// Right-hand panel (Requirement 3; Spec 1 6.5, 6.6, 7.5): verifier badge, metrics
-// at the playhead, telemetry and jam status, station queues, assumptions. Each
-// section has a serif title and one grey sentence saying what it shows.
+// Run details under the canvas (visual-polish Requirement 4; Spec 1 6.5, 6.6, 7.5):
+// four cards in a grid: verifier badge, metrics at the playhead, telemetry and jam
+// status (with the station table in a "Stations" disclosure), assumptions. Each
+// card has a title and one grey sentence saying what it shows. An error card
+// spans all columns above them.
 import { useMemo } from 'react';
 import type { Layout } from '../sim/layout';
 import { meanCycleTime, queueLengths, THROUGHPUT_WINDOW } from '../sim/metrics';
 import type { Recording } from '../sim/recorder';
 import { stationLabel } from '../render/labels';
 import type { Badge } from './badge';
-import { SECTION_NOTES, TERMS } from './copy';
+import { CARD_TITLES, SECTION_NOTES, TERMS } from './copy';
 import { InfoTip } from './InfoTip';
 import { SectionHead } from './SectionHead';
 import { TelemetryPanel } from './TelemetryPanel';
@@ -52,17 +54,17 @@ export function Panel({ layout, rec, playhead, frames, series, badge, telemetry,
   }, [rec, ready, playhead, series]);
 
   return (
-    <aside className="panel" aria-label="run details">
+    <aside className="panel cards" aria-label="run details">
       {error !== null && (
-        <section className="section">
+        <section className="card card--wide">
           <SectionHead title="Error" />
           <pre className="mono error" role="alert">
             {error}
           </pre>
         </section>
       )}
-      <section className="section">
-        <SectionHead title="Verifier" note={SECTION_NOTES.verifier} />
+      <section className="card">
+        <SectionHead title={CARD_TITLES[0]} note={SECTION_NOTES.verifier} />
         {badge ? (
           // Violations are errors, not the jam: a white border, never Accent (Accent rules).
           <p className={badge.alert ? 'badge badge--strong' : 'badge'} role="status">
@@ -73,8 +75,8 @@ export function Panel({ layout, rec, playhead, frames, series, badge, telemetry,
         )}
       </section>
 
-      <section className="section">
-        <SectionHead title="Metrics" note={SECTION_NOTES.metrics} />
+      <section className="card">
+        <SectionHead title={CARD_TITLES[1]} note={SECTION_NOTES.metrics} />
         {metrics ? (
           <dl className="bignums">
             <div className="bignum">
@@ -99,36 +101,37 @@ export function Panel({ layout, rec, playhead, frames, series, badge, telemetry,
         )}
       </section>
 
-      <TelemetryPanel view={telemetry} queueCap={layout ? layout.queueCap : 0} />
-
-      <section className="section">
-        <SectionHead title="Stations" note={SECTION_NOTES.stations} />
-        {metrics && layout ? (
-          <table className="stations">
-            <thead>
-              <tr>
-                <th scope="col">Station</th>
-                <th scope="col">Pods waiting</th>
-              </tr>
-            </thead>
-            <tbody>
-              {metrics.queues.map((q, s) => (
-                <tr key={s}>
-                  <td>
-                    Station <span className="mono">{stationLabel(s)}</span>
-                  </td>
-                  <td className="mono">{q}</td>
+      <TelemetryPanel view={telemetry} queueCap={layout ? layout.queueCap : 0}>
+        <details className="disclosure">
+          <summary className="disclosure-summary">Stations</summary>
+          <p className="section-note">{SECTION_NOTES.stations}</p>
+          {metrics && layout ? (
+            <table className="stations">
+              <thead>
+                <tr>
+                  <th scope="col">Station</th>
+                  <th scope="col">Pods waiting</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="muted">No data yet</p>
-        )}
-      </section>
+              </thead>
+              <tbody>
+                {metrics.queues.map((q, s) => (
+                  <tr key={s}>
+                    <td>
+                      Station <span className="mono">{stationLabel(s)}</span>
+                    </td>
+                    <td className="mono">{q}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="muted">No data yet</p>
+          )}
+        </details>
+      </TelemetryPanel>
 
-      <section className="section">
-        <SectionHead title="Assumptions and limits" note={SECTION_NOTES.assumptions} />
+      <section className="card">
+        <SectionHead title={CARD_TITLES[3]} note={SECTION_NOTES.assumptions} />
         <ul className="assumptions">
           {ASSUMPTIONS.map((a) => (
             <li key={a}>{a}</li>
