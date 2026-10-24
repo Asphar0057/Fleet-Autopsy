@@ -8,7 +8,7 @@ import { SCENARIOS } from '../src/sim/scenarios';
 import { autopsyReducer, INITIAL_AUTOPSY } from '../src/ui/autopsy/autopsyState';
 import type { AutopsyAction, AutopsyState } from '../src/ui/autopsy/autopsyState';
 import { baselineRows, focusTick, stepCopy, suspects } from '../src/ui/autopsy/model';
-import { templateReport } from '../src/ui/autopsy/report';
+import { REPORT_SECTIONS, templateReport } from '../src/ui/autopsy/report';
 import { CURATED_AUTOPSIES } from '../src/ui/autopsy/types';
 import type { AutopsyData } from '../src/ui/autopsy/types';
 import { loadPreset } from './helpers';
@@ -92,6 +92,9 @@ describe('curated autopsies', () => {
       walk(JSON.parse(text));
       const report = templateReport(data);
       expect(report).toContain('throughput down');
+      expect(report).not.toContain('Template report');
+      const lines = report.split('\n');
+      for (const s of REPORT_SECTIONS) expect(lines).toContain(s);
       expect(report).not.toContain('severity');
       for (const tok of report.match(/\d+(?:\.\d+)?%?/g) ?? []) {
         if (tok.endsWith('%')) {

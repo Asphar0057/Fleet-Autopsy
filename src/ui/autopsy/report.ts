@@ -2,13 +2,21 @@
 import { evidenceLines, faultLabel, fixThroughputLine, fixWindow, impactWindow } from './model';
 import type { AutopsyData } from './types';
 
+/** Section titles; the UI renders these lines as headings, the copied text keeps them plain. */
+export const REPORT_SECTIONS: readonly string[] = [
+  'Summary',
+  'Timeline',
+  'Root cause',
+  'Impact',
+  'Recommended fix',
+  'Confidence and limits',
+];
+
 export function templateReport(a: AutopsyData): string {
   const d = a.diagnosis;
   const rc = d.rootCause;
   const f = a.fix;
   const L: string[] = [];
-  L.push('Template report');
-  L.push('');
   L.push('Summary');
   L.push(
     rc

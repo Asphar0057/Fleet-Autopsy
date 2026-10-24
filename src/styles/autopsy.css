@@ -102,10 +102,22 @@
 }
 
 .autopsy-report-text {
-  margin: 0;
-  font-family: var(--font-sans);
   font-size: var(--fs-ui);
   font-variant-numeric: tabular-nums;
-  white-space: pre-wrap;
   color: var(--fg-2);
+}
+
+.autopsy-report-text p {
+  margin: 0;
+}
+
+.autopsy-report-heading {
+  margin: var(--s-3) 0 var(--s-1);
+  font-size: var(--fs-ui);
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.autopsy-report-heading:first-child {
+  margin-top: 0;
 }

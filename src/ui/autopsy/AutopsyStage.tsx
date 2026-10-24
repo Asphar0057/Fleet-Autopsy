@@ -19,7 +19,7 @@ import {
   stepCopy,
   suspects,
 } from './model';
-import { templateReport } from './report';
+import { REPORT_SECTIONS, templateReport } from './report';
 import { isAbort, simulateAsync } from './obtain';
 import type { AutopsyRun } from './types';
 import '../../styles/autopsy.css';
@@ -235,7 +235,20 @@ export default function AutopsyStage(p: AutopsyStageProps) {
               {copied ? 'Copied' : 'Copy'}
             </button>
           </div>
-          <pre className="autopsy-report-text">{reportText}</pre>
+          <div className="autopsy-report-text">
+            {reportText
+              .split('\n')
+              .filter((line) => line !== '')
+              .map((line, i) =>
+                REPORT_SECTIONS.includes(line) ? (
+                  <h3 key={i} className="autopsy-report-heading">
+                    {line}
+                  </h3>
+                ) : (
+                  <p key={i}>{line}</p>
+                ),
+              )}
+          </div>
         </section>
       )}
     </section>
