@@ -9,6 +9,7 @@ import {
   createWaitCounter,
   meanCycleTime,
   queueLengths,
+  stalledAt,
   throughputAt,
   throughputSeries,
 } from '../src/sim/metrics';
@@ -342,5 +343,53 @@ describe('metrics', () => {
       expect([...createWaitCounter(tiny).at(rec, t)]).toEqual(dense(t));
     }
     expect(() => wc.at(rec, 5)).toThrow(RangeError);
+  });
+});
+
+describe('stalledAt', () => {
+  // Robot 0 stalls at frame 2 on cell 7, stays through frame 4, moves at 5, stalls again at 7.
+  // Robot 1 has a stall event at frame 1 but moves at frame 3. Robot 2 never stalls.
+  const cells = [
+    [7, 16, 18],
+    [7, 16, 18],
+    [7, 16, 18],
+    [7, 17, 18],
+    [7, 17, 18],
+    [8, 17, 13],
+    [8, 17, 13],
+    [8, 17, 13],
+  ];
+  const r = createRecorder(3, 0);
+  for (const f of cells) {
+    r.pushFrame(Int16Array.from(f), Int16Array.from(f), new Uint8Array(3), new Uint8Array(0));
+  }
+  r.pushEvent(1, 1, EKind.Stall, 16);
+  r.pushEvent(2, 0, EKind.Stall, 7);
+  r.pushEvent(3, 2, EKind.Pick, 6);
+  r.pushEvent(7, 0, EKind.Stall, 8);
+  const rec = r.recording;
+
+  it('marks a robot stalled from its stall event until it moves', () => {
+    const out = new Uint8Array(3);
+    const expected: Record<number, number[]> = {
+      0: [0, 0, 0],
+      1: [0, 1, 0],
+      2: [1, 1, 0],
+      3: [1, 0, 0], // robot 1 moved
+      4: [1, 0, 0],
+      5: [0, 0, 0], // robot 0 moved
+      6: [0, 0, 0],
+      7: [1, 0, 0], // new stall event
+    };
+    for (const t of [0, 1, 2, 3, 4, 5, 6, 7, 2, 0]) {
+      stalledAt(rec, t, out);
+      expect([...out]).toEqual(expected[t]);
+    }
+  });
+
+  it('throws RangeError outside the recorded range', () => {
+    const out = new Uint8Array(3);
+    expect(() => stalledAt(rec, 8, out)).toThrow(RangeError);
+    expect(() => stalledAt(rec, -1, out)).toThrow(RangeError);
   });
 });

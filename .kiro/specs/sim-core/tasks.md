@@ -95,24 +95,24 @@ Bottom-up build of the pure sim (`src/sim`), then a minimal renderer and App so 
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
   - [x] 7.3 Commit: "add verifier tests and badge text"
 
-- [-] 8. Metrics
+- [x] 8. Metrics
   - [x] 8.1 Implement `src/sim/metrics.ts` (`throughputAt`, `throughputSeries`, `meanCycleTime`, `queueLengths`, `createWaitCounter` with incremental cache)
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
   - [x] 8.2 Write property test in `tests/verify.test.ts`: **Property 13: Metrics match naive models** (`numRuns: 100`)
     - **Validates: Requirements 7.1, 7.2**
   - [x] 8.3 Write unit test: wait counter on a hand-built recording, forward then backward queries
     - _Requirements: 7.4_
-  - [ ] 8.4 Commit: "add throughput, cycle time, queue, and wait-count metrics"
+  - [x] 8.4 Commit: "add throughput, cycle time, queue, and wait-count metrics"
 
-- [ ] 9. Full playback UI and renderer overlays
-  - [ ] 9.1 Add trails, congestion hatching, and stall ring with `R17 · STALL` label to `drawFrame`
+- [x] 9. Full playback UI and renderer overlays
+  - [x] 9.1 Add trails, congestion hatching, and stall ring with `R17 · STALL` label to `drawFrame`
     - _Requirements: 8.5, 8.6, 8.7, 8.8_
-  - [ ] 9.2 Implement `Controls.tsx`, `Scrubber.tsx`, `Panel.tsx` and wire them in `App.tsx`
+  - [x] 9.2 Implement `Controls.tsx`, `Scrubber.tsx`, `Panel.tsx` and wire them in `App.tsx`
     - Layout switcher, robot slider to max robots, seed input, play/pause, 1×/4×/16×, step back/forward, congestion and trail toggles (`aria-pressed`), scrubber with throughput line and event ticks
     - Panel: `01 VERIFIER` badge, `02 METRICS` with sparkline, `03 STATIONS` queue lengths, `04 ASSUMPTIONS` with "validated in simulation only"; loader errors shown in mono
     - New Sim on layout, robots, or seed change; scrubbing reads the Recording without stepping; space and ←/→ keys (ignored in text inputs)
     - _Requirements: 6.5, 6.6, 7.5, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.9_
-  - [ ] 9.3 Visible check and commit
+  - [x] 9.3 Visible check and commit
     - `npm run build` and `npm run lint` pass; in `npm run dev` each control, the scrubber, and the keyboard work; badge reads `VERIFIED · 0 VIOLATIONS · N TICKS`
     - Commit: "add playback controls, scrubber, panel, and overlays"
 

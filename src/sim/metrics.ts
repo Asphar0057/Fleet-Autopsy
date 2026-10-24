@@ -125,3 +125,33 @@ export function createWaitCounter(layout: Layout): WaitCounter {
     },
   };
 }
+
+/**
+ * Marks in `out[r]` (1 = stalled, 0 = not) every robot that is stalled at `tick`:
+ * it has a stall event at or before `tick` and has not moved since that event,
+ * i.e. its cell is the same in every frame from the event's tick through `tick`.
+ * `out` must have length >= rec.robots. Throws RangeError outside [0, frames).
+ */
+export function stalledAt(rec: Recording, tick: number, out: Uint8Array): void {
+  if (!Number.isInteger(tick) || tick < 0 || tick >= rec.frames) {
+    throw new RangeError(`tick ${tick} is outside [0, ${rec.frames})`);
+  }
+  const n = rec.robots;
+  out.fill(0, 0, n);
+  // First frame of each robot's current standstill (cells equal from there through `tick`).
+  const since = new Int32Array(n);
+  let earliest = tick;
+  for (let r = 0; r < n; r++) {
+    const c = rec.positions[tick * n + r];
+    let t = tick;
+    while (t > 0 && rec.positions[(t - 1) * n + r] === c) t--;
+    since[r] = t;
+    if (t < earliest) earliest = t;
+  }
+  // Stall events inside a robot's standstill window, scanned backward from `tick`.
+  for (let e = upperBound(rec, tick) - 1; e >= 0 && rec.evTick[e] >= earliest; e--) {
+    if (rec.evKind[e] !== EKind.Stall) continue;
+    const r = rec.evRobot[e];
+    if (r >= 0 && r < n && rec.evTick[e] >= since[r]) out[r] = 1;
+  }
+}

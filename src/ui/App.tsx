@@ -1,45 +1,94 @@
-// Minimal app: loads fulfillment-block, runs the sim at 10 ticks/s, and draws
-// the latest tick. Full controls, panel, and scrubber arrive in task 9.
-import { useEffect, useRef, useState } from 'react';
+// Playback app (design.md D10, Requirement 9). The Sim lives in a memo keyed by
+// (layout, robots, seed). A rAF loop owns the playhead and redraws the canvas every
+// frame it changes; React state for the header, panel, and scrubber is published at
+// about 10 Hz so 16× playback does not re-render React on every tick.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { drawFrame, fitCanvas, readColors } from '../render/canvasRenderer';
-import type { DrawOptions } from '../render/canvasRenderer';
 import { parseLayout } from '../sim/layout';
-import type { Layout, LayoutManifest } from '../sim/layout';
+import type { Layout, LayoutManifest, LayoutMeta } from '../sim/layout';
+import { createWaitCounter, stalledAt, throughputSeries } from '../sim/metrics';
 import { createSim } from '../sim/sim';
 import type { Sim } from '../sim/sim';
+import { verifyRun } from '../sim/verify';
+import { badgeText } from './badge';
+import type { Badge } from './badge';
+import { Controls } from './Controls';
+import { Panel } from './Panel';
+import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from './playback';
+import type { Speed } from './playback';
+import { Scrubber } from './Scrubber';
 
-const LAYOUT_ID = 'fulfillment-block';
-const ROBOTS = 36;
+const DEFAULT_LAYOUT = 'fulfillment-block';
 const DEFAULT_SEED = 42;
-const TICKS_PER_SECOND = 10;
-const MAX_STEPS_PER_FRAME = 5; // cap catch-up after a background tab
+const PUBLISH_MS = 100; // React state updates at about 10 Hz
+const VERIFY_MS = 250; // re-verify the growing recording at most 4 times a second
+const MAX_STEPS_PER_FRAME = 32; // cap catch-up after a background tab
 
-async function loadLayout(id: string): Promise<Layout> {
-  const base = import.meta.env.BASE_URL;
-  const res = await fetch(`${base}layouts/layouts.json`);
+const EMPTY_SERIES = new Int16Array(0);
+
+function errorText(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+async function loadManifest(): Promise<LayoutMeta[]> {
+  const res = await fetch(`${import.meta.env.BASE_URL}layouts/layouts.json`);
   if (!res.ok) throw new Error(`layouts.json: http ${res.status}`);
-  const manifest = (await res.json()) as LayoutManifest;
-  const meta = manifest.layouts.find((m) => m.id === id);
-  if (!meta) throw new Error(`layouts.json: no layout '${id}'`);
-  const grid = await fetch(`${base}layouts/${meta.file}`);
-  if (!grid.ok) throw new Error(`${meta.file}: http ${grid.status}`);
-  return parseLayout(meta, await grid.text());
+  return ((await res.json()) as LayoutManifest).layouts;
+}
+
+async function loadLayout(meta: LayoutMeta): Promise<Layout> {
+  const res = await fetch(`${import.meta.env.BASE_URL}layouts/${meta.file}`);
+  if (!res.ok) throw new Error(`${meta.file}: http ${res.status}`);
+  return parseLayout(meta, await res.text());
+}
+
+/** Keyboard shortcuts are ignored while focus is in a field that uses the keys itself. */
+function isEditable(el: EventTarget | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  if (el.isContentEditable) return true;
+  return el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement;
+}
+
+/** Mutable playback state shared by the rAF loop and the event handlers. */
+interface Runtime {
+  playhead: number;
+  dirty: boolean;
+  playing: boolean;
+  speed: Speed;
+  trails: boolean;
+  congestion: boolean;
 }
 
 export function App() {
+  const [layouts, setLayouts] = useState<LayoutMeta[]>([]);
+  const [layoutId, setLayoutId] = useState(DEFAULT_LAYOUT);
   const [layout, setLayout] = useState<Layout | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [robots, setRobots] = useState(0);
+  const [seed, setSeed] = useState(DEFAULT_SEED);
+  const [playing, setPlaying] = useState(true);
+  const [speed, setSpeed] = useState<Speed>(1);
+  const [trails, setTrails] = useState(false);
+  const [congestion, setCongestion] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // Published at about 10 Hz by the loop, immediately by user actions.
+  const [playhead, setPlayhead] = useState(0);
+  const [frames, setFrames] = useState(1);
+  const [badge, setBadge] = useState<Badge | null>(null);
+
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const layoutCache = useRef(new Map<string, Layout>());
+  const rt = useRef<Runtime>({ playhead: 0, dirty: true, playing: true, speed: 1, trails: false, congestion: false });
 
+  // Manifest, once.
   useEffect(() => {
     let cancelled = false;
-    loadLayout(LAYOUT_ID).then(
+    loadManifest().then(
       (l) => {
-        if (!cancelled) setLayout(l);
+        if (!cancelled) setLayouts(l);
       },
       (e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setLoadError(errorText(e));
       },
     );
     return () => {
@@ -47,51 +96,130 @@ export function App() {
     };
   }, []);
 
+  // Selected layout; robots reset to the layout's recommended count in the same render.
+  useEffect(() => {
+    const meta = layouts.find((m) => m.id === layoutId);
+    if (!meta) return;
+    let cancelled = false;
+    const cached = layoutCache.current.get(meta.id);
+    const p = cached ? Promise.resolve(cached) : loadLayout(meta);
+    p.then(
+      (l) => {
+        if (cancelled) return;
+        layoutCache.current.set(meta.id, l);
+        setLoadError(null);
+        setLayout(l);
+        setRobots(meta.recommendedRobots);
+      },
+      (e: unknown) => {
+        if (!cancelled) setLoadError(errorText(e));
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [layouts, layoutId]);
+
+  // A new Sim whenever layout, robots, or seed change (D10). createSim is deterministic.
+  const created = useMemo((): { sim: Sim | null; error: string | null } => {
+    if (!layout || robots < 1) return { sim: null, error: null };
+    try {
+      return { sim: createSim(layout, { seed, robots, queueCap: layout.queueCap, faults: [] }), error: null };
+    } catch (e) {
+      return { sim: null, error: errorText(e) };
+    }
+  }, [layout, robots, seed]);
+  const sim = created.sim;
+
+  // Keep the loop's view of toggles in sync and redraw on change.
+  useEffect(() => {
+    const r = rt.current;
+    r.playing = playing;
+    r.speed = speed;
+    r.trails = trails;
+    r.congestion = congestion;
+    r.dirty = true;
+  }, [playing, speed, trails, congestion]);
+
+  const publish = useCallback(() => {
+    if (!sim) return;
+    setPlayhead(rt.current.playhead);
+    setFrames(sim.recording.frames);
+  }, [sim]);
+
+  // Render loop for the current Sim.
   useEffect(() => {
     const canvas = canvasRef.current;
     const box = boxRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!layout || !canvas || !box || !ctx) return;
+    if (!sim || !canvas || !box || !ctx) return;
+    const { layout: lay } = sim;
+    const r = rt.current;
+    r.playhead = 0;
+    r.dirty = true;
+    const stalled = new Uint8Array(sim.config.robots);
+    const waits = createWaitCounter(lay);
+    const colors = readColors();
+    setBadge(null);
+    publish();
 
-    let sim: Sim;
-    try {
-      sim = createSim(layout, { seed: DEFAULT_SEED, robots: ROBOTS, queueCap: layout.queueCap, faults: [] });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      return;
-    }
-    const opts: DrawOptions = {
-      trails: false,
-      congestion: false,
-      waitCounts: null,
-      stalled: new Uint8Array(ROBOTS),
-      colors: readColors(),
+    const draw = () => {
+      const rec = sim.recording;
+      const ph = r.playhead;
+      stalledAt(rec, ph, stalled);
+      drawFrame(ctx, lay, rec, ph, {
+        trails: r.trails,
+        congestion: r.congestion,
+        waitCounts: r.congestion ? waits.at(rec, ph) : null,
+        stalled,
+        colors,
+      });
     };
-    const draw = () => drawFrame(ctx, layout, sim.recording, sim.tick, opts);
 
     const observer = new ResizeObserver(() => {
-      fitCanvas(canvas, layout);
-      draw();
+      fitCanvas(canvas, lay);
+      r.dirty = true;
     });
     observer.observe(box);
-    fitCanvas(canvas, layout);
-    draw();
+    fitCanvas(canvas, lay);
 
-    const interval = 1000 / TICKS_PER_SECOND;
     let last = performance.now();
     let acc = 0;
+    let lastPublish = -Infinity;
+    let lastVerify = -Infinity;
+    let verifiedFrames = -1;
     let raf = 0;
     const frame = (now: number) => {
-      acc += now - last;
+      const dt = now - last;
       last = now;
-      let steps = 0;
-      while (acc >= interval && steps < MAX_STEPS_PER_FRAME) {
-        sim.step();
-        acc -= interval;
-        steps++;
+      if (r.playing) {
+        acc += dt;
+        const interval = tickInterval(r.speed);
+        let steps = 0;
+        while (acc >= interval && steps < MAX_STEPS_PER_FRAME) {
+          r.playhead = stepForward(sim, r.playhead);
+          acc -= interval;
+          steps++;
+        }
+        if (steps === MAX_STEPS_PER_FRAME) acc = 0;
+        if (steps > 0) r.dirty = true;
+      } else {
+        acc = 0;
       }
-      if (steps === MAX_STEPS_PER_FRAME) acc = 0;
-      if (steps > 0) draw();
+      if (r.dirty) {
+        r.dirty = false;
+        draw();
+      }
+      if (now - lastPublish >= PUBLISH_MS) {
+        lastPublish = now;
+        publish();
+      }
+      const rec = sim.recording;
+      if (rec.frames !== verifiedFrames && now - lastVerify >= VERIFY_MS) {
+        lastVerify = now;
+        verifiedFrames = rec.frames;
+        setBadge(badgeText(verifyRun(rec, lay).length, sim.tick));
+      }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -100,18 +228,129 @@ export function App() {
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [layout]);
+  }, [sim, publish]);
+
+  const seek = useCallback(
+    (t: number) => {
+      if (!sim) return;
+      rt.current.playhead = clampPlayhead(sim, t);
+      rt.current.dirty = true;
+      publish();
+    },
+    [sim, publish],
+  );
+
+  const onStepForward = useCallback(() => {
+    if (!sim) return;
+    setPlaying(false);
+    rt.current.playhead = stepForward(sim, rt.current.playhead);
+    rt.current.dirty = true;
+    publish();
+  }, [sim, publish]);
+
+  const onStepBack = useCallback(() => {
+    if (!sim) return;
+    setPlaying(false);
+    rt.current.playhead = stepBack(rt.current.playhead);
+    rt.current.dirty = true;
+    publish();
+  }, [sim, publish]);
+
+  const togglePlay = useCallback(() => setPlaying((p) => !p), []);
+
+  // Keyboard: space toggles play, ←/→ step (Requirement 9.5).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || isEditable(e.target)) return;
+      if (e.key === ' ') {
+        // A focused button already activates on space; let it.
+        if (e.target instanceof HTMLButtonElement) return;
+        e.preventDefault();
+        togglePlay();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        onStepBack();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        onStepForward();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [togglePlay, onStepBack, onStepForward]);
+
+  const onLayout = useCallback(
+    (id: string) => {
+      if (id !== layoutId) setLayoutId(id);
+    },
+    [layoutId],
+  );
+
+  const rec = sim ? sim.recording : null;
+  // State can lag a just-created Sim by one render; clamp into its recording.
+  const shownFrames = rec ? Math.min(frames, rec.frames) : 1;
+  const shownPlayhead = Math.min(playhead, shownFrames - 1);
+  const series = useMemo(
+    () => (sim ? throughputSeries(sim.recording, shownFrames - 1) : EMPTY_SERIES),
+    [sim, shownFrames],
+  );
+  const meta = layouts.find((m) => m.id === (layout?.id ?? layoutId));
+  const error = loadError ?? created.error;
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: 16 }}>
-      <h1 style={{ fontWeight: 400 }}>
-        Fleet <em>Autopsy</em>
-      </h1>
-      {error !== null && <pre style={{ fontFamily: 'ui-monospace, monospace' }}>{error}</pre>}
-      <div ref={boxRef} style={{ width: '100%', height: 'calc(100vh - 160px)', minHeight: 240 }}>
-        <canvas ref={canvasRef} style={{ display: 'block' }} aria-label="warehouse floor, robots moving" role="img" />
-      </div>
-      <p>validated in simulation only</p>
-    </main>
+    <div className="app">
+      <header className="header">
+        <h1 className="wordmark">
+          Fleet <em>Autopsy</em>
+        </h1>
+        <p className="meta mono" aria-live="off">
+          SEED {pad4(seed)} · TICK {pad4(shownPlayhead)}
+        </p>
+      </header>
+
+      <Controls
+        layouts={layouts}
+        layoutId={layoutId}
+        onLayout={onLayout}
+        robots={Math.max(1, robots)}
+        maxRobots={meta?.maxRobots ?? 1}
+        recommendedRobots={meta?.recommendedRobots ?? 1}
+        onRobots={setRobots}
+        seed={seed}
+        onSeed={setSeed}
+        playing={playing}
+        onTogglePlay={togglePlay}
+        speed={speed}
+        onSpeed={setSpeed}
+        onStepBack={onStepBack}
+        onStepForward={onStepForward}
+        trails={trails}
+        onTrails={setTrails}
+        congestion={congestion}
+        onCongestion={setCongestion}
+        disabled={!sim}
+      />
+
+      <main className="main">
+        <div className="canvas-box" ref={boxRef}>
+          <canvas
+            ref={canvasRef}
+            role="img"
+            aria-label={layout ? `${layout.name} floor, ${robots} robots, tick ${shownPlayhead}` : 'warehouse floor'}
+          />
+        </div>
+        <Panel
+          layout={layout}
+          rec={rec}
+          playhead={shownPlayhead}
+          frames={shownFrames}
+          series={series}
+          badge={badge}
+          error={error}
+        />
+      </main>
+
+      <Scrubber rec={rec} frames={shownFrames} playhead={shownPlayhead} series={series} onSeek={seek} />
+    </div>
   );
 }

@@ -14,10 +14,12 @@ export interface Colors {
 }
 
 export interface DrawOptions {
-  trails: boolean; // task 9
-  congestion: boolean; // task 9
-  waitCounts: Uint16Array | null; // task 9
-  stalled: Uint8Array; // 1 per robot; task 9
+  trails: boolean;
+  congestion: boolean;
+  /** Per-cell wait counts at `tick` (createWaitCounter); hatching needs it. */
+  waitCounts: Uint16Array | null;
+  /** 1 per stalled robot at `tick` (stalledAt). */
+  stalled: Uint8Array;
   /** Colors read once at mount via `readColors`; defaults to the design tokens. */
   colors?: Colors;
 }
@@ -28,6 +30,10 @@ const WALL_WIDTH = 1.4;
 const SLOT_INSET = 2.5;
 const ROBOT_R = 0.27;
 const CARRY_R = 0.42;
+const STALL_R = 0.78;
+const TRAIL_TICKS = 12;
+const HATCH_WIDTH = 0.6;
+const HATCH_LEVELS = 4;
 
 /**
  * Reads --ink, --bg, --accent from CSS custom properties on `el`
@@ -202,9 +208,122 @@ function drawRobots(
 }
 
 /**
+ * Congestion layer: 45° hatching per floor cell, clipped analytically to the cell.
+ * Density is normalized by the maximum count: levels 1..HATCH_LEVELS draw
+ * 1, 3, 5, 7 lines. No color, ink only.
+ */
+function drawCongestion(
+  ctx: CanvasRenderingContext2D,
+  layout: Layout,
+  waits: Uint16Array,
+  cell: number,
+  ink: string,
+): void {
+  const { width, floor } = layout;
+  let max = 0;
+  for (let k = 0; k < floor.length; k++) if (waits[floor[k]] > max) max = waits[floor[k]];
+  if (max === 0) return;
+  ctx.beginPath();
+  for (let k = 0; k < floor.length; k++) {
+    const i = floor[k];
+    const w = waits[i];
+    if (w === 0) continue;
+    const level = Math.max(1, Math.ceil((HATCH_LEVELS * w) / max));
+    const lines = 2 * level - 1;
+    const x0 = (i % width) * cell;
+    const y0 = Math.floor(i / width) * cell;
+    // Lines x + y = s in cell-local coordinates, s evenly spaced in (0, 2 cell).
+    for (let j = 1; j <= lines; j++) {
+      const s = (2 * cell * j) / (lines + 1);
+      const ax = Math.max(0, s - cell);
+      const bx = Math.min(cell, s);
+      ctx.moveTo(x0 + ax, y0 + s - ax);
+      ctx.lineTo(x0 + bx, y0 + s - bx);
+    }
+  }
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = HATCH_WIDTH;
+  ctx.lineCap = 'butt';
+  ctx.stroke();
+}
+
+/** Trails: the last TRAIL_TICKS moves of each robot, older segments more transparent. */
+function drawTrails(
+  ctx: CanvasRenderingContext2D,
+  layout: Layout,
+  rec: Recording,
+  tick: number,
+  cell: number,
+  ink: string,
+): void {
+  const n = rec.robots;
+  const w = layout.width;
+  const span = Math.min(TRAIL_TICKS, tick);
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'round';
+  // One path per segment age: segment from frame t - 1 to frame t, age = tick - t.
+  for (let age = 0; age < span; age++) {
+    const t = tick - age;
+    const cur = t * n;
+    const prev = cur - n;
+    ctx.beginPath();
+    let any = false;
+    for (let r = 0; r < n; r++) {
+      const a = rec.positions[prev + r];
+      const b = rec.positions[cur + r];
+      if (a === b) continue;
+      ctx.moveTo(((a % w) + 0.5) * cell, (Math.floor(a / w) + 0.5) * cell);
+      ctx.lineTo(((b % w) + 0.5) * cell, (Math.floor(b / w) + 0.5) * cell);
+      any = true;
+    }
+    if (!any) continue;
+    ctx.globalAlpha = 1 - age / TRAIL_TICKS;
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** Stalled robots: accent ring and a mono label `R{id} · STALL`. */
+function drawStalls(
+  ctx: CanvasRenderingContext2D,
+  layout: Layout,
+  rec: Recording,
+  tick: number,
+  stalled: Uint8Array,
+  cell: number,
+  accent: string,
+): void {
+  const pos = positionsAt(rec, tick);
+  const w = layout.width;
+  const fullW = layout.width * cell;
+  ctx.strokeStyle = accent;
+  ctx.fillStyle = accent;
+  ctx.lineWidth = 1;
+  ctx.font = `${Math.max(9, Math.round(cell * 0.42))}px 'Geist Mono', ui-monospace, monospace`;
+  ctx.textBaseline = 'bottom';
+  const n = Math.min(rec.robots, stalled.length);
+  for (let r = 0; r < n; r++) {
+    if (stalled[r] !== 1) continue;
+    const cx = ((pos[r] % w) + 0.5) * cell;
+    const cy = (Math.floor(pos[r] / w) + 0.5) * cell;
+    const rr = STALL_R * cell;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+    ctx.stroke();
+    const label = `R${r} · STALL`;
+    const lw = ctx.measureText(label).width;
+    // Label to the upper right of the ring; flip left near the right edge.
+    const right = cx + rr * 0.7 + lw + 2 <= fullW;
+    ctx.textAlign = right ? 'left' : 'right';
+    ctx.fillText(label, right ? cx + rr * 0.7 : cx - rr * 0.7, Math.max(cell * 0.5, cy - rr * 0.7));
+  }
+}
+
+/**
  * Draws the full frame at `tick` (must be in [0, rec.frames)). Expects the
- * context scaled by fitCanvas. Trails, congestion, and stall overlays are
- * accepted but not drawn yet (task 9).
+ * context scaled by fitCanvas. Layer order: floor structure, congestion,
+ * trails, robots, stalls. The accent color is used for stalls only.
  */
 export function drawFrame(
   ctx: CanvasRenderingContext2D,
@@ -217,7 +336,10 @@ export function drawFrame(
   const cell = cellOf(ctx, layout);
   ctx.fillStyle = c.bg;
   ctx.fillRect(0, 0, layout.width * cell, layout.height * cell);
+  if (opts.congestion && opts.waitCounts) drawCongestion(ctx, layout, opts.waitCounts, cell, c.ink);
   drawWalls(ctx, layout, cell, c.ink);
   drawEndpoints(ctx, layout, cell, c);
+  if (opts.trails) drawTrails(ctx, layout, rec, tick, cell, c.ink);
   drawRobots(ctx, layout, rec, tick, cell, c.ink);
+  drawStalls(ctx, layout, rec, tick, opts.stalled, cell, c.accent);
 }
