@@ -66,24 +66,24 @@ Rules for every task:
     - **Validates: Requirements 2.1**
   - [x] 4.6 Check and commit: commit "add blocked-cell verifier rule and runHeadless"
 
-- [ ] 5. Telemetry
+- [x] 5. Telemetry
   - [x] 5.1 Implement `src/sim/telemetry.ts` (`jamWindow`, `createTelemetryTracker`, `deriveTelemetry`) per design; add an ESLint `no-restricted-imports` block so `telemetry.ts` and `jam.ts` cannot import `faults`, `sim`, `oracle`, or `scenarios`
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
   - [x] 5.2 Write `tests/telemetry.test.ts` examples: standstill resets on move, serving, and idle; service ring keeps the last 5; RangeError out of range; log the time to derive 2,000 ticks × 45 robots
     - _Requirements: 3.2, 3.3, 3.5_
   - [x] 5.3 Write property test: **Property 9: Telemetry matches a naive recount** (`numRuns: 25`, 300 ticks)
     - **Validates: Requirements 3.2, 3.3, 3.4**
-  - [-] 5.4 Check and commit: `npm run lint` passes; commit "derive telemetry from recordings"
+  - [x] 5.4 Check and commit: `npm run lint` passes; commit "derive telemetry from recordings"
 
-- [ ] 6. Jam detector and healthy-baseline gate
-  - [~] 6.1 Implement `src/sim/jam.ts` (`baselineAt`, `detectJam`, histogram median, latched detection, onset and severity per D16, D17)
+- [x] 6. Jam detector and healthy-baseline gate
+  - [x] 6.1 Implement `src/sim/jam.ts` (`baselineAt`, `detectJam`, histogram median, latched detection, onset and severity per D16, D17)
     - _Requirements: 4.1, 4.2, 4.3_
-  - [~] 6.2 Write property test in `tests/jam.test.ts`: **Property 10: Jam detector matches a reference model** (`numRuns: 100`)
+  - [x] 6.2 Write property test in `tests/jam.test.ts`: **Property 10: Jam detector matches a reference model** (`numRuns: 100`)
     - **Validates: Requirements 4.1, 4.2, 4.3**
-  - [~] 6.3 Write the healthy gate: 3 presets × seeds 1 to 5 × 2,000 ticks return null; log per-run minimum throughput / Baseline ratio and max stalled100
+  - [x] 6.3 Write the healthy gate: 3 presets × seeds 1 to 5 × 2,000 ticks return null; log per-run minimum throughput / Baseline ratio and max stalled100
     - If a run false-alarms, apply the debug rule; the only allowed remedy beyond fixing a bug is the D18 200-tick window for layouts under 20 deliveries per 100 ticks, recorded in design.md D18 and the Assumptions text
     - _Requirements: 4.4_
-  - [~] 6.4 Check and commit: commit "add jam detector with healthy-baseline gate"
+  - [x] 6.4 Check and commit: commit "add jam detector with healthy-baseline gate"
 
 - [ ] 7. Oracle
   - [~] 7.1 Implement `deliveries`, `scoreFaults`, `isValid` in `src/sim/oracle.ts` (D14) using `runHeadless`
