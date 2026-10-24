@@ -37,8 +37,12 @@ export function JamBadge({ jam }: { jam: Jam | null }) {
       <p className={b.alert ? 'badge badge--alert' : 'badge'}>{b.text}</p>
       {jam !== null && (
         <span className="status-tips">
-          <InfoTip label="onset" text={TERMS.onset} />
-          <InfoTip label="severity" text={TERMS.severity} />
+          <span className="label">
+            Onset <InfoTip label="onset" text={TERMS.onset} />
+          </span>
+          <span className="label">
+            Throughput down <InfoTip label="throughput down" text={TERMS.severity} />
+          </span>
         </span>
       )}
       {/* Announce state changes only, not every severity update. */}

@@ -1008,7 +1008,9 @@ input[type='range']:disabled {
 
 .status-tips {
   display: inline-flex;
-  gap: var(--s-1);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
 }
 
 /* These tips can end a row at the panel's right edge: open them leftwards. */
