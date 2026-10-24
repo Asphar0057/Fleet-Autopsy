@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { createRecorder, hashRecording, positionsAt, statesAt } from '../src/sim/recorder';
+import type { Recording } from '../src/sim/recorder';
+import { parseLayout } from '../src/sim/layout';
+import { verifyRun } from '../src/sim/verify';
+import { badgeText } from '../src/ui/badge';
+import { metaFor } from './helpers';
 
 describe('recorder', () => {
   it('throws RangeError outside the recorded range', () => {
@@ -104,5 +109,111 @@ describe('recorder properties', () => {
       }),
       { numRuns: 100 },
     );
+  });
+});
+
+// Required test 2: hand-built recordings on a tiny grid.
+//   #####     cells:  0  1  2  3  4
+//   #p..#             5  6  7  8  9     6 = pod slot
+//   #.#.#            10 11 12 13 14    12 = interior wall
+//   #...#            15 16 17 18 19
+//   #####
+const GRID = '#####\n#p..#\n#.#.#\n#...#\n#####\n';
+const tiny = parseLayout(metaFor(GRID), GRID);
+const POD = 6;
+const WALL = 12;
+
+/** Builds a recording from frames of [cell, goal] per robot. */
+function recordingOf(frames: [number, number][][]): Recording {
+  const robots = frames[0].length;
+  const r = createRecorder(robots, 0);
+  const q = new Uint8Array(0);
+  for (const f of frames) {
+    r.pushFrame(
+      Int16Array.from(f.map(([c]) => c)),
+      Int16Array.from(f.map(([, g]) => g)),
+      new Uint8Array(robots),
+      q,
+    );
+  }
+  return r.recording;
+}
+
+describe('verifyRun', () => {
+  it('accepts a clean run', () => {
+    const rec = recordingOf([
+      [[7, 18], [16, 8]],
+      [[8, 18], [17, 8]],
+      [[13, 18], [18, 8]],
+    ]);
+    expect(verifyRun(rec, tiny)).toEqual([]);
+  });
+
+  it('flags same-cell with tick and both robot ids', () => {
+    const rec = recordingOf([
+      [[7, 18], [8, 18]],
+      [[8, 18], [8, 18]],
+    ]);
+    expect(verifyRun(rec, tiny)).toEqual([{ kind: 'same-cell', tick: 1, robots: [0, 1] }]);
+  });
+
+  it('flags a swap with tick and both robot ids', () => {
+    const rec = recordingOf([
+      [[16, 18], [7, 18], [8, 16]],
+      [[16, 18], [8, 18], [7, 16]],
+    ]);
+    expect(verifyRun(rec, tiny)).toEqual([{ kind: 'swap', tick: 1, robots: [1, 2] }]);
+  });
+
+  it('flags a jump (diagonal and two cells) with tick and robot id', () => {
+    const rec = recordingOf([
+      [[7, 18], [16, 18]],
+      [[7, 18], [18, 18]],
+      [[13, 18], [18, 18]],
+    ]);
+    expect(verifyRun(rec, tiny)).toEqual([
+      { kind: 'jump', tick: 1, robots: [1] },
+      { kind: 'jump', tick: 2, robots: [0] },
+    ]);
+  });
+
+  it('flags a robot on a wall cell as illegal-cell', () => {
+    const rec = recordingOf([[[11, 13]], [[WALL, 13]], [[13, 13]]]);
+    expect(verifyRun(rec, tiny)).toEqual([{ kind: 'illegal-cell', tick: 1, robots: [0] }]);
+  });
+
+  it('allows an endpoint that is the goal, and staying there after the goal changes', () => {
+    const rec = recordingOf([
+      [[7, POD]],
+      [[POD, POD]], // enters its goal
+      [[POD, 18]], // picked: goal changed, still on the slot
+      [[POD, 18]],
+      [[7, 18]],
+    ]);
+    expect(verifyRun(rec, tiny)).toEqual([]);
+  });
+
+  it('flags entering an endpoint that is not the goal', () => {
+    const rec = recordingOf([
+      [[7, 18], [11, 13]],
+      [[POD, 18], [16, 13]],
+    ]);
+    expect(verifyRun(rec, tiny)).toEqual([{ kind: 'illegal-cell', tick: 1, robots: [0] }]);
+  });
+
+  it('flags spawning on a non-goal endpoint at tick 0', () => {
+    const rec = recordingOf([[[POD, 18]]]);
+    expect(verifyRun(rec, tiny)).toEqual([{ kind: 'illegal-cell', tick: 0, robots: [0] }]);
+  });
+});
+
+describe('badgeText', () => {
+  it('reads VERIFIED with 0 violations', () => {
+    expect(badgeText(0, 2000)).toEqual({ text: 'VERIFIED · 0 VIOLATIONS · 2000 TICKS', alert: false });
+  });
+
+  it('shows the violation count as an alert', () => {
+    expect(badgeText(3, 214)).toEqual({ text: '3 VIOLATIONS · 214 TICKS', alert: true });
+    expect(badgeText(1, 214)).toEqual({ text: '1 VIOLATION · 214 TICKS', alert: true });
   });
 });
