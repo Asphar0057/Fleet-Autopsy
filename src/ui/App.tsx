@@ -73,7 +73,14 @@ interface Runtime {
   reveal: boolean;
 }
 
-export function App() {
+export interface AppProps {
+  /** Wordmark: return to the landing view. */
+  onHome?(): void;
+  /** Header "How it works": open the drawer; focus returns to the opener on close. */
+  onHowItWorks?(opener: HTMLElement): void;
+}
+
+export function App({ onHome, onHowItWorks }: AppProps = {}) {
   const [layouts, setLayouts] = useState<LayoutMeta[]>([]);
   const [layoutId, setLayoutId] = useState(DEFAULT_LAYOUT);
   const [layout, setLayout] = useState<Layout | null>(null);
@@ -441,12 +448,27 @@ export function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1 className="wordmark">
-          Fleet <em>Autopsy</em>
-        </h1>
-        <p className="meta mono" aria-live="off">
-          SEED {pad4(seed)} · TICK {pad4(shownPlayhead)}
-        </p>
+        <div className="header-left">
+          <h1 className="header-title">
+            <button
+              type="button"
+              className="wordmark"
+              aria-label="Fleet Autopsy, back to start"
+              onClick={() => onHome?.()}
+            >
+              Fleet <em>Autopsy</em>
+            </button>
+          </h1>
+          <p className="scenario-name">{scenario?.name ?? 'Healthy fleet'}</p>
+        </div>
+        <div className="header-right">
+          <p className="meta mono" aria-live="off">
+            seed {pad4(seed)} · tick {pad4(shownPlayhead)}
+          </p>
+          <button type="button" className="btn btn--quiet" onClick={(e) => onHowItWorks?.(e.currentTarget)}>
+            How it works
+          </button>
+        </div>
       </header>
 
       <Controls

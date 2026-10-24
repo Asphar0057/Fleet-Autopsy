@@ -130,6 +130,33 @@ button {
   border-bottom: 1px solid var(--hairline);
 }
 
+.header-left,
+.header-right {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  min-width: 0;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-title {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.scenario-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  line-height: 32px;
+  color: var(--fg-2);
+}
+
 .wordmark {
   font-family: var(--font-display);
   font-size: var(--fs-h1);
@@ -171,10 +198,270 @@ button.wordmark {
   border-bottom: 1px solid var(--hairline);
 }
 
-.control-group {
+/* Three clusters (scenario, fleet, playback) separated by thin vertical rules. */
+.cluster {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  min-width: 0;
+}
+
+.cluster + .cluster {
+  padding-left: var(--s-4);
+  border-left: 1px solid var(--hairline);
+}
+
+/* One label + control pair inside a cluster. */
+.field {
+  display: inline-flex;
   align-items: center;
   gap: var(--s-2);
+  min-width: 0;
+}
+
+/* Segmented control: joined buttons, outer corners rounded. */
+.segmented {
+  display: inline-flex;
+}
+
+.segmented .btn {
+  border-radius: 0;
+}
+
+.segmented .btn + .btn {
+  margin-left: -1px;
+}
+
+.segmented .btn:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.segmented .btn:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.segmented .btn:only-child {
+  border-radius: var(--radius);
+}
+
+/* Keep the hovered or pressed border on top of its neighbours. */
+.segmented .btn:hover,
+.segmented .btn[aria-pressed='true'],
+.segmented .btn:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+/* Switch: a pill track with a round thumb, then the label text. */
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  min-height: 32px;
+  background: transparent;
+  border: 0;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.switch-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 16px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--fg-2);
+  transition:
+    transform var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.switch:hover .switch-track {
+  border-color: var(--fg);
+}
+
+.switch[aria-pressed='true'] .switch-track {
+  background: var(--fg);
+  border-color: var(--fg);
+}
+
+.switch[aria-pressed='true'] .switch-thumb {
+  background: var(--bg);
+  transform: translateX(12px);
+}
+
+/* Chip: pill toggle for overlays. */
+.chip {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 1px 12px;
+  min-height: 24px;
+  background: transparent;
+  color: var(--fg-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+/* Icon button: 32px square, 16px inline SVG in currentColor. */
+.btn-icon {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.btn-icon svg {
+  display: block;
+}
+
+.btn-icon:hover:not(:disabled) {
+  border-color: var(--fg);
+}
+
+.btn-icon:active:not(:disabled) {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.btn-icon--primary {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+.btn-icon--primary:hover:not(:disabled) {
+  background: var(--fg-2);
+  border-color: var(--fg-2);
+}
+
+.btn-icon:disabled {
+  background: transparent;
+  color: var(--fg-3);
+  border-color: var(--hairline);
+  cursor: default;
+}
+
+/* Info tip: a small round "i" button; the tooltip shows on hover and keyboard focus. */
+.infotip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.infotip-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: 1;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  cursor: help;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.infotip-btn:hover {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.infotip-text {
+  position: absolute;
+  top: calc(100% + var(--s-2));
+  left: 50%;
+  z-index: 10;
+  width: max-content;
+  max-width: 240px;
+  padding: var(--s-2) var(--s-3);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius);
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility var(--dur) var(--ease);
+}
+
+.infotip:hover .infotip-text,
+.infotip:focus-within .infotip-text {
+  visibility: visible;
+  opacity: 1;
 }
 
 .value {
@@ -220,10 +507,6 @@ button.wordmark {
   color: var(--fg-3);
   border-color: var(--hairline);
   cursor: default;
-}
-
-.btn--play {
-  min-width: 7ch;
 }
 
 /* Primary: white fill, black text. */
