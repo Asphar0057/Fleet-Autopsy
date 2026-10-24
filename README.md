@@ -4,7 +4,8 @@ Deterministic warehouse-fleet simulator that finds why a robot traffic jam happe
 ## Status
 
 - [x] Spec 1: simulation core, layouts, renderer
-- [ ] Spec 2: failure injection, telemetry, battery and charging
+- [x] Spec 2: failure injection with ground truth, telemetry, jam detection, curated scenarios
+  - battery and charging were cut on purpose; chargers are drawn and unused
 - [ ] Spec 3: diagnosis engine (abduction by simulation, counterfactual replay)
 - [ ] Spec 4: autopsy UI, AI-written report, verified fix
 

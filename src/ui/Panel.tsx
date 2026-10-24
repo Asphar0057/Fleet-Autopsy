@@ -1,5 +1,6 @@
-// Right-hand panel (Requirement 6.5, 6.6, 7.5, 9.6, 9.9): verifier badge,
-// metrics at the playhead with a throughput sparkline, station queues, assumptions.
+// Right-hand panel (Requirement 6.5, 6.6, 7.5, 9.6, 9.9; Spec 2 D20): verifier
+// badge, metrics at the playhead with a throughput sparkline, telemetry and jam
+// badge, station queues, assumptions.
 import { useMemo } from 'react';
 import type { Layout } from '../sim/layout';
 import { meanCycleTime, queueLengths, THROUGHPUT_WINDOW } from '../sim/metrics';
@@ -7,17 +8,21 @@ import type { Recording } from '../sim/recorder';
 import { stationLabel } from '../render/labels';
 import type { Badge } from './badge';
 import { maxOf, polylinePoints } from './sparkline';
+import { TelemetryPanel } from './TelemetryPanel';
+import type { TelemetryView } from './TelemetryPanel';
 
 const SPARK_W = 240;
 const SPARK_H = 64;
 
 const ASSUMPTIONS = [
-  'validated in simulation only',
+  'simulation only; results are not validated on real fleets',
+  'faults are injected with known ground truth',
+  'detection thresholds are fixed and were not tuned on the evaluation scenarios beyond the healthy baselines',
   'inspired by fulfillment-center drive-unit systems; no affiliation with any company',
   'discrete ticks; each robot stays or moves one cell (4-neighborhood)',
   'service takes 8–14 ticks, drawn from the seeded rng',
   'one robot at a station and its access cell at a time',
-  'chargers drawn, unused in this version (no battery model)',
+  'battery and charging cut on purpose; chargers are drawn and unused',
   `throughput = deliveries in the last ${THROUGHPUT_WINDOW} ticks`,
 ];
 
@@ -30,10 +35,12 @@ export interface PanelProps {
   /** throughputSeries over 0..frames-1; its prefix up to the playhead is the series at the playhead. */
   series: Int16Array;
   badge: Badge | null;
+  /** Telemetry and jam detection, published about 4 times a second. */
+  telemetry: TelemetryView | null;
   error: string | null;
 }
 
-export function Panel({ layout, rec, playhead, frames, series, badge, error }: PanelProps) {
+export function Panel({ layout, rec, playhead, frames, series, badge, telemetry, error }: PanelProps) {
   const ready = rec !== null && playhead < frames && playhead < rec.frames;
 
   const metrics = useMemo(() => {
@@ -134,8 +141,10 @@ export function Panel({ layout, rec, playhead, frames, series, badge, error }: P
         )}
       </section>
 
+      <TelemetryPanel view={telemetry} queueCap={layout ? layout.queueCap : 0} />
+
       <section className="section">
-        <h2 className="label">03&nbsp;&nbsp;STATIONS</h2>
+        <h2 className="label">04&nbsp;&nbsp;STATIONS</h2>
         {metrics && layout ? (
           <table className="stations mono">
             <thead>
@@ -159,7 +168,7 @@ export function Panel({ layout, rec, playhead, frames, series, badge, error }: P
       </section>
 
       <section className="section">
-        <h2 className="label">04&nbsp;&nbsp;ASSUMPTIONS</h2>
+        <h2 className="label">05&nbsp;&nbsp;ASSUMPTIONS</h2>
         <ul className="assumptions">
           {ASSUMPTIONS.map((a) => (
             <li key={a}>{a}</li>

@@ -105,32 +105,32 @@ Rules for every task:
     - _Requirements: 4.5, 4.6_
   - [x] 8.4 Check and commit: commit "add curated failure scenarios with oracle-verified ground truth"
 
-- [ ] 9. Scenario generator
-  - [-] 9.1 Implement `generateScenarios(layout, seed, count)` in `src/sim/oracle.ts` per D13 (seeded rejection sampling, decoy-first pairs, attempt bound `30 × count`, descriptive throw)
+- [x] 9. Scenario generator
+  - [x] 9.1 Implement `generateScenarios(layout, seed, count)` in `src/sim/oracle.ts` per D13 (seeded rejection sampling, decoy-first pairs, attempt bound `30 × count`, descriptive throw)
     - _Requirements: 6.3, 6.4, 6.5_
-  - [~] 9.2 Write tests: `generateScenarios(pocket-dc, 1, 3)` returns 3 scenarios that pass `isValid` and is deep-equal on a second call; an attempt bound of 0 (internal option) throws
+  - [x] 9.2 Write tests: `generateScenarios(pocket-dc, 1, 3)` returns 3 scenarios that pass `isValid` and is deep-equal on a second call; an attempt bound of 0 (internal option) throws
     - _Requirements: 6.3, 6.4, 6.5_
-  - [~] 9.3 Check and commit: commit "add deterministic scenario generator"
+  - [x] 9.3 Check and commit: commit "add deterministic scenario generator"
 
-- [ ] 10. Scenario select, block drawing, and ground-truth reveal
-  - [~] 10.1 Extend `drawFrame` with `blocked` (ink cross-hatched square) and `reveal` (accent square and `F1` tags) per D21
+- [x] 10. Scenario select, block drawing, and ground-truth reveal
+  - [x] 10.1 Extend `drawFrame` with `blocked` (ink cross-hatched square) and `reveal` (accent square and `F1` tags) per D21
     - _Requirements: 8.3, 8.4_
-  - [~] 10.2 Add the scenario select and `reveal ground truth` toggle (`aria-pressed`) to `Controls.tsx`; scenario state, faults in the Sim memo, D19 reset rule, `verifyRun` with faults, `blockedAt` per frame in `App.tsx`; fault ticks in `Scrubber.tsx`; pure `faultLegend` in `src/ui/legend.ts` shown under the canvas when revealed
+  - [x] 10.2 Add the scenario select and `reveal ground truth` toggle (`aria-pressed`) to `Controls.tsx`; scenario state, faults in the Sim memo, D19 reset rule, `verifyRun` with faults, `blockedAt` per frame in `App.tsx`; fault ticks in `Scrubber.tsx`; pure `faultLegend` in `src/ui/legend.ts` shown under the canvas when revealed
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
-  - [~] 10.3 Write a unit test for `faultLegend` in `tests/ui.test.ts`
+  - [x] 10.3 Write a unit test for `faultLegend` in `tests/ui.test.ts`
     - _Requirements: 8.4_
-  - [~] 10.4 Visible check and commit: `npm run build` passes; in `npm run dev` choosing a scenario updates layout, robots, and seed; no fault markers until reveal; blocks hatched; legend and scrubber ticks on reveal; all reachable by keyboard. Commit "add scenario select and ground-truth reveal"
+  - [x] 10.4 Visible check and commit: `npm run build` passes; in `npm run dev` choosing a scenario updates layout, robots, and seed; no fault markers until reveal; blocks hatched; legend and scrubber ticks on reveal; all reachable by keyboard. Commit "add scenario select and ground-truth reveal"
 
 - [ ] 11. Telemetry panel, jam badge, assumptions, README
-  - [~] 11.1 Implement `jamBadgeText` in `src/ui/jamBadge.ts`, `JamBadge` and `TelemetryPanel.tsx` (sparkline with accent onset marker, queue bars, stalled ≥ 20 count, disabled "Find the cause" with caption "available in the next step"); renumber panel sections (D20)
+  - [x] 11.1 Implement `jamBadgeText` in `src/ui/jamBadge.ts`, `JamBadge` and `TelemetryPanel.tsx` (sparkline with accent onset marker, queue bars, stalled ≥ 20 count, disabled "Find the cause" with caption "available in the next step"); renumber panel sections (D20)
     - _Requirements: 9.1, 9.2, 9.3_
-  - [~] 11.2 In `App.tsx`, create a tracker per Sim and run `advance(playhead)` + `detectJam` every 250 ms in the rAF loop
+  - [x] 11.2 In `App.tsx`, create a tracker per Sim and run `advance(playhead)` + `detectJam` every 250 ms in the rAF loop
     - _Requirements: 9.4_
-  - [~] 11.3 Add the three Requirement 10.1 lines to the Assumptions; README Status: tick Spec 2 and add "battery and charging were cut on purpose; chargers are drawn and unused"
+  - [x] 11.3 Add the three Requirement 10.1 lines to the Assumptions; README Status: tick Spec 2 and add "battery and charging were cut on purpose; chargers are drawn and unused"
     - _Requirements: 10.1, 10.2_
-  - [~] 11.4 Write `jamBadgeText` examples in `tests/jam.test.ts` (null gives `HEALTHY`; a jam gives `JAM DETECTED · ONSET T=… · SEVERITY …%` with alert)
+  - [x] 11.4 Write `jamBadgeText` examples in `tests/jam.test.ts` (null gives `HEALTHY`; a jam gives `JAM DETECTED · ONSET T=… · SEVERITY …%` with alert)
     - _Requirements: 9.2_
-  - [~] 11.5 Visible check and commit: in `npm run dev`, `pd-holder-freeze` shows `JAM DETECTED` with an onset, playback stays smooth at 16×. Commit "add telemetry panel and jam badge"
+  - [-] 11.5 Visible check and commit: in `npm run dev`, `pd-holder-freeze` shows `JAM DETECTED` with an onset, playback stays smooth at 16×. Commit "add telemetry panel and jam badge"
 
 - [~] 12. Final checkpoint
   - Ensure `npm test`, `npm run lint`, and `npm run build` pass, including golden, healthy-baseline, jam, and oracle tests; ask the user if questions arise

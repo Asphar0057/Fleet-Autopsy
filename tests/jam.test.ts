@@ -16,6 +16,7 @@ import {
 import type { Jam, JamSignal } from '../src/sim/jam';
 import { SCENARIOS, scenarioConfig } from '../src/sim/scenarios';
 import { EKind, RState } from '../src/sim/types';
+import { jamBadgeText } from '../src/ui/jamBadge';
 import { loadPreset, PRESET_IDS } from './helpers';
 
 const pocket = loadPreset('pocket-dc');
@@ -261,4 +262,31 @@ describe('curated scenarios are detected', () => {
     },
     60_000,
   );
+});
+
+// ---- jam badge text (Requirement 9.2) ----
+
+describe('jamBadgeText', () => {
+  it('is HEALTHY in ink without a jam', () => {
+    expect(jamBadgeText(null)).toEqual({ text: 'HEALTHY', alert: false });
+  });
+
+  it('shows the zero-padded onset and rounded severity in accent for a jam', () => {
+    const jam: Jam = { onsetTick: 607, detectedTick: 679, severity: 0.426, signals: ['throughput'] };
+    expect(jamBadgeText(jam)).toEqual({ text: 'JAM DETECTED · ONSET T=0607 · SEVERITY 43%', alert: true });
+    expect(jamBadgeText({ ...jam, onsetTick: 12345, severity: 1 }).text).toBe(
+      'JAM DETECTED · ONSET T=12345 · SEVERITY 100%',
+    );
+  });
+
+  it('shows a jam for pd-holder-freeze at tick 2000', () => {
+    const s = SCENARIOS.find((x) => x.id === 'pd-holder-freeze');
+    expect(s).toBeDefined();
+    if (!s) return;
+    const layout = loadPreset(s.layoutId);
+    const rec = runHeadless(layout, scenarioConfig(s, layout), 2000);
+    const b = jamBadgeText(detectJam(rec, layout, 2000));
+    expect(b.alert).toBe(true);
+    expect(b.text).toMatch(/^JAM DETECTED · ONSET T=\d{4} · SEVERITY \d{1,3}%$/);
+  }, 60_000);
 });

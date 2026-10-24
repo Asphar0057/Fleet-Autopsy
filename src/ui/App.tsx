@@ -12,6 +12,8 @@ import { SCENARIOS, scenarioConfig } from '../sim/scenarios';
 import { createSim } from '../sim/sim';
 import type { Sim } from '../sim/sim';
 import type { FaultEvent, Scenario } from '../sim/types';
+import { detectJam } from '../sim/jam';
+import { createTelemetryTracker } from '../sim/telemetry';
 import { verifyRun } from '../sim/verify';
 import { badgeText } from './badge';
 import type { Badge } from './badge';
@@ -21,11 +23,13 @@ import { Panel } from './Panel';
 import { clampPlayhead, pad4, stepBack, stepForward, tickInterval } from './playback';
 import type { Speed } from './playback';
 import { Scrubber } from './Scrubber';
+import type { TelemetryView } from './TelemetryPanel';
 
 const DEFAULT_LAYOUT = 'fulfillment-block';
 const DEFAULT_SEED = 42;
 const PUBLISH_MS = 100; // React state updates at about 10 Hz
 const VERIFY_MS = 250; // re-verify the growing recording at most 4 times a second
+const TELEMETRY_MS = 250; // telemetry and jam detection at most 4 times a second (Requirement 9.4)
 const MAX_STEPS_PER_FRAME = 32; // cap catch-up after a background tab
 
 const EMPTY_SERIES = new Int16Array(0);
@@ -87,6 +91,7 @@ export function App() {
   const [playhead, setPlayhead] = useState(0);
   const [frames, setFrames] = useState(1);
   const [badge, setBadge] = useState<Badge | null>(null);
+  const [telemetry, setTelemetry] = useState<TelemetryView | null>(null);
 
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -162,6 +167,8 @@ export function App() {
   }, [layout, robots, seed, scenario]);
   const sim = created.sim;
   const faults: readonly FaultEvent[] = sim ? sim.config.faults : NO_FAULTS;
+  // Incremental telemetry per Sim (Requirement 9.4). It reads the live recording.
+  const tracker = useMemo(() => (sim ? createTelemetryTracker(sim.recording, sim.layout) : null), [sim]);
 
   // Keep the loop's view of toggles in sync and redraw on change.
   useEffect(() => {
@@ -185,7 +192,7 @@ export function App() {
     const canvas = canvasRef.current;
     const box = boxRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!sim || !canvas || !box || !ctx) return;
+    if (!sim || !tracker || !canvas || !box || !ctx) return;
     const { layout: lay } = sim;
     const r = rt.current;
     r.playhead = 0;
@@ -203,7 +210,19 @@ export function App() {
     let windows: Int32Array = new Int32Array(0);
     let windowsFrames = -1;
     setBadge(null);
+    setTelemetry(null);
     publish();
+
+    // Telemetry up to the playhead, then detection on it. The tracker reuses its
+    // arrays, so copy what React keeps. A backward seek recounts from 0.
+    const S = sim.recording.stations;
+    const updateTelemetry = (ph: number) => {
+      const tel = tracker.advance(ph);
+      const jam = detectJam(sim.recording, lay, ph, tel);
+      const queues: number[] = new Array<number>(S);
+      for (let s = 0; s < S; s++) queues[s] = tel.queueLen[ph * S + s];
+      setTelemetry({ upTo: ph, throughput: tel.throughput.slice(), stalled20: tel.stalled20[ph], queues, jam });
+    };
 
     const draw = () => {
       const rec = sim.recording;
@@ -255,6 +274,8 @@ export function App() {
     let lastPublish = -Infinity;
     let lastVerify = -Infinity;
     let verifiedFrames = -1;
+    let lastTelemetry = -Infinity;
+    let telemetryAt = -1;
     let raf = 0;
     const frame = (now: number) => {
       const dt = now - last;
@@ -287,6 +308,11 @@ export function App() {
         verifiedFrames = rec.frames;
         setBadge(badgeText(verifyRun(rec, lay, simFaults).length, sim.tick));
       }
+      if (r.playhead !== telemetryAt && now - lastTelemetry >= TELEMETRY_MS) {
+        lastTelemetry = now;
+        telemetryAt = r.playhead;
+        updateTelemetry(telemetryAt);
+      }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -296,7 +322,7 @@ export function App() {
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [sim, publish]);
+  }, [sim, tracker, publish]);
 
   const seek = useCallback(
     (t: number) => {
@@ -475,6 +501,7 @@ export function App() {
           frames={shownFrames}
           series={series}
           badge={badge}
+          telemetry={telemetry}
           error={error}
         />
       </main>

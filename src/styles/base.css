@@ -1,6 +1,7 @@
 /* Base styles per .kiro/steering/design.md. Tokens live in tokens.css.
    8px grid, 1px black hairlines, no shadows, gradients, or blur, radius <= 2px.
-   The accent color is used only for alerts (violation badge, loader error) and,
+   The accent color is used only for alerts (violation badge, jam badge and its
+   onset marker, loader error) and,
    when ground truth is revealed, fault markers (canvas, scrubber ticks). */
 
 *,
@@ -457,6 +458,72 @@ input[type='range']:disabled {
 .stations th:last-child,
 .stations td:last-child {
   text-align: right;
+}
+
+/* ---------- Telemetry (section 03) ---------- */
+
+/* Primary: ink fill, white text (the inverted button state). */
+.btn--primary {
+  background: var(--ink);
+  color: var(--bg);
+  width: 100%;
+  min-height: 32px;
+}
+
+.find-cause {
+  margin: 16px 0;
+}
+
+.find-cause .note {
+  margin-top: 4px;
+}
+
+.telemetry-metrics {
+  margin: 16px 0 8px;
+}
+
+.queues {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.queue {
+  display: grid;
+  grid-template-columns: 4ch minmax(0, 1fr) 5ch;
+  align-items: center;
+  gap: 8px;
+}
+
+.queue .value {
+  text-align: right;
+}
+
+/* 1px outlined bar, ink fill proportional to queue / queueCap. */
+.qbar {
+  display: block;
+  height: 8px;
+  border: 1px solid var(--line);
+}
+
+.qbar-fill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .assumptions {
