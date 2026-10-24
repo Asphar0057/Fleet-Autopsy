@@ -29,6 +29,9 @@ body {
   line-height: 22px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Guard only: the overflow sources themselves are fixed below (task 9.1). */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 h1,
@@ -189,25 +192,32 @@ button.wordmark {
 
 /* ---------- Controls ---------- */
 
+/* Three clusters (scenario, fleet, playback) separated by thin vertical rules.
+   Every cluster carries its rule on the left and is pulled left by its padding
+   plus 1px, so the rule of a cluster that starts a line sits outside the bar and
+   is clipped; between clusters on a line it sits in the middle of the 48px gap.
+   The clip keeps 4px on each side for focus outlines. clip-path makes a stacking
+   context, so the bar is lifted above the main area for its tooltips. */
 .controls {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-2) var(--s-4);
+  gap: var(--s-2) var(--s-6);
   padding: var(--s-3) 0;
   border-bottom: 1px solid var(--hairline);
+  clip-path: inset(-100vh calc(-1 * var(--s-1)));
 }
 
-/* Three clusters (scenario, fleet, playback) separated by thin vertical rules. */
 .cluster {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2) var(--s-3);
   min-width: 0;
-}
-
-.cluster + .cluster {
+  max-width: 100%;
+  margin-left: calc(-1 * var(--s-4) - 1px);
   padding-left: var(--s-4);
   border-left: 1px solid var(--hairline);
 }
@@ -437,7 +447,7 @@ button.wordmark {
   left: 50%;
   z-index: 10;
   width: max-content;
-  max-width: 240px;
+  max-width: min(240px, calc(100vw - 32px));
   padding: var(--s-2) var(--s-3);
   background: var(--surface);
   color: var(--fg);
@@ -544,6 +554,7 @@ input[type='number'] {
   appearance: textfield;
   -moz-appearance: textfield;
   width: 12ch;
+  max-width: 100%;
   margin: 0;
   padding: 5px 8px;
   min-height: 32px;
@@ -620,13 +631,18 @@ input[type='range']:disabled {
 
 #robots {
   width: 160px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Select: hairline border, no fill; a text caret in a wrapper replaces the
-   native arrow (no images, no gradients). */
+   native arrow (no images, no gradients). The wrapper may shrink below the
+   longest option (a select's min-content), so it never forces overflow. */
 .select {
   position: relative;
   display: inline-block;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .select::after {
@@ -710,8 +726,10 @@ input[type='range']:disabled {
   border-left: 1px solid var(--hairline);
 }
 
+/* 4px on the right so focus outlines at the edge are not clipped by the
+   panel's scroll box. */
 .section {
-  padding: var(--s-4) 0 var(--s-4) var(--s-4);
+  padding: var(--s-4) var(--s-1) var(--s-4) var(--s-4);
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -742,6 +760,11 @@ input[type='range']:disabled {
 .badge--alert {
   color: var(--accent);
   border-color: var(--accent);
+}
+
+/* Verifier violations: an error, so a white border instead of Accent. */
+.badge--strong {
+  border-color: var(--fg);
 }
 
 .metrics {
@@ -813,6 +836,13 @@ input[type='range']:disabled {
 .status-tips {
   display: inline-flex;
   gap: var(--s-1);
+}
+
+/* These tips can end a row at the panel's right edge: open them leftwards. */
+.status-tips .infotip-text {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 .stations {
@@ -1030,6 +1060,8 @@ input[type='range']:disabled {
 .scrubber-meta {
   display: flex;
   justify-content: space-between;
+  gap: var(--s-2);
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: var(--fs-mono);
   line-height: 16px;
@@ -1060,6 +1092,80 @@ input[type='range']:disabled {
   }
   .section {
     padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Clusters become full-width rows; the vertical rules become hairlines
+     between rows. No clipping needed, so the bar is a plain block again. */
+  .controls {
+    position: static;
+    z-index: auto;
+    clip-path: none;
+    row-gap: var(--s-3);
+  }
+  .cluster {
+    flex: 1 1 100%;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .cluster + .cluster {
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--hairline);
+  }
+
+  /* Info tips open as a fixed strip at the bottom of the viewport, so they
+     never extend past either edge (and never add scroll width while hidden). */
+  .infotip-text,
+  .status-tips .infotip-text {
+    position: fixed;
+    top: auto;
+    right: var(--s-3);
+    bottom: var(--s-3);
+    left: var(--s-3);
+    z-index: 30;
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+}
+
+/* ---------- Phones: stack cluster rows, shrink controls, wrap the header ---------- */
+
+@media (max-width: 639px) {
+  .app {
+    padding: 0 var(--s-3);
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-1);
+  }
+  .header-right {
+    justify-content: flex-start;
+  }
+  .wordmark {
+    font-size: var(--fs-num);
+    line-height: 40px;
+  }
+  /* Label and control pairs may wrap; segmented groups wrap their buttons. */
+  .field {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .segmented {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .select {
+    flex: 1 1 100%;
+  }
+  .select select {
+    width: 100%;
+  }
+  #robots {
+    flex: 1 1 96px;
+    width: auto;
   }
 }
 

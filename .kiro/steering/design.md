@@ -62,8 +62,8 @@ Dark only, no light mode. No gradients, shadows, or blur. Radius 4px for buttons
 - Quiet button: no border, grey text, white on hover.
 - Control bar: three clusters (scenario, fleet, playback) separated by thin rules. Segmented controls for layout and speed, a pill switch for "Reveal ground truth", chips for overlays, 16px inline SVG icon buttons with accessible names and tooltips.
 - Select: hairline border, custom caret. Range: 1px faint track, 12px round white thumb. Both keyboard operable.
-- Badge: hairline border, Geist 13px. Healthy is white on black. Jam is Accent text and border.
-- Info tip: small focusable button with `aria-label="About {term}"` and a `role="tooltip"`; shown on hover and keyboard focus.
+- Badge: hairline border, Geist 13px. Healthy is white on black. Jam is Accent text and border. Verifier violations are an error: white border, never Accent.
+- Info tip: small focusable button with `aria-label="About {term}"` and a `role="tooltip"`; shown on hover and keyboard focus. Width at most `min(240px, 100vw - 32px)`; under 1024px it opens as a fixed strip at the bottom of the viewport.
 - Queue bars: 4px tall, `--track` background, white fill.
 - Focus: 2px white outline, 2px offset on every focusable control. Never Accent.
 

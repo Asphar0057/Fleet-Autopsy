@@ -64,7 +64,8 @@ export function Panel({ layout, rec, playhead, frames, series, badge, telemetry,
       <section className="section">
         <SectionHead title="Verifier" note={SECTION_NOTES.verifier} />
         {badge ? (
-          <p className={badge.alert ? 'badge badge--alert' : 'badge'} role="status">
+          // Violations are errors, not the jam: a white border, never Accent (Accent rules).
+          <p className={badge.alert ? 'badge badge--strong' : 'badge'} role="status">
             {badge.text}
           </p>
         ) : (

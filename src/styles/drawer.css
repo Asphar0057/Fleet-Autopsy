@@ -59,7 +59,7 @@
 
 .hiw-step {
   display: grid;
-  grid-template-columns: var(--s-4) 1fr;
+  grid-template-columns: var(--s-4) minmax(0, 1fr);
   gap: var(--s-2);
   align-items: baseline;
 }
