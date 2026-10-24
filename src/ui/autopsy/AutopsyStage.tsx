@@ -10,7 +10,15 @@ import type { Recording } from '../../sim/recorder';
 import type { Scenario } from '../../sim/types';
 import { maxOf, polylinePoints } from '../sparkline';
 import { autopsyReducer, INITIAL_AUTOPSY, STEP_COUNT } from './autopsyState';
-import { baselineRows, faultsWithoutCause, focusTick, stepCopy, suspects } from './model';
+import {
+  baselineRows,
+  evidenceLines,
+  faultsWithoutCause,
+  fixThroughputLine,
+  focusTick,
+  stepCopy,
+  suspects,
+} from './model';
 import { templateReport } from './report';
 import { isAbort, simulateAsync } from './obtain';
 import type { AutopsyRun } from './types';
@@ -186,7 +194,7 @@ export default function AutopsyStage(p: AutopsyStageProps) {
             <p className="label">Evidence · confidence {rc ? rc.confidence : 'none'}</p>
             {rc ? (
               <ul className="assumptions">
-                {rc.evidence.map((e) => (
+                {evidenceLines(a).map((e) => (
                   <li key={e}>{e}</li>
                 ))}
               </ul>
@@ -210,10 +218,7 @@ export default function AutopsyStage(p: AutopsyStageProps) {
               {a.fix.passed ? 'verified in simulation' : 'not verified'} · recovered {(a.fix.recoveredFraction * 100).toFixed(0)}%
             </p>
             <p>{a.fix.fix ?? 'No fix proposed.'}</p>
-            <p className="note">
-              {a.fix.throughputBefore.toFixed(2)} → {a.fix.throughputAfter.toFixed(2)} deliveries / 100 ticks (no-fault{' '}
-              {a.fix.throughputBaseline.toFixed(2)})
-            </p>
+            <p className="note">{fixThroughputLine(a)}</p>
             <button type="button" className="btn" aria-pressed={p.fixActive} disabled={rc === null} onClick={p.onToggleFix}>
               {p.fixActive ? 'Back to the observed run' : 'Replay with fix applied'}
             </button>

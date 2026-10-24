@@ -1,5 +1,5 @@
 // Deterministic template report, built only from the autopsy data (no model, no clock).
-import { faultLabel } from './model';
+import { evidenceLines, faultLabel, fixThroughputLine, fixWindow, impactWindow } from './model';
 import type { AutopsyData } from './types';
 
 export function templateReport(a: AutopsyData): string {
@@ -25,24 +25,24 @@ export function templateReport(a: AutopsyData): string {
   L.push('Root cause');
   if (rc) {
     L.push(faultLabel(rc.fault));
-    for (const e of rc.evidence) L.push(`- ${e}`);
+    for (const e of evidenceLines(a)) L.push(`- ${e}`);
   } else {
     L.push('none found');
   }
   L.push('');
   L.push('Impact');
+  if (rc) L.push(`Diagnosis: removal recovers ${rc.impact.toFixed(1)} deliveries / 100 ticks ${impactWindow(a)}.`);
   L.push(
-    `Throughput was ${f.throughputBefore.toFixed(2)} deliveries / 100 ticks with the fault and ` +
-      `${f.throughputBaseline.toFixed(2)} without any fault.`,
+    `Observed: ${f.throughputBefore.toFixed(2)} deliveries / 100 ticks with the fault, ` +
+      `${f.throughputBaseline.toFixed(2)} without any fault, ${fixWindow(a)}.`,
   );
-  if (rc) L.push(`Removing the root cause recovers ${rc.impact.toFixed(1)} deliveries / 100 ticks.`);
   L.push('');
   L.push('Recommended fix');
   L.push(f.fix ?? 'none');
   L.push(
     f.passed
-      ? `Verified in simulation: throughput ${f.throughputAfter.toFixed(2)} after the fix, recovered fraction ${f.recoveredFraction.toFixed(2)}.`
-      : `Not verified: recovered fraction ${f.recoveredFraction.toFixed(2)} after the fix.`,
+      ? `Verified in simulation: ${fixThroughputLine(a)}, recovered fraction ${f.recoveredFraction.toFixed(2)}.`
+      : `Not verified: ${fixThroughputLine(a)}, recovered fraction ${f.recoveredFraction.toFixed(2)}.`,
   );
   L.push('');
   L.push('Confidence and limits');

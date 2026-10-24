@@ -55,10 +55,41 @@ export function stepCopy(a: AutopsyData, step: number): { title: string; caption
       return {
         title,
         caption: a.fix.passed
-          ? `Removing it recovers ${(a.fix.recoveredFraction * 100).toFixed(0)}% of the lost throughput.`
+          ? `Removing it recovers ${(a.fix.recoveredFraction * 100).toFixed(0)}% of the lost throughput ${fixWindow(a)}.`
           : 'The proposed fix did not pass in simulation.',
       };
   }
+}
+
+/**
+ * Two different measurements, labelled with their window so they never look
+ * contradictory:
+ * - impact (RankedFault.impact): diagnosis replays of the observed config with only
+ *   the hypothesised faults, over ticks 0 to window.endTick;
+ * - fix (FixResult): the true world, over the full run of `ticks` ticks.
+ */
+export function impactWindow(a: AutopsyData): string {
+  return `in the diagnosis replays, ticks 0 to ${a.diagnosis.window.endTick}`;
+}
+
+export function fixWindow(a: AutopsyData): string {
+  return `over the full ${a.ticks}-tick run`;
+}
+
+/** Root-cause evidence, with the impact line labelled by its window. */
+export function evidenceLines(a: AutopsyData): string[] {
+  const rc = a.diagnosis.rootCause;
+  if (!rc) return [];
+  return rc.evidence.map((e) => (e.startsWith('removal recovers') ? `${e} ${impactWindow(a)}` : e));
+}
+
+/** `7.45 → 12.95 deliveries / 100 ticks over the full 2000-tick run (no-fault 12.95)`. */
+export function fixThroughputLine(a: AutopsyData): string {
+  const f = a.fix;
+  return (
+    `${f.throughputBefore.toFixed(2)} → ${f.throughputAfter.toFixed(2)} deliveries / 100 ticks ${fixWindow(a)} ` +
+    `(no-fault ${f.throughputBaseline.toFixed(2)})`
+  );
 }
 
 export interface Suspect {
