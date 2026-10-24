@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { stationFontSize, stationLabel } from '../src/render/labels';
+import { overlapsAny, stationFontSize, stationLabel } from '../src/render/labels';
+
+describe('overlapsAny', () => {
+  const boxes = new Float64Array([0, 0, 50, 12, 100, 0, 50, 12]);
+  it('detects intersection with any of the first count boxes', () => {
+    expect(overlapsAny(boxes, 2, 40, 6, 20, 12)).toBe(true);
+    expect(overlapsAny(boxes, 2, 120, 5, 10, 10)).toBe(true);
+    expect(overlapsAny(boxes, 1, 120, 5, 10, 10)).toBe(false);
+    expect(overlapsAny(boxes, 0, 0, 0, 50, 12)).toBe(false);
+  });
+  it('treats touching edges as no overlap', () => {
+    expect(overlapsAny(boxes, 2, 50, 0, 50, 12)).toBe(false);
+    expect(overlapsAny(boxes, 2, 0, 12, 50, 12)).toBe(false);
+  });
+});
 
 // Two mono glyphs at 0.6 em each.
 const twoGlyphs = (px: number) => px * 1.2;

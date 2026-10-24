@@ -6,7 +6,7 @@ import type { Layout } from '../sim/layout';
 import { positionsAt, statesAt } from '../sim/recorder';
 import type { Recording } from '../sim/recorder';
 import { CellKind, RState } from '../sim/types';
-import { MAX_STALL_LABELS, stallLabels, stationFontSize, stationLabel } from './labels';
+import { MAX_STALL_LABELS, overlapsAny, stallLabels, stationFontSize, stationLabel } from './labels';
 import type { RevealMarks } from './marks';
 
 export type { RevealMark, RevealMarks } from './marks';
@@ -68,6 +68,8 @@ export const CANVAS_FONT = `'Gotham', 'Montserrat', system-ui, sans-serif`;
  * and stateless in effect (the no-module-state rule covers src/sim only).
  */
 const STALL_IDS = new Int16Array(MAX_STALL_LABELS);
+/** Boxes (x, y, w, h) of the stall labels drawn so far in a frame. */
+const LABEL_BOXES = new Float64Array(MAX_STALL_LABELS * 4);
 
 const WALL_WIDTH = 1;
 const LABEL_PX = 11;
@@ -406,6 +408,8 @@ function drawStalls(
   ctx.fillStyle = c.label;
   ctx.font = LABEL_FONT;
   ctx.textBaseline = 'bottom';
+  // Greedy by robot id: a label that would overlap one already drawn is skipped.
+  let drawn = 0;
   for (let k = 0; k < shown; k++) {
     const r = STALL_IDS[k];
     const cx = ((pos[r] % w) + 0.5) * cell;
@@ -414,12 +418,22 @@ function drawStalls(
     const lw = ctx.measureText(label).width;
     // Label to the upper right of the ring; flip left near the right edge.
     const right = cx + rr * 0.7 + lw + 2 <= fullW;
+    const tx = right ? cx + rr * 0.7 : cx - rr * 0.7;
+    const ty = Math.max(LABEL_PX + 1, cy - rr * 0.7);
+    const bx = right ? tx : tx - lw;
+    const by = ty - LABEL_PX - 1;
+    if (overlapsAny(LABEL_BOXES, drawn, bx, by, lw, LABEL_PX + 1)) continue;
+    LABEL_BOXES[drawn * 4] = bx;
+    LABEL_BOXES[drawn * 4 + 1] = by;
+    LABEL_BOXES[drawn * 4 + 2] = lw;
+    LABEL_BOXES[drawn * 4 + 3] = LABEL_PX + 1;
+    drawn++;
     ctx.textAlign = right ? 'left' : 'right';
-    ctx.fillText(label, right ? cx + rr * 0.7 : cx - rr * 0.7, Math.max(LABEL_PX + 1, cy - rr * 0.7));
+    ctx.fillText(label, tx, ty);
   }
 
   // Count chip when more robots are stalled than labelled.
-  if (total > MAX_STALL_LABELS) {
+  if (total > drawn) {
     const text = `${total} stalled`;
     const tw = ctx.measureText(text).width;
     const pad = 6;

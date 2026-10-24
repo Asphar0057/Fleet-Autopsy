@@ -21,6 +21,20 @@ export function stationFontSize(cell: number, widthAt: (px: number) => number): 
   return w > max && w > 0 ? (size * max) / w : size;
 }
 
+/**
+ * True when the box (x, y, w, h) intersects any of the first `count` boxes in
+ * `boxes`, stored flat as x, y, w, h. Touching edges do not overlap. Used to skip
+ * a stall label that would overlap one already drawn (greedy, by robot id).
+ */
+export function overlapsAny(boxes: Float64Array, count: number, x: number, y: number, w: number, h: number): boolean {
+  for (let k = 0; k < count; k++) {
+    const bx = boxes[k * 4];
+    const by = boxes[k * 4 + 1];
+    if (x < bx + boxes[k * 4 + 2] && bx < x + w && y < by + boxes[k * 4 + 3] && by < y + h) return true;
+  }
+  return false;
+}
+
 /** At most this many Stall_Labels per frame; more stalled robots show a count chip. */
 export const MAX_STALL_LABELS = 4;
 
