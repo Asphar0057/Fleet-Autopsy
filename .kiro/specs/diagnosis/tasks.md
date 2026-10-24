@@ -79,16 +79,16 @@ Rules for every task:
     - **Validates: Requirements 5.3**
   - [x] 6.6 Check and commit: commit "add naive baselines and ground-truth matching"
 
-- [ ] 7. Verified fix
-  - [~] 7.1 Implement `fixOutcome`, `verifyFix` (ticks = 2000, baseline = no-fault run, removes world faults matching the root cause, `verifiedBy: 'simulation'`) and `proposeFix` sentences in `src/diagnosis/fix.ts`
+- [x] 7. Verified fix
+  - [x] 7.1 Implement `fixOutcome`, `verifyFix` (ticks = 2000, baseline = no-fault run, removes world faults matching the root cause, `verifiedBy: 'simulation'`) and `proposeFix` sentences in `src/diagnosis/fix.ts`
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
-  - [~] 7.2 Write `tests/fix.test.ts` (required test 6): `verifyFix` passes on all 6 curated scenarios using their diagnoses; a wrong fix (the decoy on `pd-decoy-first`, an unrelated robot elsewhere) fails; a null root cause gives `fix: null`, `passed: false`
+  - [x] 7.2 Write `tests/fix.test.ts` (required test 6): `verifyFix` passes on all 6 curated scenarios using their diagnoses; a wrong fix (the decoy on `pd-decoy-first`, an unrelated robot elsewhere) fails; a null root cause gives `fix: null`, `passed: false`
     - _Requirements: 6.1, 6.2, 6.4_
-  - [~] 7.3 Write property test: **Property 10: Fix pass rule** (`numRuns: 100`)
+  - [x] 7.3 Write property test: **Property 10: Fix pass rule** (`numRuns: 100`)
     - **Validates: Requirements 6.2**
-  - [~] 7.4 Write property test: **Property 11: Proposed fixes name their target** (`numRuns: 100`)
+  - [x] 7.4 Write property test: **Property 11: Proposed fixes name their target** (`numRuns: 100`)
     - **Validates: Requirements 6.3**
-  - [~] 7.5 Check and commit: commit "verify proposed fixes in simulation"
+  - [x] 7.5 Check and commit: commit "verify proposed fixes in simulation"
 
 - [ ] 8. Benchmark runner
   - [~] 8.1 Implement `buildBenchmarkSet` (20 scenarios per layout from seeds ≥ 1000, skip seeds that throw; decoy and primary-only cases), `runBenchmark` (detect, diagnose, both baselines, reason codes, medians), and `renderResultsMd` in `src/diagnosis/benchmark.ts`; `BENCH_MODE` = `full` | `dev` (seeds 100 to 120) | `fast` (6 curated)
