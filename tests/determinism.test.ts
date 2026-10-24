@@ -1,6 +1,56 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { mulberry32, randInt } from '../src/sim/rng';
+import { hashRecording } from '../src/sim/recorder';
+import { runCase, runCaseArb, seedArb } from './helpers';
+
+const RUN_TICKS = 300;
+
+describe('sim determinism (required test 1)', () => {
+  it('same layout, config, and seed give identical recordings; a different seed differs', () => {
+    const base = { id: 'fulfillment-block', seed: 42, robots: 36 };
+    const a = runCase(base, 500).recording;
+    const b = runCase(base, 500).recording;
+    const c = runCase({ ...base, seed: 43 }, 500).recording;
+    expect(a.frames).toBe(501);
+    expect(hashRecording(a)).toBe(hashRecording(b));
+    const n = a.frames * a.robots;
+    expect(a.positions.subarray(0, n)).toEqual(b.positions.subarray(0, n));
+    expect(hashRecording(c)).not.toBe(hashRecording(a));
+  }, 60_000);
+
+  // Feature: sim-core, Property 4: Same inputs, same recording
+  // **Validates: Requirements 2.3, 2.6, 5.6**
+  it('Property 4: Same inputs, same recording', () => {
+    const faultsArb = fc.array(
+      fc.record({ tick: fc.integer({ min: 0, max: RUN_TICKS }), kind: fc.constantFrom('stop', 'slow', 'block') }),
+      { minLength: 1, maxLength: 4 },
+    );
+    fc.assert(
+      fc.property(runCaseArb(), faultsArb, (c, faults) => {
+        const h1 = hashRecording(runCase(c, RUN_TICKS).recording);
+        const h2 = hashRecording(runCase(c, RUN_TICKS).recording);
+        const h3 = hashRecording(runCase(c, RUN_TICKS, faults).recording);
+        return h1 === h2 && h1 === h3;
+      }),
+      { numRuns: 25 },
+    );
+  }, 120_000);
+
+  // Feature: sim-core, Property 5: Different seeds, different recordings
+  // **Validates: Requirements 2.4**
+  it('Property 5: Different seeds, different recordings', () => {
+    fc.assert(
+      fc.property(runCaseArb(), seedArb, (c, other) => {
+        fc.pre(other !== c.seed);
+        const h1 = hashRecording(runCase(c, RUN_TICKS).recording);
+        const h2 = hashRecording(runCase({ ...c, seed: other }, RUN_TICKS).recording);
+        return h1 !== h2;
+      }),
+      { numRuns: 25 },
+    );
+  }, 120_000);
+});
 
 describe('mulberry32', () => {
   it('same seed gives the same first value; different seeds differ', () => {
