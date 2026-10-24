@@ -113,35 +113,34 @@ button {
   outline-offset: var(--focus-offset);
 }
 
-/* ---------- App shell: full-height grid (header, controls, main) ---------- */
+/* ---------- App shell: full width, the page scrolls (header, controls, main) ---------- */
 
 .app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 var(--s-4);
-  height: 100vh;
-  height: 100dvh;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  padding-inline: var(--gutter);
 }
 
+/* Left (wordmark, scenario name) and right (meta, How it works) groups; on narrow
+   screens the right group wraps under the left one instead of overflowing. */
 .header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  align-items: baseline;
-  gap: var(--s-3);
-  padding: var(--s-3) 0 var(--s-2);
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  padding-block: var(--s-3);
   border-bottom: 1px solid var(--hairline);
 }
 
 .header-left,
 .header-right {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--s-1) var(--s-4);
   min-width: 0;
+  max-width: 100%;
 }
 
 .header-right {
@@ -184,8 +183,8 @@ button.wordmark {
 .meta {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: var(--fs-meta);
-  line-height: 16px;
+  font-size: var(--fs-ui);
+  line-height: 20px;
   color: var(--fg-2);
   font-variant-numeric: tabular-nums;
 }
@@ -684,30 +683,30 @@ input[type='range']:disabled {
   background: var(--surface);
 }
 
-/* ---------- Main: canvas column | hairline | panel ---------- */
+/* ---------- Main: one column, stage on top, panel below ---------- */
 
 .main {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-4);
+  padding-block: var(--s-4) var(--s-6);
 }
 
 .stage {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 0;
-  padding: var(--s-4) var(--s-4) var(--s-3) 0;
 }
 
-/* The box takes the layout's aspect ratio (inline style) and shrinks to the
-   available height. The canvas is absolutely positioned inside it, so the
-   canvas never sizes its own container (no ResizeObserver loop). */
+/* The box takes the layout's aspect ratio (inline style) across the full width,
+   clamped to 62vh; fitCanvas centres the floor inside it. The canvas is
+   absolutely positioned inside it, so the canvas never sizes its own container
+   (no ResizeObserver loop). */
 .canvas-box {
   position: relative;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   width: 100%;
-  min-height: 0;
+  max-height: 62vh;
   aspect-ratio: 39 / 23;
   overflow: hidden;
 }
@@ -719,17 +718,15 @@ input[type='range']:disabled {
   display: block;
 }
 
+/* Run details under the stage; the page scrolls, so no inner scroll box. */
 .panel {
   min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  border-left: 1px solid var(--hairline);
+  border-top: 1px solid var(--hairline);
 }
 
-/* 4px on the right so focus outlines at the edge are not clipped by the
-   panel's scroll box. */
 .section {
-  padding: var(--s-4) var(--s-1) var(--s-4) var(--s-4);
+  min-width: 0;
+  padding: var(--s-4) 0;
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -1069,33 +1066,9 @@ input[type='range']:disabled {
   color: var(--fg-2);
 }
 
-/* ---------- Narrow screens: stack the panel under the canvas ---------- */
+/* ---------- Narrow screens: control clusters as rows, tooltips as a strip ---------- */
 
 @media (max-width: 1023px) {
-  .app {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-  .main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .stage {
-    padding: var(--s-4) 0 var(--s-3);
-  }
-  .canvas-box {
-    max-height: 80vh;
-  }
-  .panel {
-    overflow: visible;
-    border-left: 0;
-    border-top: 1px solid var(--hairline);
-  }
-  .section {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
   /* Clusters become full-width rows; the vertical rules become hairlines
      between rows. No clipping needed, so the bar is a plain block again. */
   .controls {
@@ -1131,23 +1104,11 @@ input[type='range']:disabled {
   }
 }
 
-/* ---------- Phones: stack cluster rows, shrink controls, wrap the header ---------- */
+/* ---------- Phones: shrink and wrap controls ---------- */
 
 @media (max-width: 639px) {
-  .app {
-    padding: 0 var(--s-3);
-  }
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--s-1);
-  }
   .header-right {
     justify-content: flex-start;
-  }
-  .wordmark {
-    font-size: var(--fs-num);
-    line-height: 40px;
   }
   /* Label and control pairs may wrap; segmented groups wrap their buttons. */
   .field {
