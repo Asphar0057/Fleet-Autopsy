@@ -122,27 +122,39 @@ describe('pibt planner', () => {
   const l = parseLayout(metaFor(grid, 'aisle'), grid);
   const at = (x: number, y: number) => y * l.width + x;
 
-  it('resolves a head-on meeting in a one-cell aisle with a side pocket', () => {
-    const planner = createPlanner(l, createDistanceCache(l), 2);
-    const inp = makeInput(2);
-    inp.pos.set([at(1, 1), at(7, 1)]);
-    inp.goal.set([at(7, 1), at(1, 1)]);
-    // The pushed robot ties between "deeper into the aisle" and "into the pocket"
-    // (both +1 from its goal). Rotation 2 orders S before E, so the tie goes to the pocket.
-    inp.tieRot.fill(2);
-    const out = new Int16Array(2);
-    let steps = 0;
-    while ((inp.pos[0] !== inp.goal[0] || inp.pos[1] !== inp.goal[1]) && steps < 50) {
-      planner.plan(inp, out);
-      expect(safetyProblem(l, inp, out)).toBeNull();
-      inp.pos.set(out);
-      // As the sim will: age +1 while away from the goal, reset to 0 at the goal.
-      for (let i = 0; i < 2; i++) inp.prio[i] = inp.pos[i] === inp.goal[i] ? 0 : inp.prio[i] + 1;
-      steps++;
-    }
-    expect([...inp.pos]).toEqual([...inp.goal]);
-    expect(steps).toBeLessThanOrEqual(20);
-  });
+  // Every tieRot for robot A (west start) x every tieRot for robot B (east start),
+  // under both id orderings: 50 cases. The outcome must not depend on tie order or ids.
+  const headOnCases: [number, number, boolean][] = [];
+  for (const aFirst of [true, false])
+    for (let rotA = 0; rotA < 5; rotA++) for (let rotB = 0; rotB < 5; rotB++) headOnCases.push([rotA, rotB, aFirst]);
+
+  it.each(headOnCases)(
+    'resolves a head-on meeting in a one-cell aisle with a side pocket (tieRot A=%i B=%i, A is id 0: %s)',
+    (rotA, rotB, aFirst) => {
+      const planner = createPlanner(l, createDistanceCache(l), 2);
+      const inp = makeInput(2);
+      const a = aFirst ? 0 : 1;
+      const b = 1 - a;
+      inp.pos[a] = at(1, 1);
+      inp.goal[a] = at(7, 1);
+      inp.tieRot[a] = rotA;
+      inp.pos[b] = at(7, 1);
+      inp.goal[b] = at(1, 1);
+      inp.tieRot[b] = rotB;
+      const out = new Int16Array(2);
+      let steps = 0;
+      while ((inp.pos[0] !== inp.goal[0] || inp.pos[1] !== inp.goal[1]) && steps < 50) {
+        planner.plan(inp, out);
+        expect(safetyProblem(l, inp, out)).toBeNull();
+        inp.pos.set(out);
+        // As the sim will: age +1 while away from the goal, reset to 0 at the goal.
+        for (let i = 0; i < 2; i++) inp.prio[i] = inp.pos[i] === inp.goal[i] ? 0 : inp.prio[i] + 1;
+        steps++;
+      }
+      expect([...inp.pos]).toEqual([...inp.goal]);
+      expect(steps).toBeLessThanOrEqual(20);
+    },
+  );
 
   it('never moves a pinned robot and routes others around it', () => {
     const planner = createPlanner(l, createDistanceCache(l), 2);
