@@ -107,13 +107,13 @@ Rules for every task:
   - [x] 9.3 Check and commit: `npm run build` bundles the worker; commit "run diagnosis in a web worker with progress and abort"
 
 - [ ] 10. Tune on dev seeds, run and commit the benchmark
-  - [~] 10.1 Run `BENCH_MODE=dev npm run benchmark`; if accuracy is poor, follow the debug rule in `docs/spec3-debug.md` (max 8 attempts, dev seeds only, never loosen pass criteria)
+  - [x] 10.1 Run `BENCH_MODE=dev npm run benchmark`; if accuracy is poor, follow the debug rule in `docs/spec3-debug.md` (max 8 attempts, dev seeds only, never loosen pass criteria)
     - _Requirements: 7.4_
-  - [~] 10.2 Replace the design.md "Tuned constants" table with the final values and the dev-seed accuracy they gave
+  - [x] 10.2 Replace the design.md "Tuned constants" table with the final values and the dev-seed accuracy they gave
     - _Requirements: 7.4_
-  - [~] 10.3 Run `npm run benchmark` once in full mode; commit `benchmark/results.json` and `benchmark/RESULTS.md` as produced, including failures and baseline comparison; `npm test` still passes
+  - [x] 10.3 Run `npm run benchmark` once in full mode; commit `benchmark/results.json` and `benchmark/RESULTS.md` as produced, including failures and baseline comparison; `npm test` still passes
     - _Requirements: 7.1, 7.2, 7.3_
-  - [~] 10.4 Commit: "tune diagnosis constants on dev seeds and commit benchmark results"
+  - [x] 10.4 Commit: "tune diagnosis constants on dev seeds and commit benchmark results"
 
 - [ ] 11. Precomputed autopsies and the dev readout
   - [~] 11.1 Implement `buildAutopsy` in `src/diagnosis/benchmark.ts` and `scripts/precompute.run.ts` writing `public/autopsies/<scenarioId>.json` for the 6 curated scenarios (no `elapsedMs`, no timestamps, trailing newline); run `npm run precompute`

@@ -8,11 +8,11 @@ import type { FaultEvent, FaultKind, SimConfig } from '../sim/types';
 import type { Evidence, ObservedConfig, Service } from './types';
 
 /** Open standstills (stalled robots) turned into permanent freezes. */
-export const K_FREEZE = 8;
+export const K_FREEZE = 4;
 /** Closed standstill episodes turned into bounded freezes (longest first). */
 export const K_EPISODE = 8;
 /** Busy cells that went empty turned into blocked cells (most entries first). */
-export const K_BLOCK = 8;
+export const K_BLOCK = 3;
 /** Hard cap on the returned list. */
 export const MAX_HYPOTHESES = 40;
 /** Completed services that form a station's early baseline. */

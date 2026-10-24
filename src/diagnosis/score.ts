@@ -15,13 +15,13 @@ import type { ObservedConfig, Window } from './types';
 /** Frames after detectedTick that the Observation_Window extends to. */
 export const WINDOW_AFTER = 200;
 /** Weight of the position match term. */
-export const W_POS = 0.6;
+export const W_POS = 0.3;
 /** Weight of the throughput term. */
-export const W_TP = 0.2;
+export const W_TP = 0.5;
 /** Weight of the queue-length term. */
 export const W_QUEUE = 0.2;
 /** Per-frame weight of position matches at or after `fromTick` (frames before weigh 1). */
-export const POST_WEIGHT = 4;
+export const POST_WEIGHT = 1;
 
 /** Observation_Window: frames 0..min(detectedTick + 200, last recorded frame). */
 export function observationWindow(rec: Recording, jam: Jam): Window {

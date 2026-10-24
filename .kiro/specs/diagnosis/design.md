@@ -96,7 +96,7 @@ The Diagnosis types above are the data model; every value is a number, string, b
 - D9. Root cause by impact, not by score. A short decoy can explain part of the observation yet recover little throughput. The root cause is the selected fault whose removal from the selected set recovers the most deliveries per 100 ticks on the Observation_Window.
 - D10. Fix verification uses the true world over 2000 ticks (`ORACLE_TICKS`), and removes every World_Config fault that `matchesGroundTruth` the diagnosed root cause. The recovered fraction uses the Spec 2 oracle formula (D14 there): a non-positive gap gives 0.
 - D11. Tuning seeds are disjoint from test seeds. Constants are tuned on dev seeds 100 to 120 only; the benchmark uses seeds ≥ 1000; curated scenarios are never used for tuning.
-- D12. `client.ts` runs on the main thread and constructs a `Worker`, so it is excluded from the determinism block in `eslint.config.js`. It holds no diagnosis logic and cannot change a result; it stays in the fault-list guard block.
+- D12. `client.ts` runs on the main thread and constructs a `Worker`, so it is excluded from the determinism block in `eslint.config.js`. It holds no diagnosis logic and cannot change a result; it stays in the fault-list guard block. Because the node tsconfig used by tests has no DOM lib, `client.ts` declares the `Worker` constructor type-only (`declare const Worker: …`); the runtime global is used and Vite still recognises the `new Worker(new URL(...))` form.
 - D13. The worker request carries `LayoutMeta` plus grid text, not a parsed `Layout`. The worker calls `parseLayout`, the same path the app uses, and the request stays small. The Recording's typed arrays are structured-cloned.
 - D14. The dev readout is isolated. `DebugPanel.tsx` and `debugMount.tsx` live in `src/diagnosis`; `src/main.tsx` gains one import line and `src/ui` is untouched. Without `?debug=diagnose` the mount does nothing.
 
@@ -140,10 +140,10 @@ What `eslint.config.js` does for this spec:
 
 | Source | Hypothesis | Parameters |
 |---|---|---|
-| First `K_FREEZE = 8` of `ev.stalled` | robot-freeze, permanent | `tick` = standstill start; if the robot has an open service starting at `s`, `tick = max(start, s + 1)` so the replay still starts that service |
+| First `K_FREEZE = 4` of `ev.stalled` (tuned, initial 8) | robot-freeze, permanent | `tick` = standstill start; if the robot has an open service starting at `s`, `tick = max(start, s + 1)` so the replay still starts that service |
 | `K_EPISODE = 8` longest closed, non-serving episodes (ties: start, robot) | robot-freeze, bounded | `tick` = episode start, `duration` = end − start + 1 |
 | Each station with ≥ `EARLY_MIN = 3` completed services among its first `EARLY_SERVICES = 5` | station-slowdown, permanent | Early mean and max from those services. Onset = first later service from which every later service (open ones count elapsed `d − start`) lasts > early max + 1. `tick` = onset service start. Ratio = mean duration of services starting ≥ tick / early mean; emitted when ratio ≥ `SLOW_RATIO_MIN = 1.5`; `factor = clamp(round(ratio), 2, 4)` |
-| First `K_BLOCK = 8` of `ev.lastOccupied` | blocked-cell, permanent | `tick` = last occupied + 2 (earliest engagement consistent with the observation, D7) |
+| First `K_BLOCK = 3` of `ev.lastOccupied` (tuned, initial 8) | blocked-cell, permanent | `tick` = last occupied + 2 (earliest engagement consistent with the observation, D7) |
 | Each robot whose move-frame suffix in `ev.moves` has ≥ `SLOW_MIN_MOVES = 6` moves on multiples of `p` | slow-robot, permanent | Largest `p` in [4, 3, 2] that qualifies; `tick` = last breaking move + 1, else the first move |
 
 Then: dedupe by every field, drop hypotheses `validateFaults(layout, robots, [h])` rejects, sort by pre-score descending (ties: kind order freeze, slowdown, blocked, slow; target; tick; parameter; duration, null last), keep the first `MAX_HYPOTHESES = 40`. `diagnose` takes the first 12.
@@ -154,7 +154,7 @@ Pre-score (`preScore(h, ev, layout)`, in [0, 1], Evidence only):
 - blocked-cell: 0.3 + 0.4 · min(1, entries / 40)
 - slow-robot: 0.3 + 0.4 · min(1, conforming moves since tick / 30); 0 if a move since tick breaks the period
 
-Curated check (2000-tick runs): the Primary (same kind and target) ranks 0 on the four fb/cp scenarios, 2 on `pd-holder-freeze`, 1 on `pd-decoy-first`. A frozen serving robot also yields a factor-4 slowdown on its station, ranked first on both pocket-dc scenarios; replay scoring must separate them. The `pd-decoy-first` decoy (R6, 350, 30) is not in the top 12 as a bounded freeze (pre-score 0.29); R6 appears at rank 6 only as a permanent freeze at its later standstill.
+Curated check (2000-tick runs, measured with the initial `K_FREEZE = 8`, `K_BLOCK = 8`): the Primary (same kind and target) ranks 0 on the four fb/cp scenarios, 2 on `pd-holder-freeze`, 1 on `pd-decoy-first`. A frozen serving robot also yields a factor-4 slowdown on its station, ranked first on both pocket-dc scenarios; replay scoring must separate them. The `pd-decoy-first` decoy (R6, 350, 30) is not in the top 12 as a bounded freeze (pre-score 0.29); R6 appears at rank 6 only as a permanent freeze at its later standstill.
 
 ### Property 3: Hypotheses are well-formed
 *For any* run on pocket-dc or chokepoint (300 to 600 ticks, 1 to 3 valid faults, jam from `detectJam` or a synthetic one at the last frame), `generateHypotheses` returns at most 40 hypotheses, without duplicates, each accepted by `validateFaults` alone with `tick ≤ detectedTick + 2`, equal on a second call, and sorted by non-increasing pre-score in [0, 1].
@@ -172,12 +172,12 @@ Curated check (2000-tick runs): the Primary (same kind and target) ranks 0 on th
 - `scoreHypothesis(layout, config, h, observed, window, base)`: `runHeadless` with `{ seed, robots, queueCap }` from `config` and faults `[...base, h]` (`h` omitted when null) for `window.endTick` ticks, so the replay has `endTick + 1` frames. `fromTick = h.tick`, else the earliest base tick, else 0. Throws (from `createSim`) when the combined list fails `validateFaults`; `diagnose` must filter blocked-cell unions first.
 - `similarity(replay, observed, window, fromTick)`:
   - Short-circuit: if positions and queue lengths are equal on frames 0..endTick and the throughput curves are equal, return exactly 1.
-  - `P` = Σ_t w_t · (robots at the observed cell at t) / Σ_t w_t · n over frames 1..endTick, `w_t = POST_WEIGHT = 4` for `t ≥ fromTick`, else 1.
+  - `P` = Σ_t w_t · (robots at the observed cell at t) / Σ_t w_t · n over frames 1..endTick, `w_t = POST_WEIGHT` for `t ≥ fromTick`, else 1. Final `POST_WEIGHT = 1` (initial 4): unequal weights made a correct single hypothesis lose to the uniformly weighted fault-free replay (tuning attempt 1), so all frames now weigh the same.
   - `E_tp` = Σ|tp_r − tp_o| / Σ max(tp_r, tp_o) over frames 0..endTick (0 if both curves are all zero); `E_q` the same over every (frame, station) queue length.
-  - `score = W_POS · P + W_TP · (1 − E_tp) + W_QUEUE · (1 − E_q)`, `W_POS = 0.6`, `W_TP = 0.2`, `W_QUEUE = 0.2`, clamped to [0, 1 − ε] when not exact, so 1 means an exact replay.
+  - `score = W_POS · P + W_TP · (1 − E_tp) + W_QUEUE · (1 − E_q)`, final `W_POS = 0.3`, `W_TP = 0.5`, `W_QUEUE = 0.2` (initial 0.6, 0.2, 0.2), clamped to [0, 1 − ε] when not exact, so 1 means an exact replay.
   - Throws `RangeError` when `endTick` is outside either recording or robot/station counts differ.
 
-Curated check (top 12 hypotheses, empty base, 2000-tick observations): the Primary's hypothesis scores 1.0 on five scenarios and 0.9963 on `pd-decoy-first` (decoy not in the base); the best wrong hypothesis scores 0.65 to 0.72, a gap of 0.28 to 0.36. On both pocket-dc scenarios the factor-4 slowdown that out-pre-scores the true freeze drops to 0.645 and 0.635, because the slowed holder leaves its station in the replay and the frozen one does not.
+Curated check (top 12 hypotheses, empty base, 2000-tick observations, measured with the initial weights): the Primary's hypothesis scores 1.0 on five scenarios and 0.9963 on `pd-decoy-first` (decoy not in the base); the best wrong hypothesis scores 0.65 to 0.72, a gap of 0.28 to 0.36. On both pocket-dc scenarios the factor-4 slowdown that out-pre-scores the true freeze drops to 0.645 and 0.635, because the slowed holder leaves its station in the replay and the frozen one does not.
 
 ### Property 5: Similarity is bounded
 *For any* run on pocket-dc or chokepoint (300 to 600 ticks, 1 to 3 valid faults), any sub-list of its faults as base, any hypothesis or none (combined list valid), and any `fromTick`, `scoreHypothesis` and `similarity` return a value in [0, 1], the replay has `endTick + 1` frames, and a second call gives the same score.
@@ -191,7 +191,7 @@ Curated check (top 12 hypotheses, empty base, 2000-tick observations): the Prima
 
 `src/diagnosis/diagnose.ts`. `diagnose(layout, config, rec, jam, options)`; `n` = `observed.robots`.
 
-Constants: `PRUNE = 12` (Requirement 8.1), `GAIN_MIN = 0.02`, `MAX_FAULTS = 3` (Requirement 4.1), `ROUND_K = 4` (initial, tuned in task 10).
+Constants: `PRUNE = 12` (Requirement 8.1), `GAIN_MIN = 0.02`, `MAX_FAULTS = 3` (Requirement 4.1), `ROUND_K = 8` (tuned, initial 4).
 
 Steps, in order:
 
@@ -208,7 +208,7 @@ Steps, in order:
 
 Per actual replay:
 - Before it: if `options.signal?.aborted`, throw `abortError()`: `new DOMException('aborted', 'AbortError')` when `DOMException` exists, else an `Error` with `name = 'AbortError'`.
-- After it: `replaysRun++`, `options.onProgress?.(replaysRun, total, h)` (`h` null for the fault-free run and for impact replays), then `await Promise.resolve()` (D3).
+- After it: `replaysRun++`, `options.onProgress?.(replaysRun, total, h)` (`h` null for the fault-free run and for impact replays), then `await Promise.resolve()` (D3). The call for a replay is posted once the next step is known (just before the next replay, or at the end), so `total` can equal `done` on the last call even when later steps are cache hits. The order of replays, progress calls, abort checks, and yields is unchanged.
 - `total` is an upper bound recomputed as `replaysRun + remaining upper bound`: initially `1 + |H| + (MAX_FAULTS − 1) · ROUND_K + MAX_FAULTS`; it shrinks when a round stops early or hits the cache, never grows, and equals `done` on the last call.
 
 Ranked fault fields:
@@ -232,7 +232,7 @@ Ranked fault fields:
   2. `replay match 1.000, gain 0.284, next best 0.716` (`next best` omitted without a runner-up)
   3. `removal recovers 4.2 deliveries / 100 ticks`
 
-Cost bound (D8): at most `1 + 12 + 2 · ROUND_K + 3 = 24` replays at the initial `ROUND_K`, each ≤ `detectedTick + 200` ticks.
+Cost bound (D8): at most `1 + 12 + 2 · ROUND_K + 3 = 32` replays at the final `ROUND_K = 8`, each ≤ `detectedTick + 200` ticks.
 
 ### Property 7: Confidence follows the fixed gaps
 *For any* score in [0, 1] and gap in [−1, 1], `confidenceOf(score, gap)` equals the threshold table above, and raising the score or the gap never lowers the confidence (low < medium < high).
@@ -298,7 +298,7 @@ Cost bound (D8): at most `1 + 12 + 2 · ROUND_K + 3 = 24` replays at the initial
 - `fast`: the 6 curated `SCENARIOS`.
 - Each scenario yields two cases: `variant: 'world'` (its faults as given; for generated scenarios the decoy-first pair) and `variant: 'primary-only'` (only the Primary). `id = <scenarioId>/<variant>`.
 
-`runBenchmark(layouts, cases)` (async), per case in order:
+`runBenchmark(layouts, cases, mode)` (async; `mode` is recorded in the result), per case in order:
 1. `rec = runHeadless(layout, world, BENCH_TICKS)`, `jam = detectJam(rec, layout, BENCH_TICKS)`.
 2. No jam: every method fails with `not-detected`.
 3. Else `ev = extractEvidence(rec, layout, jam)`, `d = await diagnose(layout, observed, rec, jam)`, `blameFirstAlarm(ev)`, `blameMostSevere(ev)`. Each method's Target (`targetOf(d.rootCause.fault)` for diagnose) is correct when `matchesGroundTruth(target, primary, layout)`.
@@ -335,7 +335,7 @@ type ReasonCode = 'not-detected' | 'no-fault' | 'named-decoy' | 'wrong-kind' | '
 
 Median: the middle value, mean of the two middle values for an even count, 0 for none. `accuracy = correct / total`, 0 when `total` is 0.
 
-`renderResultsMd(result)` (pure, no timestamps): title, the line `validated in simulation only`, mode and counts, an accuracy table (methods × fault kinds, variants, overall, as `correct / total (pct)`), not-detected count, median replays and ms, a note that the baselines only name robot or station targets, and a failures table (every case any method got wrong: case id, primary, each method's target and reason code).
+`renderResultsMd(result)` (pure, no timestamps): title, the line `validated in simulation only`, mode and counts, an accuracy table (methods × fault kinds, variants, overall, as `correct / total (pct)`), not-detected count, median replays and ms, accuracy among detected jams (overall and by variant), failure-reason counts per method, a note that the baselines only name robot or station targets, and a failures table (every case any method got wrong: case id, primary, each method's target and reason code).
 
 `scripts/benchmark.run.ts`: one Vitest `it` that reads `BENCH_MODE` (`full` default, `dev`, `fast`), loads `public/layouts/layouts.json` and grids with `fs` and `parseLayout`, runs, and writes `benchmark/results.json` (`JSON.stringify(result, null, 2) + '\n'`) and `benchmark/RESULTS.md`; `dev` writes only `benchmark/dev-results.json` (gitignored); `fast` writes nothing and prints the Markdown.
 
@@ -374,29 +374,43 @@ serialized as `JSON.stringify(obj, null, 2) + '\n'`. Key order is fixed by objec
 
 ## Tuned constants
 
-Constants tuned on dev seeds 100 to 120 only (Requirement 7.4, D11). Task 10 replaces this table with the final values and the dev-seed accuracy they gave.
+Constants tuned on dev seeds 100 to 120 only (Requirement 7.4, D11): 63 scenarios, 126 cases. 8 attempts, logged in `docs/spec3-debug.md`; tuning was stopped when gains flattened.
 
-| Constant | File | Initial value | Dev-seed accuracy |
-|---|---|---|---|
-| `STALL_MIN` | evidence.ts | 20 | pending task 10 |
-| `SERVE_STALL` | evidence.ts | 60 | pending task 10 |
-| `HOTSPOTS` | evidence.ts | 16 | pending task 10 |
-| `MOVE_WINDOW` | evidence.ts | 200 | pending task 10 |
-| `BLOCK_GAP` | evidence.ts | 60 | pending task 10 |
-| `BLOCK_ENTRIES` | evidence.ts | 5 | pending task 10 |
-| `BLOCK_LOOKBACK` | evidence.ts | 200 | pending task 10 |
-| `K_FREEZE` | hypotheses.ts | 8 | pending task 10 |
-| `K_EPISODE` | hypotheses.ts | 8 | pending task 10 |
-| `K_BLOCK` | hypotheses.ts | 8 | pending task 10 |
-| `EARLY_SERVICES` | hypotheses.ts | 5 | pending task 10 |
-| `EARLY_MIN` | hypotheses.ts | 3 | pending task 10 |
-| `SLOW_RATIO_MIN` | hypotheses.ts | 1.5 | pending task 10 |
-| `SLOW_MIN_MOVES` | hypotheses.ts | 6 | pending task 10 |
-| `POST_WEIGHT` | score.ts | 4 | pending task 10 |
-| `W_POS`, `W_TP`, `W_QUEUE` | score.ts | 0.6, 0.2, 0.2 | pending task 10 |
-| `ROUND_K` | diagnose.ts | 4 | pending task 10 |
-| `HIGH_SCORE`, `HIGH_GAP` | diagnose.ts | 0.95, 0.15 | pending task 10 |
-| `MED_SCORE`, `MED_GAP` | diagnose.ts | 0.8, 0.05 | pending task 10 |
+| Constant | File | Initial | Final | Attempt |
+|---|---|---|---|---|
+| `STALL_MIN` | evidence.ts | 20 | 20 | |
+| `SERVE_STALL` | evidence.ts | 60 | 60 | |
+| `HOTSPOTS` | evidence.ts | 16 | 16 | |
+| `MOVE_WINDOW` | evidence.ts | 200 | 200 | |
+| `BLOCK_GAP` | evidence.ts | 60 | 60 | |
+| `BLOCK_ENTRIES` | evidence.ts | 5 | 5 | |
+| `BLOCK_LOOKBACK` | evidence.ts | 200 | 200 | |
+| `K_FREEZE` | hypotheses.ts | 8 | 4 | 3 |
+| `K_EPISODE` | hypotheses.ts | 8 | 8 | |
+| `K_BLOCK` | hypotheses.ts | 8 | 3 | 3 |
+| `EARLY_SERVICES` | hypotheses.ts | 5 | 5 | |
+| `EARLY_MIN` | hypotheses.ts | 3 | 3 | |
+| `SLOW_RATIO_MIN` | hypotheses.ts | 1.5 | 1.5 | 7 tried 1.25, reverted |
+| `SLOW_MIN_MOVES` | hypotheses.ts | 6 | 6 | |
+| `POST_WEIGHT` | score.ts | 4 | 1 | 1 |
+| `W_POS`, `W_TP`, `W_QUEUE` | score.ts | 0.6, 0.2, 0.2 | 0.3, 0.5, 0.2 | 2 (8 tried 0.3, 0.4, 0.3, reverted) |
+| `ROUND_K` | diagnose.ts | 4 | 8 | 6 |
+| `HIGH_SCORE`, `HIGH_GAP` | diagnose.ts | 0.95, 0.15 | 0.95, 0.15 | |
+| `MED_SCORE`, `MED_GAP` | diagnose.ts | 0.8, 0.05 | 0.8, 0.05 | |
+
+Diagnose accuracy on dev seeds, overall (correct / 126) and among the 86 detected cases:
+
+| Constants | overall | detected |
+|---|---|---|
+| initial | 46 (36.5%) | 46 / 86 (53.5%) |
+| after attempt 1 | 59 (46.8%) | 59 / 86 (68.6%) |
+| after attempt 2 | 61 (48.4%) | 61 / 86 (70.9%) |
+| after attempt 3 | 63 (50.0%) | 63 / 86 (73.3%) |
+| final (after attempt 6) | 64 (50.8%) | 64 / 86 (74.4%) |
+
+Baselines on dev seeds (no tuned constants): first alarm 13 / 126 (10.3%), most severe 66 / 126 (52.4%). Not detected: 40 / 126, independent of every tuned constant.
+
+Held-out benchmark (seeds ≥ 1000, run once with the final constants, never tuned on): see `benchmark/RESULTS.md`.
 
 Fixed by the requirements, never tuned: `MAX_HYPOTHESES = 40`, `PRUNE = 12`, `WINDOW_AFTER = 200`, `GAIN_MIN = 0.02`, `MAX_FAULTS = 3`, `FIX_PASS = 0.7`, `FIX_TICKS = BENCH_TICKS = 2000`, the baseline thresholds (20 ticks, 2 × early mean, tick 150), and `matchesGroundTruth`.
 
@@ -450,7 +464,7 @@ Vitest with fast-check 4.10.2 (already pinned); no new dependency. Unit tests co
 | `tests/evidence.test.ts` | cp-door-freeze R7, pd-holder-freeze R4 serving, RangeError; Properties 1, 2 |
 | `tests/hypotheses.test.ts` | Primary among hypotheses and in the top 12 on every curated scenario; Properties 3, 4 |
 | `tests/score.test.ts` | exact replay 1.0, wrong fault lower, frame count and `verifyRun`; 5 single-fault curated diagnoses match the Primary, ≤ 3 faults, gains ≥ 0.02, ≤ 12 round-1 replays; Properties 5, 6 |
-| `tests/diagnose.test.ts` | determinism without `elapsedMs`, progress count = `replaysRun`; pd-decoy-first first alarm names R6 and diagnose names R3; both faults selected (or the Primary only, recorded honestly); Properties 7, 8, 9 |
+| `tests/diagnose.test.ts` | determinism without `elapsedMs`, progress count = `replaysRun`; pd-decoy-first first alarm misses the Primary (it names R7, a natural standstill at tick 254 that precedes the decoy R6 at 350) and diagnose names R3; only the Primary is selected (the decoy's round-2 gain is below `GAIN_MIN`, recorded in `docs/spec3-debug.md`); Properties 7, 8, 9 |
 | `tests/fix.test.ts` | fix passes on 6 curated scenarios, wrong fixes fail, null root cause; Properties 10, 11 |
 | `tests/benchmark.test.ts` | fast mode: 12 case results with every field, accuracies, not-detected, medians, reasons; RESULTS.md text has the numbers; no files written |
 | `tests/worker.test.ts` | fake worker progress and done; abort terminates once with `AbortError`; `diagnose` aborted in its first `onProgress` stops at 1 replay |

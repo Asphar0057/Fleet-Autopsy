@@ -122,6 +122,8 @@ describe('benchmark (fast mode, required test 8)', () => {
     expect(md).toContain('6 scenarios');
     expect(md).toContain('12 cases');
     expect(md).toContain(`not detected: ${r.notDetected} of 12 cases`);
+    expect(md).toContain('### Among detected jams');
+    expect(md).toContain('### Failure reasons');
     expect(md).toContain(`median replays per diagnosis: ${r.medianReplays}`);
     expect(md).toContain(`median ms per diagnosis: ${r.medianMs}`);
     for (const m of METHODS) {

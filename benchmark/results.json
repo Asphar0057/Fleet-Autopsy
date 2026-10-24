@@ -1,0 +1,4559 @@
+{
+  "mode": "full",
+  "ticks": 2000,
+  "scenarios": 60,
+  "cases": 120,
+  "notDetected": 49,
+  "methods": {
+    "diagnose": {
+      "overall": {
+        "correct": 47,
+        "total": 120,
+        "accuracy": 0.39166666666666666
+      },
+      "byKind": {
+        "robot-freeze": {
+          "correct": 42,
+          "total": 66,
+          "accuracy": 0.6363636363636364
+        },
+        "station-slowdown": {
+          "correct": 5,
+          "total": 54,
+          "accuracy": 0.09259259259259259
+        },
+        "blocked-cell": {
+          "correct": 0,
+          "total": 0,
+          "accuracy": 0
+        },
+        "slow-robot": {
+          "correct": 0,
+          "total": 0,
+          "accuracy": 0
+        }
+      },
+      "byVariant": {
+        "world": {
+          "correct": 16,
+          "total": 60,
+          "accuracy": 0.26666666666666666
+        },
+        "primary-only": {
+          "correct": 31,
+          "total": 60,
+          "accuracy": 0.5166666666666667
+        }
+      }
+    },
+    "firstAlarm": {
+      "overall": {
+        "correct": 3,
+        "total": 120,
+        "accuracy": 0.025
+      },
+      "byKind": {
+        "robot-freeze": {
+          "correct": 2,
+          "total": 66,
+          "accuracy": 0.030303030303030304
+        },
+        "station-slowdown": {
+          "correct": 1,
+          "total": 54,
+          "accuracy": 0.018518518518518517
+        },
+        "blocked-cell": {
+          "correct": 0,
+          "total": 0,
+          "accuracy": 0
+        },
+        "slow-robot": {
+          "correct": 0,
+          "total": 0,
+          "accuracy": 0
+        }
+      },
+      "byVariant": {
+        "world": {
+          "correct": 1,
+          "total": 60,
+          "accuracy": 0.016666666666666666
+        },
+        "primary-only": {
+          "correct": 2,
+          "total": 60,
+          "accuracy": 0.03333333333333333
+        }
+      }
+    },
+    "mostSevere": {
+      "overall": {
+        "correct": 56,
+        "total": 120,
+        "accuracy": 0.4666666666666667
+      },
+      "byKind": {
+        "robot-freeze": {
+          "correct": 56,
+          "total": 66,
+          "accuracy": 0.8484848484848485
+        },
+        "station-slowdown": {
+          "correct": 0,
+          "total": 54,
+          "accuracy": 0
+        },
+        "blocked-cell": {
+          "correct": 0,
+          "total": 0,
+          "accuracy": 0
+        },
+        "slow-robot": {
+          "correct": 0,
+          "total": 0,
+          "accuracy": 0
+        }
+      },
+      "byVariant": {
+        "world": {
+          "correct": 29,
+          "total": 60,
+          "accuracy": 0.48333333333333334
+        },
+        "primary-only": {
+          "correct": 27,
+          "total": 60,
+          "accuracy": 0.45
+        }
+      }
+    }
+  },
+  "medianReplays": 21,
+  "medianMs": 783,
+  "constants": {
+    "STALL_MIN": 20,
+    "SERVE_STALL": 60,
+    "HOTSPOTS": 16,
+    "MOVE_WINDOW": 200,
+    "BLOCK_GAP": 60,
+    "BLOCK_ENTRIES": 5,
+    "BLOCK_LOOKBACK": 200,
+    "K_FREEZE": 4,
+    "K_EPISODE": 8,
+    "K_BLOCK": 3,
+    "EARLY_SERVICES": 5,
+    "EARLY_MIN": 3,
+    "SLOW_RATIO_MIN": 1.5,
+    "SLOW_MIN_MOVES": 6,
+    "POST_WEIGHT": 1,
+    "W_POS": 0.3,
+    "W_TP": 0.5,
+    "W_QUEUE": 0.2,
+    "ROUND_K": 8,
+    "HIGH_SCORE": 0.95,
+    "HIGH_GAP": 0.15,
+    "MED_SCORE": 0.8,
+    "MED_GAP": 0.05
+  },
+  "results": [
+    {
+      "id": "pocket-dc-gen-1000-0/world",
+      "scenarioId": "pocket-dc-gen-1000-0",
+      "layoutId": "pocket-dc",
+      "seed": 1000,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 629,
+        "station": 0,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1000-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1000-0",
+      "layoutId": "pocket-dc",
+      "seed": 1000,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 629,
+        "station": 0,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1001-0/world",
+      "scenarioId": "pocket-dc-gen-1001-0",
+      "layoutId": "pocket-dc",
+      "seed": 1001,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 630,
+        "station": 1,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1001-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1001-0",
+      "layoutId": "pocket-dc",
+      "seed": 1001,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 630,
+        "station": 1,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1002-0/world",
+      "scenarioId": "pocket-dc-gen-1002-0",
+      "layoutId": "pocket-dc",
+      "seed": 1002,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 502,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1002-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1002-0",
+      "layoutId": "pocket-dc",
+      "seed": 1002,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 502,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": 1866,
+      "replaysRun": 21,
+      "ms": 360,
+      "diagnose": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 0
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 7
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1003-0/world",
+      "scenarioId": "pocket-dc-gen-1003-0",
+      "layoutId": "pocket-dc",
+      "seed": 1003,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 696,
+        "robot": 8,
+        "duration": null
+      },
+      "detectedTick": 801,
+      "replaysRun": 21,
+      "ms": 170,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1003-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1003-0",
+      "layoutId": "pocket-dc",
+      "seed": 1003,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 696,
+        "robot": 8,
+        "duration": null
+      },
+      "detectedTick": 879,
+      "replaysRun": 21,
+      "ms": 234,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1004-0/world",
+      "scenarioId": "pocket-dc-gen-1004-0",
+      "layoutId": "pocket-dc",
+      "seed": 1004,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 589,
+        "station": 1,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1004-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1004-0",
+      "layoutId": "pocket-dc",
+      "seed": 1004,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 589,
+        "station": 1,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1005-0/world",
+      "scenarioId": "pocket-dc-gen-1005-0",
+      "layoutId": "pocket-dc",
+      "seed": 1005,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 496,
+        "robot": 1,
+        "duration": null
+      },
+      "detectedTick": 630,
+      "replaysRun": 21,
+      "ms": 151,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 3
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1005-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1005-0",
+      "layoutId": "pocket-dc",
+      "seed": 1005,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 496,
+        "robot": 1,
+        "duration": null
+      },
+      "detectedTick": 609,
+      "replaysRun": 21,
+      "ms": 166,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 3
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1006-0/world",
+      "scenarioId": "pocket-dc-gen-1006-0",
+      "layoutId": "pocket-dc",
+      "seed": 1006,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 612,
+        "station": 1,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1006-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1006-0",
+      "layoutId": "pocket-dc",
+      "seed": 1006,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 612,
+        "station": 1,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1007-0/world",
+      "scenarioId": "pocket-dc-gen-1007-0",
+      "layoutId": "pocket-dc",
+      "seed": 1007,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 655,
+        "robot": 5,
+        "duration": null
+      },
+      "detectedTick": 775,
+      "replaysRun": 29,
+      "ms": 247,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1007-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1007-0",
+      "layoutId": "pocket-dc",
+      "seed": 1007,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 655,
+        "robot": 5,
+        "duration": null
+      },
+      "detectedTick": 820,
+      "replaysRun": 21,
+      "ms": 168,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1008-0/world",
+      "scenarioId": "pocket-dc-gen-1008-0",
+      "layoutId": "pocket-dc",
+      "seed": 1008,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 690,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1008-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1008-0",
+      "layoutId": "pocket-dc",
+      "seed": 1008,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 690,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1009-0/world",
+      "scenarioId": "pocket-dc-gen-1009-0",
+      "layoutId": "pocket-dc",
+      "seed": 1009,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 645,
+        "station": 1,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1009-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1009-0",
+      "layoutId": "pocket-dc",
+      "seed": 1009,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 645,
+        "station": 1,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1010-0/world",
+      "scenarioId": "pocket-dc-gen-1010-0",
+      "layoutId": "pocket-dc",
+      "seed": 1010,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 501,
+        "robot": 8,
+        "duration": null
+      },
+      "detectedTick": 615,
+      "replaysRun": 21,
+      "ms": 177,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1010-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1010-0",
+      "layoutId": "pocket-dc",
+      "seed": 1010,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 501,
+        "robot": 8,
+        "duration": null
+      },
+      "detectedTick": 617,
+      "replaysRun": 21,
+      "ms": 169,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 2
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1011-0/world",
+      "scenarioId": "pocket-dc-gen-1011-0",
+      "layoutId": "pocket-dc",
+      "seed": 1011,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 698,
+        "station": 0,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1011-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1011-0",
+      "layoutId": "pocket-dc",
+      "seed": 1011,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 698,
+        "station": 0,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1012-0/world",
+      "scenarioId": "pocket-dc-gen-1012-0",
+      "layoutId": "pocket-dc",
+      "seed": 1012,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 454,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": 1714,
+      "replaysRun": 21,
+      "ms": 315,
+      "diagnose": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 0
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1012-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1012-0",
+      "layoutId": "pocket-dc",
+      "seed": 1012,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 454,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1013-0/world",
+      "scenarioId": "pocket-dc-gen-1013-0",
+      "layoutId": "pocket-dc",
+      "seed": 1013,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 413,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1013-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1013-0",
+      "layoutId": "pocket-dc",
+      "seed": 1013,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 413,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1014-0/world",
+      "scenarioId": "pocket-dc-gen-1014-0",
+      "layoutId": "pocket-dc",
+      "seed": 1014,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 665,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1014-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1014-0",
+      "layoutId": "pocket-dc",
+      "seed": 1014,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 665,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1015-0/world",
+      "scenarioId": "pocket-dc-gen-1015-0",
+      "layoutId": "pocket-dc",
+      "seed": 1015,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 1,
+        "duration": null
+      },
+      "detectedTick": 630,
+      "replaysRun": 21,
+      "ms": 171,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1015-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1015-0",
+      "layoutId": "pocket-dc",
+      "seed": 1015,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 1,
+        "duration": null
+      },
+      "detectedTick": 700,
+      "replaysRun": 21,
+      "ms": 165,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1016-0/world",
+      "scenarioId": "pocket-dc-gen-1016-0",
+      "layoutId": "pocket-dc",
+      "seed": 1016,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 595,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1016-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1016-0",
+      "layoutId": "pocket-dc",
+      "seed": 1016,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 595,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1017-0/world",
+      "scenarioId": "pocket-dc-gen-1017-0",
+      "layoutId": "pocket-dc",
+      "seed": 1017,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 584,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1017-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1017-0",
+      "layoutId": "pocket-dc",
+      "seed": 1017,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 584,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1018-0/world",
+      "scenarioId": "pocket-dc-gen-1018-0",
+      "layoutId": "pocket-dc",
+      "seed": 1018,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 600,
+        "station": 1,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1018-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1018-0",
+      "layoutId": "pocket-dc",
+      "seed": 1018,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 600,
+        "station": 1,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1019-0/world",
+      "scenarioId": "pocket-dc-gen-1019-0",
+      "layoutId": "pocket-dc",
+      "seed": 1019,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 370,
+        "robot": 5,
+        "duration": null
+      },
+      "detectedTick": 712,
+      "replaysRun": 13,
+      "ms": 113,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "no-fault"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "pocket-dc-gen-1019-0/primary-only",
+      "scenarioId": "pocket-dc-gen-1019-0",
+      "layoutId": "pocket-dc",
+      "seed": 1019,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 370,
+        "robot": 5,
+        "duration": null
+      },
+      "detectedTick": 485,
+      "replaysRun": 21,
+      "ms": 166,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1000-0/world",
+      "scenarioId": "fulfillment-block-gen-1000-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1000,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 657,
+        "robot": 3,
+        "duration": null
+      },
+      "detectedTick": 764,
+      "replaysRun": 21,
+      "ms": 951,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 3
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 24
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 3
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1000-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1000-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1000,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 657,
+        "robot": 3,
+        "duration": null
+      },
+      "detectedTick": 765,
+      "replaysRun": 21,
+      "ms": 1108,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 2
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 24
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 2
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1001-0/world",
+      "scenarioId": "fulfillment-block-gen-1001-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1001,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 486,
+        "robot": 8,
+        "duration": null
+      },
+      "detectedTick": 589,
+      "replaysRun": 21,
+      "ms": 980,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 29
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1001-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1001-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1001,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 486,
+        "robot": 8,
+        "duration": null
+      },
+      "detectedTick": 588,
+      "replaysRun": 21,
+      "ms": 929,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 29
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1002-0/world",
+      "scenarioId": "fulfillment-block-gen-1002-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1002,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 368,
+        "robot": 7,
+        "duration": null
+      },
+      "detectedTick": 675,
+      "replaysRun": 13,
+      "ms": 619,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "no-fault"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 17
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 7
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1002-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1002-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1002,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 368,
+        "robot": 7,
+        "duration": null
+      },
+      "detectedTick": 491,
+      "replaysRun": 21,
+      "ms": 877,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 7
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 17
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 7
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1003-0/world",
+      "scenarioId": "fulfillment-block-gen-1003-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1003,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 696,
+        "robot": 35,
+        "duration": null
+      },
+      "detectedTick": 845,
+      "replaysRun": 13,
+      "ms": 668,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "no-fault"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1003-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1003-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1003,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 696,
+        "robot": 35,
+        "duration": null
+      },
+      "detectedTick": 805,
+      "replaysRun": 21,
+      "ms": 1029,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1004-0/world",
+      "scenarioId": "fulfillment-block-gen-1004-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1004,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 526,
+        "robot": 25,
+        "duration": null
+      },
+      "detectedTick": 672,
+      "replaysRun": 21,
+      "ms": 945,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 34
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 18
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 25
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1004-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1004-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1004,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 526,
+        "robot": 25,
+        "duration": null
+      },
+      "detectedTick": 683,
+      "replaysRun": 21,
+      "ms": 943,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 25
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 18
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 25
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1005-0/world",
+      "scenarioId": "fulfillment-block-gen-1005-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1005,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 428,
+        "robot": 2,
+        "duration": null
+      },
+      "detectedTick": 680,
+      "replaysRun": 21,
+      "ms": 974,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 2
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 26
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 2
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1005-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1005-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1005,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 428,
+        "robot": 2,
+        "duration": null
+      },
+      "detectedTick": 592,
+      "replaysRun": 21,
+      "ms": 826,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 2
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 26
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 2
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1006-0/world",
+      "scenarioId": "fulfillment-block-gen-1006-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1006,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 500,
+        "robot": 35,
+        "duration": null
+      },
+      "detectedTick": 607,
+      "replaysRun": 21,
+      "ms": 907,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 34
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1006-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1006-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1006,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 500,
+        "robot": 35,
+        "duration": null
+      },
+      "detectedTick": 617,
+      "replaysRun": 21,
+      "ms": 891,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 25
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 34
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 25
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1007-0/world",
+      "scenarioId": "fulfillment-block-gen-1007-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1007,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 477,
+        "robot": 32,
+        "duration": null
+      },
+      "detectedTick": 603,
+      "replaysRun": 21,
+      "ms": 851,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 19
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1007-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1007-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1007,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 477,
+        "robot": 32,
+        "duration": null
+      },
+      "detectedTick": 603,
+      "replaysRun": 21,
+      "ms": 790,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 19
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1008-0/world",
+      "scenarioId": "fulfillment-block-gen-1008-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1008,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 660,
+        "robot": 27,
+        "duration": null
+      },
+      "detectedTick": 773,
+      "replaysRun": 21,
+      "ms": 997,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 27
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 27
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1008-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1008-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1008,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 660,
+        "robot": 27,
+        "duration": null
+      },
+      "detectedTick": 773,
+      "replaysRun": 21,
+      "ms": 975,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 27
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 27
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1009-0/world",
+      "scenarioId": "fulfillment-block-gen-1009-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1009,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 491,
+        "robot": 23,
+        "duration": null
+      },
+      "detectedTick": 709,
+      "replaysRun": 21,
+      "ms": 975,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 15
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 23
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1009-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1009-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1009,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 491,
+        "robot": 23,
+        "duration": null
+      },
+      "detectedTick": 611,
+      "replaysRun": 21,
+      "ms": 914,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 23
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 23
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1010-0/world",
+      "scenarioId": "fulfillment-block-gen-1010-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1010,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 501,
+        "robot": 33,
+        "duration": null
+      },
+      "detectedTick": 689,
+      "replaysRun": 21,
+      "ms": 883,
+      "diagnose": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 4
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 30
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 33
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1010-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1010-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1010,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 501,
+        "robot": 33,
+        "duration": null
+      },
+      "detectedTick": 730,
+      "replaysRun": 21,
+      "ms": 983,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 33
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 30
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 33
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1011-0/world",
+      "scenarioId": "fulfillment-block-gen-1011-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1011,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 628,
+        "robot": 6,
+        "duration": null
+      },
+      "detectedTick": 740,
+      "replaysRun": 21,
+      "ms": 1001,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1011-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1011-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1011,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 628,
+        "robot": 6,
+        "duration": null
+      },
+      "detectedTick": 740,
+      "replaysRun": 21,
+      "ms": 1023,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1012-0/world",
+      "scenarioId": "fulfillment-block-gen-1012-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1012,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 699,
+        "robot": 35,
+        "duration": null
+      },
+      "detectedTick": 893,
+      "replaysRun": 21,
+      "ms": 1132,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 23
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1012-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1012-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1012,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 699,
+        "robot": 35,
+        "duration": null
+      },
+      "detectedTick": 840,
+      "replaysRun": 21,
+      "ms": 995,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 23
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 35
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1013-0/world",
+      "scenarioId": "fulfillment-block-gen-1013-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1013,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 4,
+        "duration": null
+      },
+      "detectedTick": 605,
+      "replaysRun": 13,
+      "ms": 535,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "no-fault"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1013-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1013-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1013,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 4,
+        "duration": null
+      },
+      "detectedTick": 704,
+      "replaysRun": 21,
+      "ms": 864,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 31
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1014-0/world",
+      "scenarioId": "fulfillment-block-gen-1014-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1014,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 695,
+        "robot": 22,
+        "duration": null
+      },
+      "detectedTick": 976,
+      "replaysRun": 21,
+      "ms": 1273,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 22
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 34
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 22
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1014-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1014-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1014,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 695,
+        "robot": 22,
+        "duration": null
+      },
+      "detectedTick": 832,
+      "replaysRun": 21,
+      "ms": 1065,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 22
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 34
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 22
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1015-0/world",
+      "scenarioId": "fulfillment-block-gen-1015-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1015,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 5,
+        "duration": null
+      },
+      "detectedTick": 657,
+      "replaysRun": 21,
+      "ms": 943,
+      "diagnose": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 1
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 30
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1015-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1015-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1015,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 5,
+        "duration": null
+      },
+      "detectedTick": 594,
+      "replaysRun": 21,
+      "ms": 904,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 30
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 5
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1016-0/world",
+      "scenarioId": "fulfillment-block-gen-1016-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1016,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 511,
+        "robot": 32,
+        "duration": null
+      },
+      "detectedTick": 664,
+      "replaysRun": 13,
+      "ms": 611,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "no-fault"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 32
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1016-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1016-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1016,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 511,
+        "robot": 32,
+        "duration": null
+      },
+      "detectedTick": 613,
+      "replaysRun": 21,
+      "ms": 936,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 11
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 11
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1017-0/world",
+      "scenarioId": "fulfillment-block-gen-1017-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1017,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 415,
+        "robot": 32,
+        "duration": null
+      },
+      "detectedTick": 612,
+      "replaysRun": 21,
+      "ms": 901,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 24
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1017-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1017-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1017,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 415,
+        "robot": 32,
+        "duration": null
+      },
+      "detectedTick": 566,
+      "replaysRun": 21,
+      "ms": 887,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 32
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 24
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 32
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1018-0/world",
+      "scenarioId": "fulfillment-block-gen-1018-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1018,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 421,
+        "station": 2,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": 1400,
+      "replaysRun": 21,
+      "ms": 1502,
+      "diagnose": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 2
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 22
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1018-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1018-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1018,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 421,
+        "station": 2,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1019-0/world",
+      "scenarioId": "fulfillment-block-gen-1019-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1019,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 370,
+        "robot": 21,
+        "duration": null
+      },
+      "detectedTick": 565,
+      "replaysRun": 21,
+      "ms": 783,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 34
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "fulfillment-block-gen-1019-0/primary-only",
+      "scenarioId": "fulfillment-block-gen-1019-0",
+      "layoutId": "fulfillment-block",
+      "seed": 1019,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 370,
+        "robot": 21,
+        "duration": null
+      },
+      "detectedTick": 725,
+      "replaysRun": 21,
+      "ms": 952,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 34
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1000-0/world",
+      "scenarioId": "chokepoint-gen-1000-0",
+      "layoutId": "chokepoint",
+      "seed": 1000,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 430,
+        "station": 2,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1000-0/primary-only",
+      "scenarioId": "chokepoint-gen-1000-0",
+      "layoutId": "chokepoint",
+      "seed": 1000,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 430,
+        "station": 2,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1001-0/world",
+      "scenarioId": "chokepoint-gen-1001-0",
+      "layoutId": "chokepoint",
+      "seed": 1001,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 486,
+        "robot": 4,
+        "duration": null
+      },
+      "detectedTick": 605,
+      "replaysRun": 21,
+      "ms": 457,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 19
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1001-0/primary-only",
+      "scenarioId": "chokepoint-gen-1001-0",
+      "layoutId": "chokepoint",
+      "seed": 1001,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 486,
+        "robot": 4,
+        "duration": null
+      },
+      "detectedTick": 605,
+      "replaysRun": 21,
+      "ms": 442,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 19
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 4
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1002-0/world",
+      "scenarioId": "chokepoint-gen-1002-0",
+      "layoutId": "chokepoint",
+      "seed": 1002,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 502,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1002-0/primary-only",
+      "scenarioId": "chokepoint-gen-1002-0",
+      "layoutId": "chokepoint",
+      "seed": 1002,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 502,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": 1514,
+      "replaysRun": 21,
+      "ms": 868,
+      "diagnose": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 0
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 17
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1003-0/world",
+      "scenarioId": "chokepoint-gen-1003-0",
+      "layoutId": "chokepoint",
+      "seed": 1003,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 698,
+        "station": 2,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1003-0/primary-only",
+      "scenarioId": "chokepoint-gen-1003-0",
+      "layoutId": "chokepoint",
+      "seed": 1003,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 698,
+        "station": 2,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1004-0/world",
+      "scenarioId": "chokepoint-gen-1004-0",
+      "layoutId": "chokepoint",
+      "seed": 1004,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 526,
+        "robot": 15,
+        "duration": null
+      },
+      "detectedTick": 684,
+      "replaysRun": 21,
+      "ms": 533,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 15
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 10
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 15
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1004-0/primary-only",
+      "scenarioId": "chokepoint-gen-1004-0",
+      "layoutId": "chokepoint",
+      "seed": 1004,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 526,
+        "robot": 15,
+        "duration": null
+      },
+      "detectedTick": 674,
+      "replaysRun": 21,
+      "ms": 482,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 15
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 10
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 15
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1005-0/world",
+      "scenarioId": "chokepoint-gen-1005-0",
+      "layoutId": "chokepoint",
+      "seed": 1005,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 428,
+        "robot": 1,
+        "duration": null
+      },
+      "detectedTick": 527,
+      "replaysRun": 21,
+      "ms": 410,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 17
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1005-0/primary-only",
+      "scenarioId": "chokepoint-gen-1005-0",
+      "layoutId": "chokepoint",
+      "seed": 1005,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 428,
+        "robot": 1,
+        "duration": null
+      },
+      "detectedTick": 537,
+      "replaysRun": 21,
+      "ms": 558,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 1
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1006-0/world",
+      "scenarioId": "chokepoint-gen-1006-0",
+      "layoutId": "chokepoint",
+      "seed": 1006,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 674,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1006-0/primary-only",
+      "scenarioId": "chokepoint-gen-1006-0",
+      "layoutId": "chokepoint",
+      "seed": 1006,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 674,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1007-0/world",
+      "scenarioId": "chokepoint-gen-1007-0",
+      "layoutId": "chokepoint",
+      "seed": 1007,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 655,
+        "robot": 12,
+        "duration": null
+      },
+      "detectedTick": 786,
+      "replaysRun": 21,
+      "ms": 549,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": true,
+        "reason": null
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1007-0/primary-only",
+      "scenarioId": "chokepoint-gen-1007-0",
+      "layoutId": "chokepoint",
+      "seed": 1007,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 655,
+        "robot": 12,
+        "duration": null
+      },
+      "detectedTick": 777,
+      "replaysRun": 21,
+      "ms": 552,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": true,
+        "reason": null
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 12
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1008-0/world",
+      "scenarioId": "chokepoint-gen-1008-0",
+      "layoutId": "chokepoint",
+      "seed": 1008,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 660,
+        "robot": 16,
+        "duration": null
+      },
+      "detectedTick": 845,
+      "replaysRun": 21,
+      "ms": 574,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 19
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 20
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 16
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1008-0/primary-only",
+      "scenarioId": "chokepoint-gen-1008-0",
+      "layoutId": "chokepoint",
+      "seed": 1008,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 660,
+        "robot": 16,
+        "duration": null
+      },
+      "detectedTick": 765,
+      "replaysRun": 21,
+      "ms": 605,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 16
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 20
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 16
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1009-0/world",
+      "scenarioId": "chokepoint-gen-1009-0",
+      "layoutId": "chokepoint",
+      "seed": 1009,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 645,
+        "station": 2,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1009-0/primary-only",
+      "scenarioId": "chokepoint-gen-1009-0",
+      "layoutId": "chokepoint",
+      "seed": 1009,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 645,
+        "station": 2,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1010-0/world",
+      "scenarioId": "chokepoint-gen-1010-0",
+      "layoutId": "chokepoint",
+      "seed": 1010,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 501,
+        "robot": 20,
+        "duration": null
+      },
+      "detectedTick": 600,
+      "replaysRun": 21,
+      "ms": 448,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 18
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 6
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1010-0/primary-only",
+      "scenarioId": "chokepoint-gen-1010-0",
+      "layoutId": "chokepoint",
+      "seed": 1010,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 501,
+        "robot": 20,
+        "duration": null
+      },
+      "detectedTick": 630,
+      "replaysRun": 21,
+      "ms": 472,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 20
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 8
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 20
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1011-0/world",
+      "scenarioId": "chokepoint-gen-1011-0",
+      "layoutId": "chokepoint",
+      "seed": 1011,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 352,
+        "station": 0,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1011-0/primary-only",
+      "scenarioId": "chokepoint-gen-1011-0",
+      "layoutId": "chokepoint",
+      "seed": 1011,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 352,
+        "station": 0,
+        "factor": 2,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1012-0/world",
+      "scenarioId": "chokepoint-gen-1012-0",
+      "layoutId": "chokepoint",
+      "seed": 1012,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 454,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1012-0/primary-only",
+      "scenarioId": "chokepoint-gen-1012-0",
+      "layoutId": "chokepoint",
+      "seed": 1012,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 454,
+        "station": 0,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": 1169,
+      "replaysRun": 21,
+      "ms": 677,
+      "diagnose": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 0
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "station-slowdown",
+          "station": 0
+        },
+        "correct": true,
+        "reason": null
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": false,
+        "reason": "wrong-kind"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1013-0/world",
+      "scenarioId": "chokepoint-gen-1013-0",
+      "layoutId": "chokepoint",
+      "seed": 1013,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 413,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1013-0/primary-only",
+      "scenarioId": "chokepoint-gen-1013-0",
+      "layoutId": "chokepoint",
+      "seed": 1013,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 413,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1014-0/world",
+      "scenarioId": "chokepoint-gen-1014-0",
+      "layoutId": "chokepoint",
+      "seed": 1014,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 354,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1014-0/primary-only",
+      "scenarioId": "chokepoint-gen-1014-0",
+      "layoutId": "chokepoint",
+      "seed": 1014,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 354,
+        "station": 1,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1015-0/world",
+      "scenarioId": "chokepoint-gen-1015-0",
+      "layoutId": "chokepoint",
+      "seed": 1015,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 3,
+        "duration": null
+      },
+      "detectedTick": 596,
+      "replaysRun": 21,
+      "ms": 443,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 15
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 20
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 3
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1015-0/primary-only",
+      "scenarioId": "chokepoint-gen-1015-0",
+      "layoutId": "chokepoint",
+      "seed": 1015,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 495,
+        "robot": 3,
+        "duration": null
+      },
+      "detectedTick": 594,
+      "replaysRun": 21,
+      "ms": 469,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 3
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 20
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 3
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1016-0/world",
+      "scenarioId": "chokepoint-gen-1016-0",
+      "layoutId": "chokepoint",
+      "seed": 1016,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 595,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1016-0/primary-only",
+      "scenarioId": "chokepoint-gen-1016-0",
+      "layoutId": "chokepoint",
+      "seed": 1016,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 595,
+        "station": 0,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1017-0/world",
+      "scenarioId": "chokepoint-gen-1017-0",
+      "layoutId": "chokepoint",
+      "seed": 1017,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 584,
+        "station": 2,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1017-0/primary-only",
+      "scenarioId": "chokepoint-gen-1017-0",
+      "layoutId": "chokepoint",
+      "seed": 1017,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 584,
+        "station": 2,
+        "factor": 3,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1018-0/world",
+      "scenarioId": "chokepoint-gen-1018-0",
+      "layoutId": "chokepoint",
+      "seed": 1018,
+      "variant": "world",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 421,
+        "station": 1,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1018-0/primary-only",
+      "scenarioId": "chokepoint-gen-1018-0",
+      "layoutId": "chokepoint",
+      "seed": 1018,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "station-slowdown",
+        "tick": 421,
+        "station": 1,
+        "factor": 4,
+        "duration": null
+      },
+      "detectedTick": null,
+      "replaysRun": null,
+      "ms": null,
+      "diagnose": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "firstAlarm": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      },
+      "mostSevere": {
+        "target": null,
+        "correct": false,
+        "reason": "not-detected"
+      }
+    },
+    {
+      "id": "chokepoint-gen-1019-0/world",
+      "scenarioId": "chokepoint-gen-1019-0",
+      "layoutId": "chokepoint",
+      "seed": 1019,
+      "variant": "world",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 370,
+        "robot": 13,
+        "duration": null
+      },
+      "detectedTick": 534,
+      "replaysRun": 21,
+      "ms": 412,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 13
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 13
+        },
+        "correct": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "chokepoint-gen-1019-0/primary-only",
+      "scenarioId": "chokepoint-gen-1019-0",
+      "layoutId": "chokepoint",
+      "seed": 1019,
+      "variant": "primary-only",
+      "primary": {
+        "kind": "robot-freeze",
+        "tick": 370,
+        "robot": 13,
+        "duration": null
+      },
+      "detectedTick": 486,
+      "replaysRun": 21,
+      "ms": 401,
+      "diagnose": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 13
+        },
+        "correct": true,
+        "reason": null
+      },
+      "firstAlarm": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 21
+        },
+        "correct": false,
+        "reason": "wrong-target"
+      },
+      "mostSevere": {
+        "target": {
+          "kind": "robot-freeze",
+          "robot": 13
+        },
+        "correct": true,
+        "reason": null
+      }
+    }
+  ]
+}

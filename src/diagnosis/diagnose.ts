@@ -31,7 +31,7 @@ export const GAIN_MIN = 0.02;
 /** Most faults selected (Requirement 4.1). */
 export const MAX_FAULTS = 3;
 /** Candidates re-scored in each round after the first (design D8). */
-export const ROUND_K = 4;
+export const ROUND_K = 8;
 /** Confidence thresholds (design "Diagnose (task 5)"). */
 export const HIGH_SCORE = 0.95;
 export const HIGH_GAP = 0.15;

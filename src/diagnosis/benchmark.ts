@@ -57,6 +57,7 @@ export type ReasonCode = 'not-detected' | 'no-fault' | 'named-decoy' | 'wrong-ki
 export const METHODS: readonly MethodName[] = ['diagnose', 'firstAlarm', 'mostSevere'];
 export const KINDS: readonly FaultKind[] = ['robot-freeze', 'station-slowdown', 'blocked-cell', 'slow-robot'];
 export const VARIANTS: readonly Variant[] = ['world', 'primary-only'];
+export const REASONS: readonly ReasonCode[] = ['not-detected', 'no-fault', 'named-decoy', 'wrong-kind', 'wrong-target'];
 
 export interface BenchmarkCase {
   id: string;
@@ -380,6 +381,28 @@ export function renderResultsMd(r: BenchmarkResult): string {
   }
   lines.push('');
   lines.push(`- not detected: ${r.notDetected} of ${r.cases} cases`);
+  lines.push('');
+  lines.push('### Among detected jams');
+  lines.push('');
+  const detected = r.results.filter((x) => x.detectedTick !== null);
+  row(['method', 'detected', ...VARIANTS]);
+  row(['---', '---', ...VARIANTS.map(() => '---')]);
+  for (const m of METHODS) {
+    row([
+      METHOD_LABEL[m],
+      formatAcc(acc(detected, m)),
+      ...VARIANTS.map((v) => formatAcc(acc(detected.filter((x) => x.variant === v), m))),
+    ]);
+  }
+  lines.push('');
+  lines.push('### Failure reasons');
+  lines.push('');
+  row(['method', ...REASONS]);
+  row(['---', ...REASONS.map(() => '---')]);
+  for (const m of METHODS) {
+    row([METHOD_LABEL[m], ...REASONS.map((c) => String(r.results.filter((x) => x[m].reason === c).length))]);
+  }
+  lines.push('');
   lines.push(`- median replays per diagnosis: ${r.medianReplays}`);
   lines.push(`- median ms per diagnosis: ${r.medianMs}`);
   lines.push('- the baselines only name robot-freeze or station-slowdown targets, so they cannot be correct on blocked-cell or slow-robot primaries.');
