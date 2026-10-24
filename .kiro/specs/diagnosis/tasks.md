@@ -11,7 +11,7 @@ Rules for every task:
 
 ## Tasks
 
-- [-] 1. Types, lint guards, and script runner
+- [x] 1. Types, lint guards, and script runner
   - [x] 1.1 Create `src/diagnosis/types.ts` with `ObservedConfig`, `Target`, `Window`, `Evidence`, `RankedFault`, `ScoredHypothesis`, `Diagnosis`, `DiagnoseOptions`, `FixResult`, `DiagnoseRequest`, `WorkerLike`
     - _Requirements: 1.3, 4.2, 6.1, 8.4_
   - [x] 1.2 Edit `eslint.config.js` per design "ESLint changes": determinism rules on `src/diagnosis/**/*.ts`; `src/sim` blocks forbid `diagnosis`; Diagnoser block with `@typescript-eslint/no-restricted-imports` (`allowTypeImports` for `sim/scenarios`) and `no-restricted-syntax` for `.faults` reads; `src/diagnosis/**/*.tsx` in the react-hooks block
@@ -22,14 +22,14 @@ Rules for every task:
     - _Requirements: 2.4, 2.5_
   - [x] 1.5 Check and commit: `npm test`, `npm run lint` pass; commit "add diagnosis types and lint guards against fault-list reads"
 
-- [~] 2. Evidence extraction
-  - [ ] 2.1 Implement `extractEvidence` in `src/diagnosis/evidence.ts` per design (Diagnoser standstill rule with `SERVE_STALL`, stalled order, episodes, hot-spots, services, completions, throughput, moves, busy cells that went empty); reads only ticks ≤ `detectedTick`; `RangeError` out of range
+- [-] 2. Evidence extraction
+  - [x] 2.1 Implement `extractEvidence` in `src/diagnosis/evidence.ts` per design (Diagnoser standstill rule with `SERVE_STALL`, stalled order, episodes, hot-spots, services, completions, throughput, moves, busy cells that went empty); reads only ticks ≤ `detectedTick`; `RangeError` out of range
     - _Requirements: 1.1, 1.2, 1.3_
-  - [ ] 2.2 Write `tests/evidence.test.ts` (required test 1): on `cp-door-freeze`, the earliest stalled robot is R7 with standstill start ≤ 351; on `pd-holder-freeze`, R4 is stalled while Serving
+  - [x] 2.2 Write `tests/evidence.test.ts` (required test 1): on `cp-door-freeze`, the earliest stalled robot is R7 with standstill start ≤ 351; on `pd-holder-freeze`, R4 is stalled while Serving
     - _Requirements: 1.2_
-  - [ ] 2.3 Write property test: **Property 1: Evidence is a deterministic, JSON-safe function of the prefix** (`numRuns: 10`)
+  - [x] 2.3 Write property test: **Property 1: Evidence is a deterministic, JSON-safe function of the prefix** (`numRuns: 10`)
     - **Validates: Requirements 1.1, 1.3**
-  - [ ] 2.4 Write property test: **Property 2: Stalled robots are ordered and real** (`numRuns: 10`)
+  - [x] 2.4 Write property test: **Property 2: Stalled robots are ordered and real** (`numRuns: 10`)
     - **Validates: Requirements 1.2**
   - [ ] 2.5 Check and commit: commit "extract jam evidence from recordings"
 
