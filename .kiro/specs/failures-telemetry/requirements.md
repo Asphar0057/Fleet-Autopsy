@@ -81,7 +81,7 @@ Spec 2 adds fault injection to the deterministic sim, curated and generated fail
 
 #### Acceptance Criteria
 
-1. THE Sim module SHALL export at least 6 curated Scenarios with at least 2 per structural kind: a frozen robot in a one-cell aisle and a factor-3 slowdown on the busiest station (fulfillment-block); a blocked cell at a door mouth and a slow robot in the storage zone (chokepoint); a frozen Reservation_Holder (pocket-dc); and a decoy-first two-fault scenario.
+1. THE Sim module SHALL export at least 6 curated Scenarios, each oracle-verified (Requirement 6.2) and detected within 200 ticks (Requirement 4.5), covering the structures fulfillment-block, chokepoint, and pocket-dc, plus a decoy-first two-fault scenario; at least 2 per layout is preferred. The curated set is: a frozen robot in a one-cell aisle and a factor-4 slowdown on the busiest station at the layout's maximum robot count (fulfillment-block); a frozen robot in each of the two doors (chokepoint); a frozen Reservation_Holder and the decoy-first scenario (pocket-dc).
 2. WHERE a Scenario has a decoy, THE Scenario SHALL list the decoy fault with an earlier tick than the primary fault.
 3. FOR ALL curated Scenarios, THE Oracle SHALL confirm the ground truth (Requirement 6.2).
 

@@ -14,6 +14,7 @@ import {
   STALL_ROBOTS,
 } from '../src/sim/jam';
 import type { Jam, JamSignal } from '../src/sim/jam';
+import { SCENARIOS, scenarioConfig } from '../src/sim/scenarios';
 import { EKind, RState } from '../src/sim/types';
 import { loadPreset, PRESET_IDS } from './helpers';
 
@@ -234,5 +235,30 @@ describe('healthy baselines (Requirement 4.4)', () => {
       expect(jam).toBeNull();
     },
     120_000,
+  );
+});
+
+// ---- curated scenarios (Requirements 4.5, 4.6) ----
+
+describe('curated scenarios are detected', () => {
+  it.each(SCENARIOS.map((s) => [s.id, s] as const))(
+    '%s: detected within 200 ticks after the primary fault',
+    (_id, s) => {
+      const layout = loadPreset(s.layoutId);
+      const rec = runHeadless(layout, scenarioConfig(s, layout), 2000);
+      const jam = detectJam(rec, layout, 2000);
+      const primary = s.faults[s.groundTruth.primaryFaultIndex].tick;
+      console.log(`${s.id}: primary t=${primary}, jam ${JSON.stringify(jam)}`);
+      expect(jam).not.toBeNull();
+      const lag = jam!.detectedTick - primary;
+      expect(lag).toBeGreaterThanOrEqual(0);
+      expect(lag).toBeLessThanOrEqual(200);
+      for (const d of s.groundTruth.decoyIndices) {
+        // Requirement 4.6: onset closer to the primary than to the decoy.
+        const decoy = s.faults[d].tick;
+        expect(Math.abs(jam!.onsetTick - primary)).toBeLessThan(Math.abs(jam!.onsetTick - decoy));
+      }
+    },
+    60_000,
   );
 });

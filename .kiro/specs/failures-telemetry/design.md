@@ -33,6 +33,7 @@ Hard constraint: with `faults: []` the sim is byte-identical to Spec 1. Every fa
 | D21 | Engaged blocks are drawn in ink always (physical effect): a 1px square outline plus cross-hatching (both diagonals, 0.6px), distinct from the single-diagonal congestion layer. Reveal markers use accent: a 1px accent square around the faulty cell, robot, or station, with a mono tag `F1`, `F2` (fault index + 1). |
 | D22 | Spec 1 test edit: `determinism.test.ts` Property 4 builds `{ tick, kind: 'stop' }` faults, which no longer type-check and would now change behavior. It becomes: faults whose tick is after the run end produce the same hash as `faults: []`. Same intent (faults not yet active do not perturb the run). No other Spec 1 test changes. |
 | D23 | Curated placements are literal constants. A placement test checks each against its description on the fault-free run (for example, "robot R is in a one-cell aisle at frame tick − 1"). If a high-impact scenario fails the oracle or detection test, the fault is moved (another robot, cell, or tick), not the thresholds, and the final placement is recorded in the Scenarios table below. |
+| D24 | Curated set after the task 8 search (seeds 1 to 10, fault ticks 300 to 700 step 50, layout max robots: fulfillment-block 45, chokepoint 28 per `layouts.json`). Station slowdown passes only at factor 4 and 45 robots, and only narrowly (10.2% loss, detected by the standstill rule). The chokepoint door block (best: 12.8% loss, never detected) and slow robot (best: 6.9% loss, never detected) failed, because the fleet routes around them through the second door or past the slow robot; they are replaced by a frozen robot standing in each door (`cp-door-freeze`, `cp-lower-door-freeze`). The fault kinds and their tests are unchanged; only the curated list changed. Thresholds unchanged. |
 
 ## Architecture
 
@@ -178,16 +179,16 @@ export function generateScenarios(layout: Layout, seed: number, count: number): 
 - Per-sim fault state: `frozen`, `slowPin` (Uint8 per robot), `factor` (Uint8 per station, 1 when none), `blocked` (Uint8 per cell), `engaged` (Uint8 per fault).
 - Telemetry series: Int16 per tick; per-robot Int32; per-station Float64 / Int16; per-cell Uint16. 2,000 ticks: under 20 KB beyond the Recording.
 
-### Curated scenarios (initial placements; finals recorded in task 8)
+### Curated scenarios (final placements, task 8, D24)
 
-| id | layout | seed | robots | faults (index: fault) | ground truth | placement predicate (test) |
-|---|---|---|---|---|---|---|
-| `fb-aisle-freeze` | fulfillment-block | 1 | 36 | 0: freeze R?, t=500, permanent | primary 0 | robot at frame 499 on a cell with x ∈ {12, 19, 26} between pod rows (one-cell aisle) |
-| `fb-station-slow` | fulfillment-block | 2 | 36 | 0: slowdown station ?, factor 3, t=500, permanent | primary 0 | station with most service-starts in ticks 1 to 499 of the fault-free run |
-| `cp-door-block` | chokepoint | 1 | 22 | 0: block cell 192 (x 17, y 5, upper door), t=400, permanent | primary 0 | cell is a door (floor in wall column x = 17) |
-| `cp-slow-robot` | chokepoint | 2 | 22 | 0: slow R?, period 4, t=400, permanent | primary 0 | robot at frame 399 in a one-cell vertical aisle of the storage zone (x ∈ {4, 7, 10}, between pod columns), where it cannot be passed |
-| `pd-holder-freeze` | pocket-dc | 1 | 9 | 0: freeze R?, t=400, permanent | primary 0 | robot serving on a station cell at frame 399 |
-| `pd-decoy-first` | pocket-dc | 3 | 9 | 0: freeze R?, t=350, duration 30; 1: freeze R?, t=550, permanent | primary 1, decoys [0] | decoy robot on open floor (rows 2 or 8) and not on an Access_Cell at frame 349; primary robot serving on a station cell at frame 549 |
+| id | layout | seed | robots | faults (index: fault) | ground truth | placement predicate (test) | loss | Recovered_Fraction | detection |
+|---|---|---|---|---|---|---|---|---|---|
+| `fb-aisle-freeze` | fulfillment-block | 1 | 36 | 0: freeze R14, t=600, permanent | primary 0 | robot at frame 599 on a floor cell with x ∈ {12, 19, 26} and pods left and right (R14 at (19, 12)) | 61.4% (761 → 294) | 1.000 | t=704, lag 104, standstill |
+| `fb-station-slow` | fulfillment-block | 1 | 45 | 0: slowdown station 1 (37, 5), factor 4, t=400, permanent | primary 0 | station with most service starts in ticks 1 to 399 of the fault-free run | 10.2% (784 → 704) | 1.000 | t=509, lag 109, standstill |
+| `cp-door-freeze` | chokepoint | 1 | 22 | 0: freeze R7, t=350, permanent | primary 0 | robot at frame 349 on a door cell (floor at x = 17, wall above and below; R7 on cell 192, (17, 5)) | 72.2% (342 → 95) | 1.000 | t=467, lag 117, standstill |
+| `cp-lower-door-freeze` | chokepoint | 1 | 22 | 0: freeze R9, t=500, permanent | primary 0 | robot at frame 499 on a door cell (R9 on cell 542, (17, 15)) | 74.6% (342 → 87) | 1.000 | t=609, lag 109, standstill |
+| `pd-holder-freeze` | pocket-dc | 1 | 9 | 0: freeze R4, t=400, permanent | primary 0 | robot serving on a station cell at frame 399 (R4 on station 0, (1, 5)) | 45.6% (259 → 141) | 1.000 | t=530, lag 130, standstill |
+| `pd-decoy-first` | pocket-dc | 3 | 9 | 0: freeze R6, t=350, duration 30; 1: freeze R3, t=550, permanent | primary 1, decoys [0] | decoy robot on open floor (rows 2 or 8), not on an Access_Cell, at frame 349 (R6 at (16, 2)); primary robot serving on a station cell at frame 549 (R3 on station 1, (22, 5)) | 42.5% (259 → 149) | F0 0.000, F1 1.000 | t=688, lag 138, onset 586, throughput |
 
 Placement rule for every curated fault: choose a robot, cell, or station where the fault blocks through-traffic (a one-cell aisle, a door, a station's only service slot), never open floor, except the decoy, which is placed on open floor on purpose. `R?` and `station ?` are filled in task 8 from the fault-free run with a throwaway helper, then hard-coded.
 
