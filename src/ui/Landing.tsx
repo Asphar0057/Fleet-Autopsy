@@ -1,12 +1,26 @@
 // Landing view (visual-redesign Requirement 1.2 to 1.6, visual-polish Requirement 5):
 // what the tool does, before any control, centred over a blurred, vignetted Backdrop.
 import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { Backdrop } from './Backdrop';
 import { LANDING, LANDING_CENTER_CLASS } from './copy';
 
 export interface LandingProps {
   onEnter(): void;
   onHowItWorks(opener: HTMLElement): void;
+}
+
+/** The text with the first occurrence of `word` wrapped in an accent span. */
+function accentWord(text: string, word: string): ReactNode {
+  const i = text.indexOf(word);
+  if (i < 0) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="accent-text">{word}</span>
+      {text.slice(i + word.length)}
+    </>
+  );
 }
 
 export function Landing({ onEnter, onHowItWorks }: LandingProps) {
@@ -22,8 +36,10 @@ export function Landing({ onEnter, onHowItWorks }: LandingProps) {
       <div className="landing-vignette" aria-hidden="true" />
       <div className={`landing-content ${LANDING_CENTER_CLASS}`}>
         <p className="eyebrow">{LANDING.eyebrow}</p>
-        <h1 className="landing-wordmark">Fleet Autopsy</h1>
-        <p className="lede">{LANDING.lede}</p>
+        <h1 className="landing-wordmark">
+          Fleet Autopsy<span className="accent-dot">.</span>
+        </h1>
+        <p className="lede">{accentWord(LANDING.lede, 'wrong')}</p>
         <ol className="steps">
           {LANDING.steps.map((s, i) => (
             <li key={s} className="step">

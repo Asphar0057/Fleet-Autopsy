@@ -171,6 +171,13 @@ button {
   color: var(--fg);
 }
 
+/* Accent text: the wordmark full stop, the landing eyebrow and the word
+   "wrong" in the lede, and the scenario select (label and failure options). */
+.accent-dot,
+.accent-text {
+  color: var(--accent);
+}
+
 button.wordmark {
   appearance: none;
   min-height: var(--control-h); /* 36px tap target */

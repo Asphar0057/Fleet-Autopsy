@@ -65,13 +65,13 @@
   font: 600 var(--fs-eyebrow) / 16px var(--font-sans);
   text-transform: uppercase;
   letter-spacing: var(--tracking-eyebrow);
-  color: var(--fg-2);
+  color: var(--accent);
 }
 
 .landing-wordmark {
   margin: 0;
   font: 700 var(--fs-hero) / 1 var(--font-sans);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: 0.06em;
   color: var(--fg);
 }
 
