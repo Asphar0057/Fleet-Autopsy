@@ -22,14 +22,30 @@ export interface PlanInput {
 export interface Planner {
   /** Writes each robot's next cell into `out[0..n)`. */
   plan(input: PlanInput, out: Int16Array): void;
+  /** Recomputes the corridor tables after the blocked mask changed (Spec 2 D11). */
+  refreshBlocked(): void;
 }
 
 /** Candidates per robot: 4 neighbors (E, W, S, N) plus staying. */
 const SLOTS = 5;
 
-export function createPlanner(layout: Layout, cache: DistanceCache, maxRobots: number): Planner {
+/**
+ * `blocked` (Spec 2 D11) is the engaged blocked-cell mask, held by reference:
+ * blocked cells are impassable. Call `refreshBlocked()` after it changes.
+ */
+export function createPlanner(
+  layout: Layout,
+  cache: DistanceCache,
+  maxRobots: number,
+  blocked?: Uint8Array,
+): Planner {
   const { kinds, neighbors, accessOf, access } = layout;
   const cells = kinds.length;
+  if (blocked !== undefined && blocked.length !== cells) {
+    throw new RangeError(`createPlanner: blocked mask has ${blocked.length} cells, layout has ${cells}`);
+  }
+  // All zeros when no mask is given, so Spec 1 behavior is unchanged.
+  const mask = blocked ?? new Uint8Array(cells);
 
   const occ = new Int16Array(cells); // robot id per cell, -1 if empty
   const claimed = new Uint8Array(cells); // 1 once a robot will end the tick on the cell
@@ -40,22 +56,28 @@ export function createPlanner(layout: Layout, cache: DistanceCache, maxRobots: n
   const candDist = new Int16Array(SLOTS * maxRobots);
   const candPush = new Int16Array(SLOTS * maxRobots); // pusher's distance, tie-break for a pushed robot
 
-  // Corridor graph for the swap check: plain floor cells (no endpoints, no access cells).
+  // Corridor graph for the swap check: plain floor cells (no endpoints, no
+  // access cells, no engaged blocks). Recomputed in place by refreshBlocked.
   const trav = new Uint8Array(cells);
-  for (let c = 0; c < cells; c++) trav[c] = kinds[c] === CellKind.Floor && accessOf[c] < 0 ? 1 : 0;
   const deg = new Uint8Array(cells);
-  for (let c = 0; c < cells; c++) {
-    for (let d = 0; d < 4; d++) {
-      const u = neighbors[c * 4 + d];
-      if (u >= 0 && trav[u] === 1) deg[c]++;
+  function buildCorridor(): void {
+    for (let c = 0; c < cells; c++) trav[c] = kinds[c] === CellKind.Floor && accessOf[c] < 0 && mask[c] === 0 ? 1 : 0;
+    deg.fill(0);
+    for (let c = 0; c < cells; c++) {
+      for (let d = 0; d < 4; d++) {
+        const u = neighbors[c * 4 + d];
+        if (u >= 0 && trav[u] === 1) deg[c]++;
+      }
     }
   }
+  buildCorridor();
 
-  /** Movement filter: walls never; access cells only for the holder; endpoints only as goal. */
+  /** Movement filter: walls and engaged blocks never; access cells only for the holder; endpoints only as goal. */
   function allowed(inp: PlanInput, i: number, c: number): boolean {
     const k = kinds[c];
     if (k === CellKind.Wall) return false;
     if (c === inp.pos[i]) return true;
+    if (mask[c] === 1) return false;
     if (accessOf[c] >= 0) {
       const h = inp.holds[i];
       if (h < 0 || access[h] !== c) return false;
@@ -265,5 +287,6 @@ export function createPlanner(layout: Layout, cache: DistanceCache, maxRobots: n
         if (decided[i] === 0) pibt(inp, out, i, -1, 0);
       }
     },
+    refreshBlocked: buildCorridor,
   };
 }

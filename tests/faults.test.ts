@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
+import { createDistanceCache, INF } from '../src/sim/distance';
 import { blockableCells, createFaultState, isActive, validateFaults } from '../src/sim/faults';
 import type { Layout } from '../src/sim/layout';
+import { createPlanner } from '../src/sim/pibt';
 import { hashRecording } from '../src/sim/recorder';
 import type { Recording } from '../src/sim/recorder';
 import { createSim } from '../src/sim/sim';
-import { EKind } from '../src/sim/types';
+import { CellKind, EKind } from '../src/sim/types';
 import type { FaultEvent } from '../src/sim/types';
 import { verifyRun } from '../src/sim/verify';
-import { loadPreset, PRESET_IDS, runCase, runCaseArb } from './helpers';
+import { blockableFor, faultsValid, loadPreset, PRESET_IDS, runCase, runCaseArb } from './helpers';
 import type { RunCase } from './helpers';
 
 const PRESETS = ['pocket-dc', 'fulfillment-block', 'chokepoint'];
@@ -365,6 +367,170 @@ describe('fault effect properties', () => {
         return true;
       }),
       { numRuns: 25 },
+    );
+  });
+});
+
+// ---- Blocked cells: distance cache, planner, engagement (task 3) ----
+
+/** First (frame F >= 20, cell) in a fault-free run where a robot stays on a blockable cell for frames F-1 and F. */
+function occupiedBlockable(c: RunCase, ticks: number): { frame: number; cell: number } {
+  const layout = loadPreset(c.id);
+  const ok = new Set(Array.from(blockableFor(layout)));
+  const rec = runCase(c, ticks).recording;
+  for (let t = 20; t < rec.frames; t++) {
+    for (let r = 0; r < rec.robots; r++) {
+      const cell = cellAt(rec, t, r);
+      if (cellAt(rec, t - 1, r) === cell && ok.has(cell)) return { frame: t, cell };
+    }
+  }
+  throw new Error('no occupied blockable cell found');
+}
+
+function occupiedAt(rec: Recording, t: number, cell: number): boolean {
+  for (let r = 0; r < rec.robots; r++) if (cellAt(rec, t, r) === cell) return true;
+  return false;
+}
+
+describe('blocked cells', () => {
+  it('distance cache keeps Spec 1 maps until setBlocked, then excludes blocked cells', () => {
+    const l = loadPreset('pocket-dc');
+    const cell = blockableFor(l)[0];
+    const cache = createDistanceCache(l);
+    const fresh = createDistanceCache(l).get(l.stations[0], l.access[0]);
+    const before = cache.get(l.stations[0], l.access[0]);
+    expect(Array.from(before)).toEqual(Array.from(fresh));
+    const mask = new Uint8Array(l.kinds.length);
+    mask[cell] = 1;
+    cache.setBlocked(mask);
+    const after = cache.get(l.stations[0], l.access[0]);
+    expect(after).not.toBe(before);
+    expect(after[cell]).toBe(INF);
+    // An empty mask gives the Spec 1 maps again.
+    mask[cell] = 0;
+    cache.setBlocked(mask);
+    expect(Array.from(cache.get(l.stations[0], l.access[0]))).toEqual(Array.from(fresh));
+  });
+
+  it('planner never moves a robot onto a blocked cell after refreshBlocked', () => {
+    const l = loadPreset('fulfillment-block');
+    // A blockable cell b with floor on two opposite sides (E/W or S/N).
+    let a = -1;
+    let b = -1;
+    let g = -1;
+    for (const c of Array.from(blockableFor(l))) {
+      for (const [d1, d2] of [[0, 1], [2, 3]]) {
+        const x = l.neighbors[c * 4 + d1];
+        const y = l.neighbors[c * 4 + d2];
+        if (x >= 0 && y >= 0 && l.kinds[x] === CellKind.Floor && l.kinds[y] === CellKind.Floor && l.accessOf[x] < 0 && l.accessOf[y] < 0) {
+          [a, b, g] = [x, c, y];
+        }
+      }
+      if (b >= 0) break;
+    }
+    expect(b).toBeGreaterThanOrEqual(0);
+    const mask = new Uint8Array(l.kinds.length);
+    const cache = createDistanceCache(l);
+    const planner = createPlanner(l, cache, 1, mask);
+    const inp = {
+      n: 1,
+      pos: Int16Array.of(a),
+      goal: Int16Array.of(g),
+      prio: new Int32Array(1),
+      pinned: new Uint8Array(1),
+      allowAccess: Int16Array.of(-1),
+      holds: Int16Array.of(-1),
+      tieRot: new Uint8Array(1),
+    };
+    const out = new Int16Array(1);
+    planner.plan(inp, out);
+    expect(out[0]).toBe(b); // the straight path goes through b
+    mask[b] = 1;
+    cache.setBlocked(mask);
+    planner.refreshBlocked();
+    for (let rot = 0; rot < 5; rot++) {
+      inp.tieRot[0] = rot;
+      planner.plan(inp, out);
+      expect(out[0]).not.toBe(b);
+    }
+  });
+
+  it('FaultState engages a block only when its cell is empty and releases it when the window ends', () => {
+    const l = loadPreset('pocket-dc');
+    const cell = blockableFor(l)[0];
+    const st = createFaultState(l, 1, [block(cell, 5, 10)]);
+    const on = Int16Array.of(cell);
+    const off = Int16Array.of(l.floor[0] === cell ? l.floor[1] : l.floor[0]);
+    expect(st.update(4, off)).toBe(false); // before the window
+    expect(st.blocked[cell]).toBe(0);
+    expect(st.update(5, on)).toBe(false); // in the window but occupied
+    expect(st.blocked[cell]).toBe(0);
+    expect(st.update(6, off)).toBe(true); // engages
+    expect(st.blocked[cell]).toBe(1);
+    expect(st.update(7, off)).toBe(false); // unchanged
+    expect(st.update(15, off)).toBe(true); // window [5, 15) ended
+    expect(st.blocked[cell]).toBe(0);
+  });
+
+  it('an occupied block engages on the first tick its cell is empty, then no robot enters until the window ends', () => {
+    const c: RunCase = { id: 'fulfillment-block', seed: 1, robots: loadPreset('fulfillment-block').recommendedRobots };
+    const { frame, cell } = occupiedBlockable(c, RUN_TICKS);
+    const f = block(cell, frame, 150);
+    const rec = runCase(c, RUN_TICKS + 100, [f]).recording;
+    const end = windowEnd(f, rec);
+    // Engagement frame E: the first t >= f.tick whose previous frame has the cell empty (D7).
+    let engage = -1;
+    for (let t = f.tick; t < end; t++) {
+      if (!occupiedAt(rec, t - 1, cell)) {
+        engage = t;
+        break;
+      }
+    }
+    expect(engage).toBeGreaterThan(f.tick); // the occupant held it for at least frame f.tick
+    for (let t = engage; t < end; t++) expect(occupiedAt(rec, t, cell)).toBe(false);
+    expect(verifyRun(rec, loadPreset(c.id))).toEqual([]);
+  });
+
+  // Feature: failures-telemetry, Property 6: Distance maps exclude blocked cells
+  // **Validates: Requirements 1.4**
+  it('Property 6: Distance maps exclude blocked cells', () => {
+    const arb = fc.constantFrom(...PRESET_IDS).chain((id) => {
+      const l = loadPreset(id);
+      const cellsArb = fc
+        .uniqueArray(fc.constantFrom(...Array.from(blockableFor(l))), { minLength: 1, maxLength: 3 })
+        .filter((cells) => faultsValid(l, 1, cells.map((c) => block(c))));
+      const goals = Array.from(l.kinds.keys()).filter((c) => l.kinds[c] !== CellKind.Wall);
+      return fc.record({
+        id: fc.constant(id),
+        cells: cellsArb,
+        goal: fc.constantFrom(...goals),
+        allow: fc.constantFrom(-1, ...Array.from(l.access)),
+      });
+    });
+    fc.assert(
+      fc.property(arb, ({ id, cells, goal, allow }) => {
+        fc.pre(!cells.includes(goal));
+        const l = loadPreset(id);
+        const cache = createDistanceCache(l);
+        cache.get(goal, allow); // a version-0 map that setBlocked must drop
+        const mask = new Uint8Array(l.kinds.length);
+        for (const c of cells) mask[c] = 1;
+        cache.setBlocked(mask);
+        const map = cache.get(goal, allow);
+        if (map[goal] !== 0) return false;
+        for (const c of cells) if (map[c] !== INF) return false;
+        for (let c = 0; c < l.kinds.length; c++) {
+          if (c === goal || l.kinds[c] !== CellKind.Floor || map[c] === INF) continue;
+          let step = false;
+          for (let d = 0; d < 4; d++) {
+            const nb = l.neighbors[c * 4 + d];
+            if (nb >= 0 && map[nb] === map[c] - 1) step = true;
+          }
+          if (!step) return false;
+        }
+        return cache.get(goal, allow) === map;
+      }),
+      { numRuns: 100 },
     );
   });
 });

@@ -191,9 +191,12 @@ export interface FaultState {
   slowPin: Uint8Array;
   /** Product of active slowdown factors per station, 1 when none (D6). */
   factor: Uint8Array;
-  /** Engaged blocked cells (D7). Allocated here; engagement arrives with blocked-cell support. */
+  /** Engaged blocked cells (D7): union over engaged blocked-cell faults. */
   blocked: Uint8Array;
-  /** Recomputes the arrays for frame `t`; returns true if the blocked mask changed. */
+  /**
+   * Recomputes the arrays for frame `t` from `pos` (frame t - 1 positions);
+   * returns true if the blocked mask changed.
+   */
   update(t: number, pos: Int16Array): boolean;
 }
 
@@ -202,12 +205,47 @@ export function createFaultState(layout: Layout, robots: number, faults: readonl
   const slowPin = new Uint8Array(robots);
   const factor = new Uint8Array(layout.stations.length).fill(1);
   const blocked = new Uint8Array(layout.kinds.length);
+  const engaged = new Uint8Array(faults.length); // per fault, blocked-cell only (D7)
+  let hasBlocks = false;
+  for (let k = 0; k < faults.length; k++) if (faults[k].kind === 'blocked-cell') hasBlocks = true;
+
+  /** True if any robot stands on cell c. */
+  function occupied(pos: Int16Array, c: number): boolean {
+    for (let r = 0; r < pos.length; r++) if (pos[r] === c) return true;
+    return false;
+  }
+
+  /** Engagement per D7, then the mask as the union of engaged faults. True if the mask changed. */
+  function updateBlocks(t: number, pos: Int16Array): boolean {
+    for (let k = 0; k < faults.length; k++) {
+      const f = faults[k];
+      if (f.kind !== 'blocked-cell') continue;
+      if (!isActive(f, t)) engaged[k] = 0;
+      else if (engaged[k] === 0 && !occupied(pos, f.cell)) engaged[k] = 1;
+    }
+    let changed = false;
+    for (let k = 0; k < faults.length; k++) {
+      const f = faults[k];
+      if (f.kind !== 'blocked-cell') continue;
+      let v = 0;
+      for (let j = 0; j < faults.length; j++) {
+        const g = faults[j];
+        if (g.kind === 'blocked-cell' && g.cell === f.cell && engaged[j] === 1) v = 1;
+      }
+      if (blocked[f.cell] !== v) {
+        blocked[f.cell] = v;
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
   return {
     frozen,
     slowPin,
     factor,
     blocked,
-    update(t: number): boolean {
+    update(t: number, pos: Int16Array): boolean {
       frozen.fill(0);
       slowPin.fill(0);
       factor.fill(1);
@@ -225,11 +263,11 @@ export function createFaultState(layout: Layout, robots: number, faults: readonl
             factor[f.station] = Math.min(FACTOR_CAP, factor[f.station] * f.factor);
             break;
           case 'blocked-cell':
-            // Engagement (D7) is not applied yet; the mask stays empty.
+            // Engagement needs positions; handled by updateBlocks.
             break;
         }
       }
-      return false;
+      return hasBlocks ? updateBlocks(t, pos) : false;
     },
   };
 }

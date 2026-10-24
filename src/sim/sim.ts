@@ -103,8 +103,6 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
   validateFaults(layout, n, config.faults);
 
   const rng = mulberry32(config.seed);
-  const cache = createDistanceCache(layout);
-  const planner = createPlanner(layout, cache, n);
   const recorder = createRecorder(n, S);
   const queueCap = config.queueCap;
   // Fault effects (Spec 2). Every fault path is gated on hasFaults so a
@@ -114,6 +112,11 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
   const frozen = fs.frozen;
   const slowPin = fs.slowPin;
   const factor = fs.factor;
+  const blocked = fs.blocked; // engaged blocks (D7); all zero until one engages
+  /** True while at least one block is engaged (gates the D9 pod guard). */
+  let anyBlocked = false;
+  const cache = createDistanceCache(layout);
+  const planner = createPlanner(layout, cache, n, blocked);
 
   // Per robot.
   const pos = new Int16Array(n);
@@ -173,6 +176,15 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
     return best + QUEUE_WEIGHT * (qCount[s] + pending[s]);
   }
 
+  /** True if the pod has a floor neighbor that is not an engaged block (D9). */
+  function podUsable(pod: number): boolean {
+    for (let d = 0; d < 4; d++) {
+      const c = neighbors[pod * 4 + d];
+      if (c >= 0 && kinds[c] === CellKind.Floor && blocked[c] === 0) return true;
+    }
+    return false;
+  }
+
   /** Task selection with admission (Requirement 4.1, 4.2). */
   function tryTask(i: number, t: number): void {
     const wasIdle = state[i] === RState.Idle;
@@ -189,8 +201,10 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
       return;
     }
     // D16: draw until an unreserved pod; terminates because robots < pods.
+    // Spec 2 D9: while a block is engaged, also skip pods without an unblocked
+    // floor neighbor (never true under D8; no extra draws when nothing is engaged).
     let p = pods[Math.floor(rng() * pods.length)];
-    while (podReserved[p] === 1) p = pods[Math.floor(rng() * pods.length)];
+    while (podReserved[p] === 1 || (anyBlocked && !podUsable(p))) p = pods[Math.floor(rng() * pods.length)];
     podReserved[p] = 1;
     home[i] = p;
     let best = -1;
@@ -232,7 +246,18 @@ export function createSim(layout: Layout, config: SimConfig): Sim {
     const t = tick + 1;
 
     // 0. Faults active in frame t (skipped entirely when there are none).
-    if (hasFaults) fs.update(t, pos);
+    // pos still holds frame t - 1, which decides block engagement (D7).
+    if (hasFaults && fs.update(t, pos)) {
+      cache.setBlocked(blocked);
+      planner.refreshBlocked();
+      anyBlocked = false;
+      for (let c = 0; c < blocked.length; c++) {
+        if (blocked[c] === 1) {
+          anyBlocked = true;
+          break;
+        }
+      }
+    }
 
     // 1. Task phase, robots in id order. A frozen robot skips it entirely (D3).
     for (let i = 0; i < n; i++) {
