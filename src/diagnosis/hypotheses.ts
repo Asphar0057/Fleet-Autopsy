@@ -1,6 +1,6 @@
 // Hypothesis generation (Spec 3, Requirement 2): candidate faults inferred from
 // Evidence only. Never reads the fault list; `config` is used for `robots` only.
-// Rules and constants: design.tmp.md "Hypotheses (task 3)".
+// Rules and constants: design.md "Hypotheses (task 3)".
 
 import { FAULT_PARAM_MAX, FAULT_PARAM_MIN, validateFaults } from '../sim/faults';
 import type { Layout } from '../sim/layout';

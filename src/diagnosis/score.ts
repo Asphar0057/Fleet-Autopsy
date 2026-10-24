@@ -2,7 +2,7 @@
 // tick 0 with the Observed_Config plus base faults plus one hypothesis, and compare
 // the replay to the observed Recording on observables only (positions, throughput,
 // station queue lengths). Never reads the fault list of `config`.
-// Formula and weights: design.tmp.md "Scoring (task 4)".
+// Formula and weights: design.md "Scoring (task 4)".
 
 import type { Jam } from '../sim/jam';
 import type { Layout } from '../sim/layout';

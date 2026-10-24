@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
+import { matchesGroundTruth, targetOf } from '../src/diagnosis/baselines';
+import { diagnose } from '../src/diagnosis/diagnose';
 import { extractEvidence } from '../src/diagnosis/evidence';
 import { generateHypotheses, preScore } from '../src/diagnosis/hypotheses';
 import { observationWindow, scoreHypothesis, similarity } from '../src/diagnosis/score';
@@ -110,6 +112,34 @@ describe('scoreHypothesis examples', () => {
       );
       expect(truth.length).toBeGreaterThan(0);
       expect(bestTrue).toBeGreaterThan(wrong[0]?.score ?? 0);
+    }, 180_000);
+  }
+});
+
+// ---- diagnose on single-fault curated scenarios (required test 3, part 2) ----
+
+describe('diagnose on single-fault curated scenarios', () => {
+  // Single-fault = no decoys and exactly one fault (excludes pd-decoy-first).
+  const single = SCENARIOS.filter((x) => x.faults.length === 1 && x.groundTruth.decoyIndices.length === 0);
+
+  it('there are 5 single-fault curated scenarios', () => {
+    expect(single.length).toBe(5);
+  });
+
+  for (const sc of single) {
+    it(`${sc.id}: rootCause matches the true fault, at most 3 faults, gains >= 0.02, at most 12 replayed`, async () => {
+      const { s, layout, observed, rec, jam } = curated(sc.id);
+      const truth = s.faults[s.groundTruth.primaryFaultIndex];
+      const d = await diagnose(layout, observed, rec, jam);
+      console.log(
+        `${s.id}: root ${JSON.stringify(d.rootCause?.fault ?? null)}, faults ${d.faults.length}, replays ${d.replaysRun}, ${d.elapsedMs} ms`,
+      );
+      expect(d.rootCause).not.toBeNull();
+      expect(matchesGroundTruth(d.rootCause ? targetOf(d.rootCause.fault) : null, truth, layout)).toBe(true);
+      expect(d.faults.length).toBeGreaterThanOrEqual(1);
+      expect(d.faults.length).toBeLessThanOrEqual(3);
+      for (const f of d.faults) expect(f.gain).toBeGreaterThanOrEqual(0.02);
+      expect(d.hypotheses.filter((h) => h.score !== null).length).toBeLessThanOrEqual(12);
     }, 180_000);
   }
 });

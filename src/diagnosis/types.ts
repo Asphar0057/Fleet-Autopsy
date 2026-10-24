@@ -69,6 +69,8 @@ export interface RankedFault {
   fault: FaultEvent;
   score: number;
   gain: number;
+  /** Score minus the best other-Target candidate scored in the same round; the gain without one. */
+  gap: number;
   /** Deliveries per 100 ticks recovered on removal. */
   impact: number;
   confidence: 'high' | 'medium' | 'low';
