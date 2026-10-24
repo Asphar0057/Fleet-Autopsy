@@ -1,8 +1,12 @@
-// Playback and run controls (Requirement 9.2, 9.7). All controls are real
-// <button>s or labeled inputs; icon-only buttons carry aria-label; toggles use aria-pressed.
+// Playback and run controls (Requirement 2.2, 2.3, 9.2, 9.7), grouped into three
+// clusters: scenario, fleet, playback. All controls are real <button>s or labeled
+// inputs; icon-only buttons carry aria-label and a title tooltip; toggles use aria-pressed.
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { LayoutMeta } from '../sim/layout';
 import type { Scenario } from '../sim/types';
+import { SCENARIO_GROUPS, shortLayoutName } from './copy';
+import { InfoTip } from './InfoTip';
 import { SPEEDS } from './playback';
 import type { Speed } from './playback';
 
@@ -28,15 +32,53 @@ export interface ControlsProps {
   onTrails(on: boolean): void;
   congestion: boolean;
   onCongestion(on: boolean): void;
-  /** Curated scenarios; the select shows "healthy" (value '') plus each by name. */
+  /** Curated scenarios; the select shows "Healthy fleet" (value '') plus each by name. */
   scenarios: readonly Scenario[];
   /** Selected scenario id, or null for healthy. */
   scenarioId: string | null;
   onScenario(id: string | null): void;
+  /** Transient grey note under the select, e.g. after a fleet change cleared the scenario. */
+  scenarioNote?: string | null;
   reveal: boolean;
   onReveal(on: boolean): void;
   disabled: boolean;
 }
+
+/* 16px inline icons, stroked or filled in currentColor; decorative (the button has the name). */
+function Icon({ children }: { children: ReactNode }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      {children}
+    </svg>
+  );
+}
+
+const StepBackIcon = () => (
+  <Icon>
+    <rect x="3" y="3" width="1.5" height="10" fill="currentColor" />
+    <path d="M13 3 L5.5 8 L13 13 Z" fill="currentColor" />
+  </Icon>
+);
+
+const StepForwardIcon = () => (
+  <Icon>
+    <path d="M3 3 L10.5 8 L3 13 Z" fill="currentColor" />
+    <rect x="11.5" y="3" width="1.5" height="10" fill="currentColor" />
+  </Icon>
+);
+
+const PlayIcon = () => (
+  <Icon>
+    <path d="M4.5 2.5 L13 8 L4.5 13.5 Z" fill="currentColor" />
+  </Icon>
+);
+
+const PauseIcon = () => (
+  <Icon>
+    <rect x="4" y="3" width="2.5" height="10" fill="currentColor" />
+    <rect x="9.5" y="3" width="2.5" height="10" fill="currentColor" />
+  </Icon>
+);
 
 export function Controls(p: ControlsProps) {
   const [seedDraft, setSeedDraft] = useState(String(p.seed));
@@ -56,125 +98,180 @@ export function Controls(p: ControlsProps) {
 
   return (
     <div className="controls">
-      <div className="control-group">
-        <label className="label" htmlFor="scenario">
-          scenario
-        </label>
-        <span className="select">
-          <select
-            id="scenario"
-            value={p.scenarioId ?? ''}
-            onChange={(e) => p.onScenario(e.target.value === '' ? null : e.target.value)}
-          >
-            <option value="">healthy</option>
-            {p.scenarios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+      <div className="cluster cluster--scenario" role="group" aria-label="scenario">
+        <span className="field field--stacked field--scenario">
+          <span className="cluster-label" aria-hidden="true">
+            Scenario
+          </span>
+          <label className="sr-only" htmlFor="scenario">
+            Failure scenario
+          </label>
+          <span className="select">
+            <select
+              id="scenario"
+              className={p.scenarioId === null ? undefined : 'select--failure'}
+              value={p.scenarioId ?? ''}
+              onChange={(e) => p.onScenario(e.target.value === '' ? null : e.target.value)}
+            >
+              <option value="">Healthy fleet</option>
+              {SCENARIO_GROUPS.map((g) => {
+                const items = p.scenarios.filter((s) => s.layoutId === g.layoutId);
+                if (items.length === 0) return null;
+                return (
+                  <optgroup key={g.layoutId} label={g.label}>
+                    {items.map((s) => (
+                      <option key={s.id} value={s.id} className="option--failure">
+                        {g.label} · {s.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
+            </select>
+          </span>
+          <span className="note" role="status">
+            {p.scenarioNote ?? ''}
+          </span>
         </span>
-        <button type="button" className="btn" aria-pressed={p.reveal} onClick={() => p.onReveal(!p.reveal)}>
-          reveal ground truth
-        </button>
-      </div>
-
-      <div className="control-group" role="group" aria-label="layout">
-        <span className="label">layout</span>
-        {p.layouts.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            className="btn"
-            aria-pressed={m.id === p.layoutId}
-            onClick={() => p.onLayout(m.id)}
-          >
-            {m.name}
+        <span className="field">
+          <button type="button" className="switch" aria-pressed={p.reveal} onClick={() => p.onReveal(!p.reveal)}>
+            <span className="switch-track" aria-hidden="true">
+              <span className="switch-thumb" />
+            </span>
+            Ground truth
           </button>
-        ))}
+          <InfoTip label="ground truth" text="Shows which injected fault is the real cause." />
+        </span>
       </div>
 
-      <div className="control-group">
-        <label className="label" htmlFor="robots">
-          robots
-        </label>
-        <input
-          id="robots"
-          type="range"
-          min={1}
-          max={p.maxRobots}
-          step={1}
-          value={p.robots}
-          disabled={p.disabled}
-          onChange={(e) => p.onRobots(Number(e.target.value))}
-        />
-        <output className="mono value" htmlFor="robots">
-          {p.robots}
-        </output>
-        {p.robots > p.recommendedRobots && (
-          <span className="note">above recommended {p.recommendedRobots} · jams expected</span>
-        )}
+      <div className="cluster cluster--fleet" role="group" aria-label="fleet">
+        <span className="field field--stacked">
+          <span className="cluster-label" aria-hidden="true">
+            Fleet
+          </span>
+          <span className="segmented" role="group" aria-label="layout">
+            {p.layouts.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className="btn"
+                aria-pressed={m.id === p.layoutId}
+                onClick={() => p.onLayout(m.id)}
+              >
+                {shortLayoutName(m.name)}
+              </button>
+            ))}
+          </span>
+        </span>
+
+        <span className="field field--stacked field--robots">
+          <span className="field-caption">
+            <label htmlFor="robots">Robots</label>
+            <output className="mono value" htmlFor="robots">
+              {p.robots}
+            </output>
+          </span>
+          <input
+            id="robots"
+            type="range"
+            min={1}
+            max={p.maxRobots}
+            step={1}
+            value={p.robots}
+            disabled={p.disabled}
+            onChange={(e) => p.onRobots(Number(e.target.value))}
+          />
+          {p.robots > p.recommendedRobots && (
+            <span className="note">Above recommended {p.recommendedRobots} · jams expected</span>
+          )}
+        </span>
+
+        <span className="field field--stacked">
+          <label className="field-caption" htmlFor="seed">
+            Seed
+          </label>
+          <input
+            id="seed"
+            className="mono"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={MAX_SEED}
+            step={1}
+            value={seedDraft}
+            onChange={(e) => onSeedInput(e.target.value)}
+            onBlur={() => setSeedDraft(String(p.seed))}
+          />
+        </span>
       </div>
 
-      <div className="control-group">
-        <label className="label" htmlFor="seed">
-          seed
-        </label>
-        <input
-          id="seed"
-          className="mono"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={MAX_SEED}
-          step={1}
-          value={seedDraft}
-          onChange={(e) => onSeedInput(e.target.value)}
-          onBlur={() => setSeedDraft(String(p.seed))}
-        />
-      </div>
+      <div className="cluster cluster--playback" role="group" aria-label="playback">
+        <span className="field field--stacked">
+          <span className="cluster-label" aria-hidden="true">
+            Playback
+          </span>
+          <span className="icon-row">
+            <button
+              type="button"
+              className="btn-icon"
+              aria-label="step back"
+              title="Step back (←)"
+              onClick={p.onStepBack}
+              disabled={p.disabled}
+            >
+              <StepBackIcon />
+            </button>
+            <button
+              type="button"
+              className="btn-icon btn-icon--primary"
+              aria-label={p.playing ? 'pause' : 'play'}
+              title="Play or pause (space)"
+              onClick={p.onTogglePlay}
+              disabled={p.disabled}
+            >
+              {p.playing ? <PauseIcon /> : <PlayIcon />}
+            </button>
+            <button
+              type="button"
+              className="btn-icon"
+              aria-label="step forward"
+              title="Step forward (→)"
+              onClick={p.onStepForward}
+              disabled={p.disabled}
+            >
+              <StepForwardIcon />
+            </button>
+          </span>
+        </span>
 
-      <div className="control-group" role="group" aria-label="playback">
-        <button type="button" className="btn" aria-label="step back" onClick={p.onStepBack} disabled={p.disabled}>
-          ◀
-        </button>
-        <button type="button" className="btn btn--play" onClick={p.onTogglePlay} disabled={p.disabled}>
-          {p.playing ? 'pause' : 'play'}
-        </button>
-        <button
-          type="button"
-          className="btn"
-          aria-label="step forward"
-          onClick={p.onStepForward}
-          disabled={p.disabled}
-        >
-          ▶
-        </button>
-      </div>
+        <span className="segmented" role="group" aria-label="speed">
+          {SPEEDS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className="btn mono"
+              aria-label={`speed ${s}x`}
+              aria-pressed={s === p.speed}
+              onClick={() => p.onSpeed(s)}
+            >
+              {s}x
+            </button>
+          ))}
+        </span>
 
-      <div className="control-group" role="group" aria-label="speed">
-        <span className="label">speed</span>
-        {SPEEDS.map((s) => (
+        <span className="field" role="group" aria-label="overlays">
           <button
-            key={s}
             type="button"
-            className="btn"
-            aria-label={`speed ${s}x`}
-            aria-pressed={s === p.speed}
-            onClick={() => p.onSpeed(s)}
+            className="chip"
+            aria-pressed={p.congestion}
+            onClick={() => p.onCongestion(!p.congestion)}
           >
-            {s}×
+            Congestion
           </button>
-        ))}
-      </div>
-
-      <div className="control-group" role="group" aria-label="overlays">
-        <button type="button" className="btn" aria-pressed={p.congestion} onClick={() => p.onCongestion(!p.congestion)}>
-          congestion
-        </button>
-        <button type="button" className="btn" aria-pressed={p.trails} onClick={() => p.onTrails(!p.trails)}>
-          trails
-        </button>
+          <button type="button" className="chip" aria-pressed={p.trails} onClick={() => p.onTrails(!p.trails)}>
+            Trails
+          </button>
+        </span>
       </div>
     </div>
   );

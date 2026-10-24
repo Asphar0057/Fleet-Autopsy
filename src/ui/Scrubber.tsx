@@ -6,7 +6,9 @@ import { EKind } from '../sim/types';
 import { maxOf, polylinePoints } from './sparkline';
 
 const W = 1000;
-const H = 32;
+const H = 32; // track height in px; the SVG is 32px tall, so y units are px
+const EVENT_H = 8; // stall-event ticks: bottom 8px of the track
+const FAULT_H = 10; // fault ticks: short accent ticks from the top
 
 export interface ScrubberProps {
   rec: Recording | null;
@@ -50,9 +52,9 @@ export function Scrubber({ rec, frames, playhead, series, faultTicks = null, onS
             className="scrubber-event"
             x1={x(t)}
             x2={x(t)}
-            y1={0}
+            y1={H - EVENT_H}
             y2={H}
-            stroke="var(--ink, #000)"
+            stroke="var(--scrub-event)"
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
           />
@@ -60,7 +62,7 @@ export function Scrubber({ rec, frames, playhead, series, faultTicks = null, onS
         <polyline
           points={line}
           fill="none"
-          stroke="var(--ink, #000)"
+          stroke="var(--scrub-line)"
           strokeWidth={1}
           vectorEffect="non-scaling-stroke"
         />
@@ -73,8 +75,8 @@ export function Scrubber({ rec, frames, playhead, series, faultTicks = null, onS
               x1={x(t)}
               x2={x(t)}
               y1={0}
-              y2={H}
-              stroke="var(--accent, #ff4a1c)"
+              y2={FAULT_H}
+              stroke="var(--accent)"
               strokeWidth={1}
               vectorEffect="non-scaling-stroke"
             />

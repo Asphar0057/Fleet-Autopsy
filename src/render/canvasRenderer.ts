@@ -1,4 +1,4 @@
-// Canvas 2D renderer, blueprint style (steering design.md, canvas drawing rules).
+// Canvas 2D renderer, dark instrument style (steering design.md, canvas drawing rules).
 // Stateless: every call draws a full frame from the Layout and the Recording.
 // Imports sim types and pure read helpers only.
 
@@ -6,15 +6,25 @@ import type { Layout } from '../sim/layout';
 import { positionsAt, statesAt } from '../sim/recorder';
 import type { Recording } from '../sim/recorder';
 import { CellKind, RState } from '../sim/types';
-import { stationFontSize, stationLabel } from './labels';
+import { MAX_STALL_LABELS, stallLabels, stationFontSize, stationLabel } from './labels';
 import type { RevealMarks } from './marks';
 
 export type { RevealMark, RevealMarks } from './marks';
 
 export interface Colors {
-  ink: string;
   bg: string;
+  robot: string;
+  carry: string;
+  wall: string;
+  pod: string;
+  station: string;
+  stationText: string;
+  stall: string;
+  label: string;
+  /** Reveal markers only (steering design.md, Accent rules). */
   accent: string;
+  /** Kept for callers that still read it; equals robot. */
+  ink: string;
 }
 
 export interface DrawOptions {
@@ -28,14 +38,40 @@ export interface DrawOptions {
   blocked: Uint8Array | null;
   /** Ground-truth markers, drawn in accent only when revealed (D21); null hides them. */
   reveal: RevealMarks | null;
+  /** 1 per robot that has a reveal marker; its stall ring and label are skipped. Null when not revealed. */
+  revealSkip?: Uint8Array | null;
   /** Colors read once at mount via `readColors`; defaults to the design tokens. */
   colors?: Colors;
 }
 
+/** The black palette from src/styles/tokens.css (--bg, --canvas-*, --accent). */
+export const DEFAULT_COLORS: Colors = {
+  bg: '#000000',
+  robot: '#ffffff',
+  carry: 'rgba(255,255,255,.6)',
+  wall: 'rgba(255,255,255,.30)',
+  pod: 'rgba(255,255,255,.15)',
+  station: 'rgba(255,255,255,.92)',
+  stationText: '#000000',
+  stall: 'rgba(255,255,255,.45)',
+  label: '#a3a3a3',
+  accent: '#ff4a1c',
+  ink: '#ffffff',
+};
 
-export const DEFAULT_COLORS: Colors = { ink: '#000000', bg: '#ffffff', accent: '#ff4a1c' };
+/** Mirrors --font-sans in tokens.css; canvas text cannot read CSS variables per frame. */
+export const CANVAS_FONT = `'Gotham', 'Montserrat', system-ui, sans-serif`;
 
-const WALL_WIDTH = 1.4;
+/**
+ * Scratch for stallLabels ids. Module-level but never read across calls: it is
+ * fully written before use in each frame, so drawFrame stays allocation-free
+ * and stateless in effect (the no-module-state rule covers src/sim only).
+ */
+const STALL_IDS = new Int16Array(MAX_STALL_LABELS);
+
+const WALL_WIDTH = 1;
+const LABEL_PX = 11;
+const CHIP_INSET = 8; // count chip offset from the canvas top-left, CSS px
 const SLOT_INSET = 2.5;
 const ROBOT_R = 0.27;
 const CARRY_R = 0.42;
@@ -47,16 +83,25 @@ const BLOCK_HATCH_LINES = 3; // per diagonal direction
 const REVEAL_OUTSET = 1.5; // accent square sits just outside the cell
 
 /**
- * Reads --ink, --bg, --accent from CSS custom properties on `el`
- * (default: the root element), falling back to the design tokens.
+ * Reads --bg, --canvas-*, and --accent from CSS custom properties on `el`
+ * (default: the root element), falling back to the black palette.
  */
 export function readColors(el: Element = document.documentElement): Colors {
   const css = getComputedStyle(el);
   const pick = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+  const robot = pick('--canvas-robot', DEFAULT_COLORS.robot);
   return {
-    ink: pick('--ink', DEFAULT_COLORS.ink),
     bg: pick('--bg', DEFAULT_COLORS.bg),
+    robot,
+    carry: pick('--canvas-carry', DEFAULT_COLORS.carry),
+    wall: pick('--canvas-wall', DEFAULT_COLORS.wall),
+    pod: pick('--canvas-pod', DEFAULT_COLORS.pod),
+    station: pick('--canvas-station', DEFAULT_COLORS.station),
+    stationText: pick('--canvas-station-text', DEFAULT_COLORS.stationText),
+    stall: pick('--canvas-stall', DEFAULT_COLORS.stall),
+    label: pick('--canvas-label', DEFAULT_COLORS.label),
     accent: pick('--accent', DEFAULT_COLORS.accent),
+    ink: robot,
   };
 }
 
@@ -166,19 +211,19 @@ function drawEndpoints(ctx: CanvasRenderingContext2D, layout: Layout, cell: numb
     ctx.moveTo(cx, cy - arm);
     ctx.lineTo(cx, cy + arm);
   }
-  ctx.strokeStyle = c.ink;
+  ctx.strokeStyle = c.pod;
   ctx.lineWidth = 1;
   ctx.lineCap = 'butt';
   ctx.stroke();
 
-  // Stations: solid squares with the two-digit station label ("01".."06") in white mono.
+  // Stations: filled squares with the two-digit station label ("01".."06") in the sans.
   if (stations.length === 0) return;
-  const sample = stationLabel(stations.length - 1); // mono: every label has the same width
+  const sample = stationLabel(stations.length - 1); // labels are centred, so small width differences do not show
   const size = stationFontSize(cell, (px) => {
-    ctx.font = monoFont(px);
+    ctx.font = stationFont(px);
     return ctx.measureText(sample).width;
   });
-  ctx.font = monoFont(size);
+  ctx.font = stationFont(size);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   // Center the digits' ink box vertically (digits have no descender).
@@ -190,16 +235,19 @@ function drawEndpoints(ctx: CanvasRenderingContext2D, layout: Layout, cell: numb
     const i = stations[s];
     const x0 = (i % width) * cell;
     const y0 = Math.floor(i / width) * cell;
-    ctx.fillStyle = c.ink;
+    ctx.fillStyle = c.station;
     ctx.fillRect(x0, y0, cell, cell);
-    ctx.fillStyle = c.bg;
+    ctx.fillStyle = c.stationText;
     ctx.fillText(stationLabel(s), x0 + cell / 2, y0 + cell / 2 + dy);
   }
 }
 
-function monoFont(px: number): string {
-  return `${Math.round(px * 10) / 10}px 'Geist Mono', ui-monospace, monospace`;
+function stationFont(px: number): string {
+  return `500 ${Math.round(px * 10) / 10}px ${CANVAS_FONT}`;
 }
+
+/** Canvas label font: sans 500 11px, sentence case (constant string, no per-frame allocation). */
+const LABEL_FONT = `500 ${LABEL_PX}px ${CANVAS_FONT}`;
 
 function drawRobots(
   ctx: CanvasRenderingContext2D,
@@ -207,7 +255,7 @@ function drawRobots(
   rec: Recording,
   tick: number,
   cell: number,
-  ink: string,
+  c: Colors,
 ): void {
   const pos = positionsAt(rec, tick);
   const st = statesAt(rec, tick);
@@ -220,7 +268,7 @@ function drawRobots(
     ctx.moveTo(cx + ROBOT_R * cell, cy);
     ctx.arc(cx, cy, ROBOT_R * cell, 0, Math.PI * 2);
   }
-  ctx.fillStyle = ink;
+  ctx.fillStyle = c.robot;
   ctx.fill();
 
   // Carrying a pod: to-station, serving, returning.
@@ -233,7 +281,7 @@ function drawRobots(
     ctx.moveTo(cx + CARRY_R * cell, cy);
     ctx.arc(cx, cy, CARRY_R * cell, 0, Math.PI * 2);
   }
-  ctx.strokeStyle = ink;
+  ctx.strokeStyle = c.carry;
   ctx.lineWidth = 1;
   ctx.stroke();
 }
@@ -315,39 +363,77 @@ function drawTrails(
   ctx.globalAlpha = 1;
 }
 
-/** Stalled robots: accent ring and a mono label `R{id} · STALL`. */
+/**
+ * Stalled robots: a grey 1px ring on every stalled robot without a reveal
+ * marker, a sans label `R{id} · stalled` on at most MAX_STALL_LABELS of them
+ * (lowest ids first), and a count chip `{n} stalled` top-left when there are more.
+ */
 function drawStalls(
   ctx: CanvasRenderingContext2D,
   layout: Layout,
   rec: Recording,
   tick: number,
   stalled: Uint8Array,
+  skip: Uint8Array | null,
   cell: number,
-  accent: string,
+  c: Colors,
 ): void {
   const pos = positionsAt(rec, tick);
   const w = layout.width;
   const fullW = layout.width * cell;
-  ctx.strokeStyle = accent;
-  ctx.fillStyle = accent;
-  ctx.lineWidth = 1;
-  ctx.font = monoFont(Math.max(9, Math.round(cell * 0.42)));
-  ctx.textBaseline = 'bottom';
   const n = Math.min(rec.robots, stalled.length);
+  const rr = STALL_R * cell;
+
+  // Rings: one path for all.
+  ctx.beginPath();
+  let any = false;
   for (let r = 0; r < n; r++) {
-    if (stalled[r] !== 1) continue;
+    if (stalled[r] !== 1 || (skip !== null && skip[r] === 1)) continue;
     const cx = ((pos[r] % w) + 0.5) * cell;
     const cy = (Math.floor(pos[r] / w) + 0.5) * cell;
-    const rr = STALL_R * cell;
-    ctx.beginPath();
+    ctx.moveTo(cx + rr, cy);
     ctx.arc(cx, cy, rr, 0, Math.PI * 2);
-    ctx.stroke();
-    const label = `R${r} · STALL`;
+    any = true;
+  }
+  if (!any) return;
+  ctx.strokeStyle = c.stall;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Labels: lowest ids first, capped.
+  const total = stallLabels(n === stalled.length ? stalled : stalled.subarray(0, n), skip, STALL_IDS);
+  const shown = Math.min(total, MAX_STALL_LABELS);
+  ctx.fillStyle = c.label;
+  ctx.font = LABEL_FONT;
+  ctx.textBaseline = 'bottom';
+  for (let k = 0; k < shown; k++) {
+    const r = STALL_IDS[k];
+    const cx = ((pos[r] % w) + 0.5) * cell;
+    const cy = (Math.floor(pos[r] / w) + 0.5) * cell;
+    const label = `R${r} · stalled`;
     const lw = ctx.measureText(label).width;
     // Label to the upper right of the ring; flip left near the right edge.
     const right = cx + rr * 0.7 + lw + 2 <= fullW;
     ctx.textAlign = right ? 'left' : 'right';
-    ctx.fillText(label, right ? cx + rr * 0.7 : cx - rr * 0.7, Math.max(cell * 0.5, cy - rr * 0.7));
+    ctx.fillText(label, right ? cx + rr * 0.7 : cx - rr * 0.7, Math.max(LABEL_PX + 1, cy - rr * 0.7));
+  }
+
+  // Count chip when more robots are stalled than labelled.
+  if (total > MAX_STALL_LABELS) {
+    const text = `${total} stalled`;
+    const tw = ctx.measureText(text).width;
+    const pad = 6;
+    const x = CHIP_INSET;
+    const y = CHIP_INSET;
+    const h = LABEL_PX + 2 * 4;
+    ctx.fillStyle = c.bg;
+    ctx.fillRect(x, y, tw + 2 * pad, h);
+    ctx.strokeStyle = c.stall;
+    ctx.strokeRect(x + 0.5, y + 0.5, tw + 2 * pad - 1, h - 1);
+    ctx.fillStyle = c.label;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x + pad, y + h / 2);
   }
 }
 
@@ -421,7 +507,7 @@ function drawReveal(
   ctx.fillStyle = accent;
   ctx.lineWidth = 1;
   ctx.lineCap = 'butt';
-  ctx.font = monoFont(Math.max(9, Math.round(cell * 0.42)));
+  ctx.font = LABEL_FONT;
   ctx.textBaseline = 'bottom';
   for (const m of marks) {
     let c = -1;
@@ -436,7 +522,7 @@ function drawReveal(
     const lw = ctx.measureText(m.tag).width;
     const left = x0 - 2 - lw >= 0;
     ctx.textAlign = left ? 'right' : 'left';
-    ctx.fillText(m.tag, left ? x0 - 2 : x0 + side + 2, Math.max(cell * 0.5, y0 + 1));
+    ctx.fillText(m.tag, left ? x0 - 2 : x0 + side + 2, Math.max(LABEL_PX + 1, y0 + 1));
   }
 }
 
@@ -444,7 +530,7 @@ function drawReveal(
  * Draws the full frame at `tick` (must be in [0, rec.frames)). Expects the
  * context scaled by fitCanvas. Layer order: floor structure, congestion,
  * engaged blocks, trails, robots, stalls, ground-truth markers. The accent
- * color is used for stalls and, when revealed, ground-truth markers.
+ * color is used only for ground-truth markers, when revealed.
  */
 export function drawFrame(
   ctx: CanvasRenderingContext2D,
@@ -457,12 +543,12 @@ export function drawFrame(
   const cell = cellOf(ctx, layout);
   ctx.fillStyle = c.bg;
   ctx.fillRect(0, 0, layout.width * cell, layout.height * cell);
-  if (opts.congestion && opts.waitCounts) drawCongestion(ctx, layout, opts.waitCounts, cell, c.ink);
-  drawWalls(ctx, layout, cell, c.ink);
+  if (opts.congestion && opts.waitCounts) drawCongestion(ctx, layout, opts.waitCounts, cell, c.wall);
+  drawWalls(ctx, layout, cell, c.wall);
   drawEndpoints(ctx, layout, cell, c);
-  if (opts.blocked) drawBlocked(ctx, layout, opts.blocked, cell, c.ink);
-  if (opts.trails) drawTrails(ctx, layout, rec, tick, cell, c.ink);
-  drawRobots(ctx, layout, rec, tick, cell, c.ink);
-  drawStalls(ctx, layout, rec, tick, opts.stalled, cell, c.accent);
+  if (opts.blocked) drawBlocked(ctx, layout, opts.blocked, cell, c.wall);
+  if (opts.trails) drawTrails(ctx, layout, rec, tick, cell, c.robot);
+  drawRobots(ctx, layout, rec, tick, cell, c);
+  drawStalls(ctx, layout, rec, tick, opts.stalled, opts.revealSkip ?? null, cell, c);
   if (opts.reveal) drawReveal(ctx, layout, rec, tick, opts.reveal, cell, c.accent);
 }

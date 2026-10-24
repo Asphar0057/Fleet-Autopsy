@@ -1,8 +1,7 @@
-/* Base styles per .kiro/steering/design.md. Tokens live in tokens.css.
-   8px grid, 1px black hairlines, no shadows, gradients, or blur, radius <= 2px.
-   The accent color is used only for alerts (violation badge, jam badge and its
-   onset marker, loader error) and,
-   when ground truth is revealed, fault markers (canvas, scrubber ticks). */
+/* Base styles per .kiro/steering/design.md. Every value comes from tokens.css.
+   Black background, white type, hairlines, sentence case (no uppercase, no
+   letter-spacing). No shadows, gradients, or blur. Accent is reserved for the
+   culprit marker, the jam badge, and the throughput onset marker. */
 
 *,
 *::before,
@@ -16,166 +15,647 @@ body,
   height: 100%;
 }
 
+html {
+  color-scheme: dark;
+  background: var(--bg);
+}
+
 body {
   margin: 0;
   background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 15px;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
   line-height: 22px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Guard only: the overflow sources themselves are fixed in the rules below. */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 h1,
 h2,
 h3 {
-  font-family: var(--font-display);
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
   margin: 0;
 }
 
-/* Mono: labels, numbers, data, buttons. Numbers use tabular figures. */
+/* Numbers and data: the same sans with tabular figures. */
 .mono,
-.label,
 .value,
-.btn,
-.badge,
-input,
 output {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
 
-.label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 16px;
+.badge,
+input,
+select,
+button {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Small UI label: sans 13px, sentence case, grey. */
+.label,
+.field-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
   font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--fg-2);
   margin: 0;
 }
 
 .muted,
 .unit,
 .note {
-  color: var(--ink-2);
+  color: var(--fg-2);
 }
 
 .unit,
 .note {
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
 }
 
-/* ---------- App shell: full-height grid (header, controls, main) ---------- */
+/* Card header: title plus one grey sentence. No margin: the card's gap spaces it. */
+.section-head {
+  margin: 0;
+}
+
+.section-title {
+  font-family: var(--font-sans);
+  font-size: var(--fs-h2);
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg);
+}
+
+.section-note {
+  margin: var(--s-1) 0 0;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+}
+
+/* Shared focus ring: 2px white, 2px offset. Never Accent. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+/* ---------- App shell: full width, the page scrolls (header, controls, main) ---------- */
 
 .app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 100vh;
-  height: 100dvh;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  padding-inline: var(--gutter);
 }
 
+/* Left (wordmark, scenario name) and right (meta, How it works) groups; on narrow
+   screens the right group wraps under the left one instead of overflowing. */
 .header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  padding: 16px 0 8px;
-  border-bottom: 1px solid var(--line);
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  padding-block: var(--s-3);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-title {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.scenario-name {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 22px;
+  font-weight: 500;
+  color: var(--fg-2);
 }
 
 .wordmark {
-  font-family: var(--font-display);
-  font-size: 40px;
-  line-height: 48px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
+  font-size: var(--fs-wordmark);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg);
 }
 
-.wordmark em {
-  font-style: italic;
+/* Accent text: the wordmark full stop, the landing eyebrow and the word
+   "wrong" in the lede. */
+.accent-dot,
+.accent-text {
+  color: var(--accent);
+}
+
+button.wordmark {
+  appearance: none;
+  min-height: var(--control-h); /* 36px tap target */
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
 }
 
 .meta {
   margin: 0;
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Controls ---------- */
 
+/* Three labelled clusters (scenario, fleet, playback). One row from 1360px,
+   Playback on its own row at 1100-1359px, stacked full-width rows below 1100px
+   (media queries at the end of this section). Separators are a left border on
+   .cluster + .cluster; the breakpoints swap it for a top hairline where a
+   cluster starts a row. The bar sits above the main area for its tooltips. */
 .controls {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 24px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--line);
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--s-4) 0;
+  padding-block: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--hairline);
 }
 
-.control-group {
+.cluster {
   display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.cluster + .cluster {
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px solid var(--hairline);
+}
+
+/* One control (or caption + control) inside a cluster. Never stretched. */
+.field {
+  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-1);
+}
+
+/* Caption row (16px) above the control (36px). */
+.field--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cluster-label,
+.field-caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.field-caption {
+  display: inline-flex;
+  gap: var(--s-1);
+  font-weight: 500;
+}
+
+.field-caption output {
+  min-width: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.icon-row {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+
+/* Robots note: under the slider, in the bar's bottom padding (or the row gap),
+   so it never widens a cluster or adds a row. Static and wrapping below 1100px. */
+.field--robots,
+.field--scenario {
+  position: relative;
+}
+
+.field--robots .note,
+.field--scenario .note {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  left: 0;
+  font-size: var(--fs-meta);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1359px) {
+  /* Scenario + fleet on row 1, the whole playback cluster on row 2. Row 1 is
+     packed left: with space-between the fleet cluster would end at the right
+     edge and the absolute robots note (about 250px from the slider's left)
+     would run past it. */
+  .controls {
+    justify-content: flex-start;
+  }
+  .cluster.cluster--playback {
+    flex: 1 1 100%;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--hairline);
+  }
+}
+
+@media (max-width: 1099px) {
+  /* Clusters stacked; their controls flow and wrap as rows of controls. */
+  .cluster {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    row-gap: var(--s-2);
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .cluster + .cluster {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--hairline);
+  }
+  .field--robots .note,
+  .field--scenario .note {
+    position: static;
+    width: max-content;
+    max-width: calc(100vw - 2 * var(--gutter));
+    white-space: normal;
+  }
+}
+
+/* Slack for the one row at 1360-1439px, where the estimate (about 1,293px)
+   meets the content width (1,292px at 1360). Narrower separators and segment
+   and chip padding save about 48px; text and the 10-digit seed are unchanged.
+   From 1440px the default spacing has over 70px to spare. */
+@media (min-width: 1360px) and (max-width: 1439px) {
+  .cluster + .cluster {
+    margin-left: var(--s-2);
+    padding-left: var(--s-2);
+  }
+  .controls .segmented .btn {
+    padding: 0 var(--s-2);
+  }
+  .controls .chip {
+    padding: 0 10px;
+  }
+}
+
+/* Segmented control: joined buttons, outer corners rounded. */
+.segmented {
+  display: inline-flex;
+}
+
+.segmented .btn {
+  min-width: var(--control-h); /* 36px tap target for "1x" and "4x" */
+  padding: 0 10px;
+  border-radius: 0;
+}
+
+.segmented .btn + .btn {
+  margin-left: -1px;
+}
+
+.segmented .btn:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.segmented .btn:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.segmented .btn:only-child {
+  border-radius: var(--radius);
+}
+
+/* Keep the hovered or pressed border on top of its neighbours. */
+.segmented .btn:hover,
+.segmented .btn[aria-pressed='true'],
+.segmented .btn:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+/* Switch: a pill track with a round thumb, then the label text. */
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  min-height: var(--control-h);
+  background: transparent;
+  border: 0;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Track 32×18 pill, thumb 12px. */
+.switch-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 18px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--fg-2);
+  transition:
+    transform var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+.switch:hover .switch-track {
+  border-color: var(--fg);
+}
+
+.switch[aria-pressed='true'] .switch-track {
+  background: var(--fg);
+  border-color: var(--fg);
+}
+
+.switch[aria-pressed='true'] .switch-thumb {
+  background: var(--bg);
+  transform: translateX(14px);
+}
+
+/* ---------- Shared control style ----------
+   Buttons, chips, icon buttons, the select and the number input: 36px tall,
+   6px radius, hairline border, faint hover fill, white fill when pressed.
+   Hover and pressed rules are written per selector (not one :is() list) so the
+   primary and quiet variants below can override them at equal specificity. */
+.btn,
+.chip,
+.btn-icon,
+.select select,
+input[type='number'] {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  height: var(--control-h);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  font-weight: 500;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.btn:hover:not(:disabled),
+.chip:hover:not(:disabled),
+.btn-icon:hover:not(:disabled),
+.select select:hover:not(:disabled),
+input[type='number']:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--hairline-strong);
+}
+
+.btn[aria-pressed='true'],
+.btn[aria-pressed='true']:hover,
+.chip[aria-pressed='true'],
+.chip[aria-pressed='true']:hover,
+.btn:active:not(:disabled),
+.btn-icon:active:not(:disabled) {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+/* Chip: pill toggle for overlays. */
+.chip {
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+/* Icon button: 36px square, 16px inline SVG in currentColor. */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: var(--control-h);
+  cursor: pointer;
+}
+
+.btn-icon svg {
+  display: block;
+}
+
+.btn-icon--primary {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+.btn-icon--primary:hover:not(:disabled) {
+  background: var(--fg-2);
+  border-color: var(--fg-2);
+}
+
+.btn-icon:disabled {
+  background: transparent;
+  color: var(--fg-3);
+  border-color: var(--hairline);
+  cursor: default;
+}
+
+/* Info tip: a small round "i" button; the tooltip shows on hover and keyboard focus. */
+.infotip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 18px to look at, 36px to tap: the ::before extends the hit area 9px each side. */
+.infotip-btn {
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  color: var(--fg-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-pill);
+  cursor: help;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.infotip-btn::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+
+.infotip-btn:hover {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.infotip-text {
+  position: absolute;
+  top: calc(100% + var(--s-2));
+  left: 50%;
+  z-index: 10;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 32px));
+  padding: var(--s-2) var(--s-3);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-card);
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    visibility var(--dur-fast) var(--ease);
+}
+
+.infotip:hover .infotip-text,
+.infotip:focus-within .infotip-text {
+  visibility: visible;
+  opacity: 1;
 }
 
 .value {
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--fs-ui);
+  line-height: 20px;
   min-width: 3ch;
 }
 
 /* ---------- Buttons ---------- */
 
+/* Base look, hover and pressed come from the shared control style above. */
 .btn {
-  appearance: none;
-  -webkit-appearance: none;
-  margin: 0;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 3px 8px; /* 16px line + 2 × 3px + 2 × 1px border = 24px tall */
-  min-height: 24px;
+  padding: 0 12px;
   cursor: pointer;
-  transition:
-    background-color 120ms linear,
-    color 120ms linear;
-}
-
-.btn:hover:not(:disabled),
-.btn:active:not(:disabled),
-.btn[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--bg);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
 }
 
 .btn:disabled {
-  opacity: 0.4;
+  color: var(--fg-3);
+  border-color: var(--hairline);
   cursor: default;
 }
 
-.btn--play {
-  min-width: 7ch;
+/* Primary: white fill, black text. */
+.btn--primary {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--fg-2);
+  border-color: var(--fg-2);
+}
+
+.btn--primary:disabled {
+  background: transparent;
+  border-color: var(--hairline-strong);
+  color: var(--fg-3);
+}
+
+/* Quiet: text-only button for secondary header actions. */
+.btn--quiet {
+  border-color: transparent;
+  color: var(--fg-2);
+}
+
+.btn--quiet:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--fg);
 }
 
 /* ---------- Inputs ---------- */
@@ -184,15 +664,8 @@ input[type='number'] {
   appearance: textfield;
   -moz-appearance: textfield;
   width: 12ch;
-  margin: 0;
-  padding: 3px 8px;
-  min-height: 24px;
-  font-size: 11px;
-  line-height: 16px;
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  max-width: 100%;
+  padding: 0 7px; /* with the 1px border, #seed's calc(10ch + 16px) leaves exactly 10ch for digits */
 }
 
 input[type='number']::-webkit-outer-spin-button,
@@ -201,16 +674,11 @@ input[type='number']::-webkit-inner-spin-button {
   margin: 0;
 }
 
-input[type='number']:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-
-/* Range: 1px black track, 12px square black thumb, no browser accent fill. */
+/* Range: 2px pill track, 14px round white thumb, no browser fill colour. */
 input[type='range'] {
   appearance: none;
   -webkit-appearance: none;
-  height: 16px;
+  height: var(--control-h); /* 36px hit area, lines up with the other controls */
   margin: 0;
   padding: 0;
   background: transparent;
@@ -218,26 +686,28 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  height: 1px;
-  background: var(--ink);
+  height: 2px;
+  background: var(--hairline-strong);
   border: 0;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
-  margin-top: -5.5px; /* center on the 1px track */
-  background: var(--ink);
+  width: 14px;
+  height: 14px;
+  margin-top: -6px; /* center on the 2px track */
+  background: var(--fg);
   border: 0;
-  border-radius: 0;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']::-moz-range-track {
-  height: 1px;
-  background: var(--ink);
+  height: 2px;
+  background: var(--hairline-strong);
   border: 0;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']::-moz-range-progress {
@@ -245,20 +715,11 @@ input[type='range']::-moz-range-progress {
 }
 
 input[type='range']::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  background: var(--ink);
+  width: 14px;
+  height: 14px;
+  background: var(--fg);
   border: 0;
-  border-radius: 0;
-}
-
-input[type='range']:focus {
-  outline: none;
-}
-
-input[type='range']:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+  border-radius: var(--radius-pill);
 }
 
 input[type='range']:disabled {
@@ -267,79 +728,88 @@ input[type='range']:disabled {
 }
 
 #robots {
-  width: 160px;
+  width: 80px;
 }
 
-/* Select: 1px line, no fill, mono 11px uppercase like buttons; a text caret
-   in a wrapper replaces the native arrow (no images, no gradients). */
+#seed {
+  width: calc(10ch + 16px);
+}
+
+/* Select: hairline border, no fill; a CSS chevron in a wrapper replaces the
+   native arrow (no images, no gradients). Natural width (~209px for the
+   longest option), capped at the content width so it never forces overflow. */
 .select {
   position: relative;
   display: inline-block;
+  min-width: 0;
+  max-width: 100%;
 }
 
+/* Chevron: a 6px square with right and bottom borders, turned 45deg; the
+   -75% lift centres the rotated point on the control's midline. */
 .select::after {
-  content: '▾';
+  content: '';
   position: absolute;
-  right: 8px;
+  right: 12px;
   top: 50%;
-  transform: translateY(-50%);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--fg-2);
+  border-bottom: 1.5px solid var(--fg-2);
+  transform: translateY(-75%) rotate(45deg);
   pointer-events: none;
 }
 
 .select select {
-  appearance: none;
-  -webkit-appearance: none;
-  margin: 0;
-  padding: 3px 24px 3px 8px;
-  min-height: 24px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  padding: 0 32px 0 12px;
+  max-width: 100%;
   cursor: pointer;
 }
 
-.select select:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+.select option,
+.select optgroup {
+  color: var(--fg);
+  background: var(--surface);
 }
 
-.select option {
-  text-transform: none;
+/* Scenario select: a selected failure scenario and the failure options in the
+   open list (where the browser styles options) use Accent. "Healthy fleet",
+   the group labels and the "Scenario" label keep their usual colours. */
+.select select.select--failure,
+.select option.option--failure {
+  color: var(--accent);
 }
 
-/* ---------- Main: canvas column | 1px rule | panel ---------- */
+.select select.select--failure option[value=''] {
+  color: var(--fg);
+}
+
+/* ---------- Main: one column, stage on top, panel below ---------- */
 
 .main {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-4);
+  padding-block: var(--s-4) var(--s-6);
 }
 
+/* Canvas, then the scrubber across the full width, then the legend row. */
 .stage {
   display: flex;
   flex-direction: column;
+  gap: var(--s-2);
   min-width: 0;
-  min-height: 0;
-  padding: 24px 24px 16px 0;
 }
 
-/* The box takes the layout's aspect ratio (inline style) and shrinks to the
-   available height. The canvas is absolutely positioned inside it, so the
-   canvas never sizes its own container (no ResizeObserver loop). */
+/* The box takes the layout's aspect ratio (inline style) across the full width,
+   clamped to 62vh; fitCanvas centres the floor inside it. The canvas is
+   absolutely positioned inside it, so the canvas never sizes its own container
+   (no ResizeObserver loop). */
 .canvas-box {
   position: relative;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   width: 100%;
-  min-height: 0;
+  max-height: 62vh;
   aspect-ratio: 39 / 23;
   overflow: hidden;
 }
@@ -351,40 +821,111 @@ input[type='range']:disabled {
   display: block;
 }
 
+/* ---------- Run details: four cards under the stage ----------
+   4 equal columns from 1280px, 2 from 760px, 1 below; cards in a row share a
+   height. The page scrolls, so no inner scroll box. */
 .panel {
   min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  border-left: 1px solid var(--line);
 }
 
-.section {
-  padding: 16px 0 16px 24px;
-  border-bottom: 1px solid var(--line);
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+  align-items: stretch;
 }
 
-.section:last-child {
-  border-bottom: 0;
+@media (max-width: 1279px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-.section > .label {
-  margin-bottom: 8px;
+@media (max-width: 759px) {
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.section p {
+/* Title, grey note, content; the flex gap is the only vertical rhythm. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  overflow-wrap: break-word;
+}
+
+/* Error card: spans every column, above the four cards. */
+.card--wide {
+  grid-column: 1 / -1;
+}
+
+/* Zero specificity, so .section-note and other classed margins still apply. */
+:where(.card) :where(p, dl, ul, table) {
   margin: 0;
 }
 
-/* Verifier badge: 1px border, mono. Violation: accent text and border. */
+/* Stations: a native disclosure at the end of the telemetry card. */
+.disclosure {
+  min-width: 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.disclosure-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--control-h);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--fg);
+  list-style: none;
+  border-radius: var(--radius);
+}
+
+.disclosure-summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Text caret, turned down when open (no images). */
+.disclosure-summary::before {
+  content: '▸';
+  font-size: var(--fs-meta);
+  line-height: 1;
+  color: var(--fg-2);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.disclosure[open] > .disclosure-summary::before {
+  transform: rotate(90deg);
+}
+
+.disclosure > .section-note {
+  margin: 0 0 var(--s-2);
+}
+
+/* Status badge: hairline border. Alert (jam): Accent text and border.
+   Wraps inside narrow cards instead of overflowing. */
 .badge {
   display: inline-block;
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: 1px solid var(--ink);
+  align-self: flex-start;
+  max-width: 100%;
+  white-space: normal;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg);
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--radius);
-  padding: 3px 8px;
+  padding: 2px 8px;
 }
 
 .badge--alert {
@@ -392,30 +933,58 @@ input[type='range']:disabled {
   border-color: var(--accent);
 }
 
+/* Verifier violations: an error, so a white border instead of Accent. */
+.badge--strong {
+  border-color: var(--fg);
+}
+
 .metrics {
   display: grid;
-  gap: 8px;
-  margin: 0 0 16px;
+  gap: var(--s-2);
+  margin: 0;
 }
 
 .metric {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .metric dd {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--fs-body);
   line-height: 22px;
 }
 
-.spark-row {
+/* Labels that carry an info tip keep the tip on the text baseline. */
+.metric dt,
+.bignum dt,
+.spark-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* Metrics: large serif numbers with grey units. */
+.bignums {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
-  align-items: end;
+  gap: var(--s-3);
+  margin: 0;
+}
+
+.bignum dd {
+  margin: 0;
+}
+
+.num {
+  font-family: var(--font-sans);
+  font-size: var(--fs-num);
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
 }
 
 .sparkline {
@@ -424,35 +993,49 @@ input[type='range']:disabled {
   height: 64px;
 }
 
-.spark-values {
-  display: grid;
-  gap: 8px;
-  margin: 0;
+/* The sparkline follows in the card gap; pull it up to its label. */
+.spark-label {
+  margin: 0 0 calc(var(--s-2) - var(--s-3));
 }
 
-.spark-values div {
+/* Jam status: badge plus info tips for onset and severity. */
+.status-row {
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
 }
 
-.spark-values dd {
-  margin: 0;
-  text-align: right;
+.status-tips {
+  display: inline-flex;
+  gap: var(--s-1);
+}
+
+/* These tips can end a row at the panel's right edge: open them leftwards. */
+.status-tips .infotip-text {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 .stations {
   border-collapse: collapse;
-  font-size: 11px;
-  line-height: 16px;
+  font-size: var(--fs-ui);
+  line-height: 20px;
   width: 100%;
+}
+
+.stations th {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  color: var(--fg-2);
 }
 
 .stations th,
 .stations td {
   text-align: left;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--line-soft);
+  padding: var(--s-1) 0;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .stations th:last-child,
@@ -460,26 +1043,22 @@ input[type='range']:disabled {
   text-align: right;
 }
 
-/* ---------- Telemetry (section 03) ---------- */
-
-/* Primary: ink fill, white text (the inverted button state). */
-.btn--primary {
-  background: var(--ink);
-  color: var(--bg);
-  width: 100%;
-  min-height: 32px;
-}
+/* ---------- Telemetry ---------- */
 
 .find-cause {
-  margin: 16px 0;
+  margin: 0;
+}
+
+.find-cause .btn--primary {
+  width: 100%;
 }
 
 .find-cause .note {
-  margin-top: 4px;
+  margin-top: var(--s-1);
 }
 
 .telemetry-metrics {
-  margin: 16px 0 8px;
+  margin: 0;
 }
 
 .queues {
@@ -487,31 +1066,33 @@ input[type='range']:disabled {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .queue {
   display: grid;
-  grid-template-columns: 4ch minmax(0, 1fr) 5ch;
+  grid-template-columns: 10ch minmax(0, 1fr) 5ch;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
 }
 
 .queue .value {
   text-align: right;
 }
 
-/* 1px outlined bar, ink fill proportional to queue / queueCap. */
+/* Thin bar: faint track, white fill proportional to queue / queueCap. */
 .qbar {
   display: block;
-  height: 8px;
-  border: 1px solid var(--line);
+  height: 4px;
+  background: var(--track);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
 }
 
 .qbar-fill {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--fg);
 }
 
 .sr-only {
@@ -530,41 +1111,113 @@ input[type='range']:disabled {
   margin: 0;
   padding: 0;
   list-style: none;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
 }
 
 .assumptions li {
-  padding: 0 0 8px;
+  padding: 0 0 var(--s-2);
 }
 
-.assumptions li::before {
-  content: '— ';
-  color: var(--ink-2);
+.assumptions li:last-child {
+  padding-bottom: 0;
 }
 
+.assumptions li::first-letter {
+  text-transform: uppercase;
+}
+
+/* Errors are not alerts in the Accent sense: grey text, mono message. */
 .error {
   margin: 0;
   white-space: pre-wrap;
-  font-size: 11px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
   line-height: 16px;
-  color: var(--accent);
+  color: var(--fg-2);
 }
 
-/* Ground-truth legend under the canvas: one mono line, shown only when revealed. */
-.legend {
+/* ---------- Canvas legend: always-visible key under the canvas ---------- */
+
+/* One centred row; wrapping only so it never overflows a narrow screen. */
+.legend-block {
   flex: 0 0 auto;
-  margin: 8px 0 0;
-  font-size: 11px;
-  line-height: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  min-width: 0;
+}
+
+.canvas-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+  gap: var(--s-1) var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.legend-swatch {
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* Collapsed legend (under 640px): label plus info tip. Hidden by default. */
+.legend-tip {
+  display: none;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* Ground-truth line, shown only when revealed: sans sentence style, one line. */
+.reveal-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-1) 0 0;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+}
+
+.reveal-legend-text {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ---------- Scrubber: directly under the canvas ---------- */
+@media (max-width: 639px) {
+  .canvas-legend {
+    display: none;
+  }
+  .legend-tip {
+    display: inline-flex;
+  }
+}
+
+/* ---------- Scrubber: directly under the canvas, full stage width ---------- */
 
 .scrubber {
   flex: 0 0 auto;
-  padding-top: 16px;
+  width: 100%;
 }
 
 .scrubber-track {
@@ -578,38 +1231,56 @@ input[type='range']:disabled {
   width: 100%;
 }
 
+/* Scrubber range: 2px track at .3 alpha; the 14px round white thumb comes from
+   the shared input[type='range'] rules. */
+.scrubber-input::-webkit-slider-runnable-track {
+  background: var(--scrub-track);
+}
+
+.scrubber-input::-moz-range-track {
+  background: var(--scrub-track);
+}
+
 .scrubber-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  gap: var(--s-2);
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
   line-height: 16px;
-  color: var(--ink-2);
+  color: var(--fg-2);
 }
 
-/* ---------- Narrow screens: stack the panel under the canvas ---------- */
+/* ---------- Narrow screens: tooltips as a strip ---------- */
 
 @media (max-width: 1023px) {
-  .app {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
+  /* Info tips open as a fixed strip at the bottom of the viewport, so they
+     never extend past either edge (and never add scroll width while hidden). */
+  .infotip-text,
+  .status-tips .infotip-text {
+    position: fixed;
+    top: auto;
+    right: var(--s-3);
+    bottom: var(--s-3);
+    left: var(--s-3);
+    z-index: 30;
+    width: auto;
+    max-width: none;
+    transform: none;
   }
-  .main {
-    grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---------- Phones ---------- */
+
+@media (max-width: 639px) {
+  .header-right {
+    justify-content: flex-start;
   }
-  .stage {
-    padding: 24px 0 16px;
-  }
-  .canvas-box {
-    max-height: 80vh;
-  }
-  .panel {
-    overflow: visible;
-    border-left: 0;
-    border-top: 1px solid var(--line);
-  }
-  .section {
-    padding-left: 0;
+  /* Guard: a field never exceeds the content width (controls keep their
+     natural width; nothing is stretched or truncated). */
+  .field {
+    max-width: 100%;
   }
 }
 

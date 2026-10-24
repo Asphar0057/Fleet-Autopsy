@@ -1,0 +1,151 @@
+/* How it works drawer (visual-redesign Requirement 5). Fixed right slide-over
+   with a dim scrim. No blur, no shadow. The slide is a mount animation, removed
+   under prefers-reduced-motion (here and by the global block in base.css). */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.6);
+  animation: scrim-in var(--dur-slow) var(--ease);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  box-sizing: border-box;
+  width: min(440px, 100vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-4);
+  background: var(--surface);
+  border-left: 1px solid var(--hairline);
+  color: var(--fg);
+  animation: drawer-in var(--dur-slow) var(--ease);
+}
+
+.drawer:focus {
+  outline: none;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-bottom: var(--s-3);
+  margin-bottom: var(--s-4);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.drawer-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-h1);
+  line-height: 1.1;
+  letter-spacing: var(--tracking-tight);
+}
+
+.hiw-steps {
+  list-style: none;
+  margin: 0 0 var(--s-5);
+  padding: 0;
+  display: grid;
+  gap: var(--s-4);
+}
+
+.hiw-step {
+  display: grid;
+  grid-template-columns: var(--s-4) minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: start;
+}
+
+/* Same 24px circle as the landing .step-num. */
+.hiw-num {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 50%;
+  font: 600 var(--fs-meta) / 1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.hiw-step-title {
+  margin: 0 0 var(--s-1);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-h2);
+  line-height: 24px; /* matches the 24px number circle */
+  letter-spacing: var(--tracking-tight);
+}
+
+.hiw-step-body {
+  margin: 0;
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+}
+
+.pipeline {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pipeline-node {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1;
+}
+
+/* The single Accent use in the drawer: the "find the cause" node. */
+.pipeline-node--cause {
+  stroke: var(--accent);
+}
+
+.pipeline-edge {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1;
+}
+
+.pipeline-label {
+  fill: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .drawer {
+    animation: none;
+  }
+}

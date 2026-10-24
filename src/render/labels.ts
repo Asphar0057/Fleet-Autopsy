@@ -20,3 +20,22 @@ export function stationFontSize(cell: number, widthAt: (px: number) => number): 
   const max = cell * STATION_TEXT_FIT;
   return w > max && w > 0 ? (size * max) / w : size;
 }
+
+/** At most this many Stall_Labels per frame; more stalled robots show a count chip. */
+export const MAX_STALL_LABELS = 4;
+
+/**
+ * Writes into out[0..min(total, MAX_STALL_LABELS)) the lowest ids r, ascending, with
+ * stalled[r] === 1 and skip?.[r] !== 1. Returns total, the count of all such robots.
+ * No allocation; `out` must have length >= MAX_STALL_LABELS.
+ */
+export function stallLabels(stalled: Uint8Array, skip: Uint8Array | null, out: Int16Array): number {
+  let total = 0;
+  for (let r = 0; r < stalled.length; r++) {
+    if (stalled[r] !== 1) continue;
+    if (skip !== null && skip[r] === 1) continue;
+    if (total < MAX_STALL_LABELS) out[total] = r;
+    total++;
+  }
+  return total;
+}

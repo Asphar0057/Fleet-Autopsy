@@ -1,13 +1,50 @@
-/* Design tokens, copied from .kiro/steering/design.md. */
+/* Design tokens: the single home of design CSS variables (.kiro/steering/design.md). */
+
+/* Licensed Gotham drop-in (not committed): place files in public/fonts/ and uncomment.
+@font-face { font-family: 'Gotham'; src: url('/fonts/Gotham-Book.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Gotham'; src: url('/fonts/Gotham-Medium.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Gotham'; src: url('/fonts/Gotham-Bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+*/
+
 :root {
-  --bg: #ffffff;
-  --ink: #000000;
-  --ink-2: #6b6b6b;      /* secondary text, units */
-  --line: #000000;       /* structure: 1px */
-  --line-soft: rgba(0,0,0,.14);
-  --accent: #ff4a1c;     /* ONLY for alerts, violations, root-cause highlight */
-  --radius: 2px;
-  --font-display: 'Instrument Serif', 'Times New Roman', serif;
-  --font-body: 'Geist', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  /* color */
+  --bg: #000000;
+  --surface: #0a0a0a;              /* panels, cards, drawer */
+  --fg: #ffffff;                   /* primary text, 21:1 */
+  --fg-2: #a3a3a3;                 /* secondary text, ~8.6:1 on #000 */
+  --fg-3: #8a8a8a;                 /* tertiary text, minimum, ~6:1 on #000 */
+  --hairline: rgba(255,255,255,.10);
+  --hairline-strong: rgba(255,255,255,.24);
+  --track: rgba(255,255,255,.10);
+  --hover: rgba(255,255,255,.06);
+  --accent: #ff4a1c;               /* culprit marker, jam badge, onset marker ONLY; ~6.3:1 on #000 */
+  /* canvas */
+  --canvas-robot: #ffffff;
+  --canvas-carry: rgba(255,255,255,.6);
+  --canvas-wall: rgba(255,255,255,.30);
+  --canvas-pod: rgba(255,255,255,.15);
+  --canvas-station: rgba(255,255,255,.92);
+  --canvas-station-text: #000000;
+  --canvas-stall: rgba(255,255,255,.45);
+  --canvas-label: #a3a3a3;
+  /* scrubber */
+  --scrub-line: rgba(255,255,255,.6);   /* throughput line */
+  --scrub-event: rgba(255,255,255,.18); /* stall-event ticks */
+  --scrub-track: rgba(255,255,255,.3);  /* range track */
+  /* type: one family (mirrored by CANVAS_FONT in src/render/canvasRenderer.ts) */
+  --font-sans: 'Gotham', 'Montserrat', system-ui, sans-serif;
+  --fs-hero: clamp(56px, 7.5vw, 112px);  /* 96px at 1280 */
+  --fs-h1: 32px;        /* drawer title */
+  --fs-wordmark: 22px;  /* app header */
+  --fs-h2: 18px;        /* card and step titles */
+  --fs-num: 36px; --fs-lede: 20px; --fs-body: 15px; --fs-ui: 13px; --fs-meta: 12px; --fs-eyebrow: 11px;
+  --tracking-tight: -0.02em; --tracking-eyebrow: 0.08em;
+  /* space and shape (8px grid) */
+  --s-1: 4px; --s-2: 8px; --s-3: 16px; --s-4: 24px; --s-5: 32px; --s-6: 48px; --s-7: 64px;
+  --gutter: clamp(16px, 2.5vw, 40px);
+  --control-h: 36px; --radius: 6px; --radius-card: 8px; --radius-pill: 999px;
+  /* motion */
+  --dur-fast: 150ms; --dur: 200ms; --dur-slow: 250ms; --ease: cubic-bezier(.2,.0,.0,1);
+  /* focus */
+  --focus: 2px solid #ffffff; --focus-offset: 2px;
 }
