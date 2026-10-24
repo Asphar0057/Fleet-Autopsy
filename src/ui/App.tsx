@@ -16,6 +16,7 @@ import { detectJam } from '../sim/jam';
 import { createTelemetryTracker } from '../sim/telemetry';
 import { verifyRun } from '../sim/verify';
 import type { Badge } from './badge';
+import { CanvasLegend } from './CanvasLegend';
 import { Controls } from './Controls';
 import { verifierCopy } from './copy';
 import { faultLegend, faultTicks, revealMarks } from './legend';
@@ -512,11 +513,7 @@ export function App({ onHome, onHowItWorks }: AppProps = {}) {
               aria-label={layout ? `${layout.name} floor, ${robots} robots, tick ${shownPlayhead}` : 'warehouse floor'}
             />
           </div>
-          {legend !== null && (
-            <p className="legend mono" title={legend}>
-              {legend}
-            </p>
-          )}
+          <CanvasLegend reveal={legend} />
           <Scrubber
             rec={rec}
             frames={shownFrames}

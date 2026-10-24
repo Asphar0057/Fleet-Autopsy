@@ -931,16 +931,72 @@ input[type='range']:disabled {
   color: var(--fg-2);
 }
 
-/* Ground-truth legend under the canvas: one line, shown only when revealed. */
-.legend {
+/* ---------- Canvas legend: always-visible key under the canvas ---------- */
+
+.legend-block {
   flex: 0 0 auto;
   margin: var(--s-2) 0 0;
+  min-width: 0;
+}
+
+.canvas-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-body);
   font-size: var(--fs-ui);
   line-height: 20px;
   color: var(--fg-2);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.legend-swatch {
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* Collapsed legend (under 640px): label plus info tip. Hidden by default. */
+.legend-tip {
+  display: none;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* Ground-truth line, shown only when revealed: Geist sentence style, one line. */
+.reveal-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-1) 0 0;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-ui);
+  line-height: 20px;
+  color: var(--fg-2);
+}
+
+.reveal-legend-text {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 639px) {
+  .canvas-legend {
+    display: none;
+  }
+  .legend-tip {
+    display: inline-flex;
+  }
 }
 
 /* ---------- Scrubber: directly under the canvas ---------- */
@@ -959,6 +1015,16 @@ input[type='range']:disabled {
 .scrubber-input {
   display: block;
   width: 100%;
+}
+
+/* Scrubber range: 1px track at .3 alpha; the 12px round white thumb comes from
+   the shared input[type='range'] rules. */
+.scrubber-input::-webkit-slider-runnable-track {
+  background: var(--scrub-track);
+}
+
+.scrubber-input::-moz-range-track {
+  background: var(--scrub-track);
 }
 
 .scrubber-meta {

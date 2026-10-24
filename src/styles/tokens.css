@@ -19,6 +19,10 @@
   --canvas-station-text: #000000;
   --canvas-stall: rgba(255,255,255,.45);
   --canvas-label: #a3a3a3;
+  /* scrubber */
+  --scrub-line: rgba(255,255,255,.6);   /* throughput line */
+  --scrub-event: rgba(255,255,255,.18); /* stall-event ticks */
+  --scrub-track: rgba(255,255,255,.3);  /* range track */
   /* type */
   --font-display: 'Instrument Serif', 'Times New Roman', serif;
   --font-body: 'Geist', system-ui, sans-serif;
