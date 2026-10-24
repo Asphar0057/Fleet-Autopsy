@@ -7,7 +7,7 @@ import { createElement } from 'react';
 import type { FunctionComponent } from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { CARD_TITLES, LANDING, LANDING_CENTER_CLASS, shortLayoutName } from '../src/ui/copy';
+import { CARD_TITLES, LANDING, shortLayoutName } from '../src/ui/copy';
 
 type AnyProps = Record<string, unknown>;
 
@@ -62,10 +62,14 @@ describe('Card_Grid render (Requirement 4.2, 4.5, 8.4)', () => {
 });
 
 describe('Landing render (Requirement 5.1, 5.2, 8.4)', () => {
-  it('renders the centred content, eyebrow, three steps and both actions', async () => {
+  it('renders the label, title block, frozen robot, three steps and both actions', async () => {
     const Landing = await component('Landing', 'Landing');
     const html = renderToString(createElement(Landing, { onEnter: noop, onHowItWorks: noop }));
-    expect(html).toContain(LANDING_CENTER_CLASS);
+    expect(html).toContain('class="landing-hero"');
+    expect(html).toContain('class="frozen-robot"');
+    expect(count(html, 'class="fr-ring"')).toBe(7);
+    // Deterministic markup: two renders are identical.
+    expect(renderToString(createElement(Landing, { onEnter: noop, onHowItWorks: noop }))).toBe(html);
     expect(html).toContain(LANDING.eyebrow);
     expect(html).toMatch(/<button[^>]*>Enter the simulator<\/button>/);
     expect(html).toMatch(/<button[^>]*>How it works<\/button>/);
