@@ -87,20 +87,20 @@ Bottom-up build of the pure sim (`src/sim`), then a minimal renderer and App so 
     - `npm run build` passes; `npm run dev` shows robots moving on fulfillment-block
     - Commit: "add canvas renderer and app loop with moving robots"
 
-- [ ] 7. Verifier tests and badge text
-  - [ ] 7.1 Implement a pure `badgeText(violations, ticks)` helper in `src/ui/badge.ts`
+- [x] 7. Verifier tests and badge text
+  - [x] 7.1 Implement a pure `badgeText(violations, ticks)` helper in `src/ui/badge.ts`
     - _Requirements: 6.5, 6.6_
-  - [ ] 7.2 Write unit tests in `tests/verify.test.ts` (required test 2)
+  - [x] 7.2 Write unit tests in `tests/verify.test.ts` (required test 2)
     - Hand-built same-cell and swap recordings flagged with tick and robot ids; jump and wall cases; endpoint-after-pick stays legal; badge text for 0 and N violations
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
-  - [ ] 7.3 Commit: "add verifier tests and badge text"
+  - [x] 7.3 Commit: "add verifier tests and badge text"
 
-- [ ] 8. Metrics
-  - [ ] 8.1 Implement `src/sim/metrics.ts` (`throughputAt`, `throughputSeries`, `meanCycleTime`, `queueLengths`, `createWaitCounter` with incremental cache)
+- [-] 8. Metrics
+  - [x] 8.1 Implement `src/sim/metrics.ts` (`throughputAt`, `throughputSeries`, `meanCycleTime`, `queueLengths`, `createWaitCounter` with incremental cache)
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
-  - [ ] 8.2 Write property test in `tests/verify.test.ts`: **Property 13: Metrics match naive models** (`numRuns: 100`)
+  - [x] 8.2 Write property test in `tests/verify.test.ts`: **Property 13: Metrics match naive models** (`numRuns: 100`)
     - **Validates: Requirements 7.1, 7.2**
-  - [ ] 8.3 Write unit test: wait counter on a hand-built recording, forward then backward queries
+  - [x] 8.3 Write unit test: wait counter on a hand-built recording, forward then backward queries
     - _Requirements: 7.4_
   - [ ] 8.4 Commit: "add throughput, cycle time, queue, and wait-count metrics"
 

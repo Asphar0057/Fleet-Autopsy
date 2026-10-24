@@ -5,6 +5,14 @@ import type { Recording } from '../src/sim/recorder';
 import { parseLayout } from '../src/sim/layout';
 import { verifyRun } from '../src/sim/verify';
 import { badgeText } from '../src/ui/badge';
+import {
+  createWaitCounter,
+  meanCycleTime,
+  queueLengths,
+  throughputAt,
+  throughputSeries,
+} from '../src/sim/metrics';
+import { EKind, RState } from '../src/sim/types';
 import { metaFor } from './helpers';
 
 describe('recorder', () => {
@@ -215,5 +223,124 @@ describe('badgeText', () => {
   it('shows the violation count as an alert', () => {
     expect(badgeText(3, 214)).toEqual({ text: '3 VIOLATIONS · 214 TICKS', alert: true });
     expect(badgeText(1, 214)).toEqual({ text: '1 VIOLATION · 214 TICKS', alert: true });
+  });
+});
+
+describe('metrics properties', () => {
+  // Feature: sim-core, Property 13: Metrics match naive models
+  // **Validates: Requirements 7.1, 7.2**
+  it('Property 13: Metrics match naive models', () => {
+    const input = fc.record({
+      // [tick gap to previous event, kind, cycle length for service-end / arg otherwise]
+      ev: fc.array(
+        fc.tuple(
+          fc.integer({ min: 0, max: 40 }),
+          fc.integer({ min: 0, max: 4 }),
+          fc.integer({ min: 0, max: 300 }),
+        ),
+        { maxLength: 300 },
+      ),
+      query: fc.integer({ min: 0, max: 1 << 30 }),
+    });
+    fc.assert(
+      fc.property(input, ({ ev, query }) => {
+        const r = createRecorder(1, 1);
+        const events: { tick: number; kind: number; arg: number }[] = [];
+        let tick = 0;
+        for (const [gap, kind, x] of ev) {
+          tick += gap;
+          const arg = kind === EKind.ServiceEnd ? tick - x : x;
+          events.push({ tick, kind, arg });
+          r.pushEvent(tick, 0, kind, arg);
+        }
+        const last = tick + 150;
+        const one16 = new Int16Array(1);
+        const one8 = new Uint8Array(1);
+        for (let t = 0; t <= last; t++) r.pushFrame(one16, one16, one8, one8);
+        const rec = r.recording;
+        const T = query % (last + 1);
+
+        const naiveThroughput = (q: number) =>
+          events.filter((e) => e.kind === EKind.Deliver && e.tick > q - 100 && e.tick <= q).length;
+        expect(throughputAt(rec, T)).toBe(naiveThroughput(T));
+
+        const ends = events.filter((e) => e.kind === EKind.ServiceEnd && e.tick <= T);
+        const mean = meanCycleTime(rec, T);
+        if (ends.length === 0) expect(mean).toBeNaN();
+        else expect(mean).toBeCloseTo(ends.reduce((s, e) => s + e.tick - e.arg, 0) / ends.length, 9);
+
+        const series = throughputSeries(rec, T);
+        expect(series.length).toBe(T + 1);
+        const stride = Math.max(1, Math.floor(T / 64));
+        for (let t = 0; t <= T; t += stride) expect(series[t]).toBe(naiveThroughput(t));
+        expect(series[T]).toBe(naiveThroughput(T));
+      }),
+      { numRuns: 100 },
+    );
+  });
+});
+
+describe('metrics', () => {
+  it('queueLengths returns the recorded row and throws outside the range', () => {
+    const r = createRecorder(1, 2);
+    const c = new Int16Array(1);
+    const s = new Uint8Array(1);
+    r.pushFrame(c, c, s, Uint8Array.of(1, 2));
+    r.pushFrame(c, c, s, Uint8Array.of(3, 0));
+    expect([...queueLengths(r.recording, 1)]).toEqual([3, 0]);
+    expect(() => queueLengths(r.recording, 2)).toThrow(RangeError);
+    expect(() => queueLengths(r.recording, -1)).toThrow(RangeError);
+  });
+
+  it('meanCycleTime is NaN before any service-end', () => {
+    const r = createRecorder(1, 1);
+    r.pushEvent(5, 0, EKind.Deliver, 6);
+    expect(meanCycleTime(r.recording, 10)).toBeNaN();
+    r.pushEvent(12, 0, EKind.ServiceEnd, 2);
+    expect(meanCycleTime(r.recording, 11)).toBeNaN();
+    expect(meanCycleTime(r.recording, 12)).toBe(10);
+  });
+
+  it('wait counter: forward, repeated, and backward queries give exact counts', () => {
+    const { ToPod, ToStation, Serving, Returning, Idle } = RState;
+    // Per frame: [cell, state] for robots 0 and 1 on the tiny grid.
+    const frames: [number, number][][] = [
+      [[7, ToPod], [16, Idle]],
+      [[7, ToPod], [16, Idle]], // r0 waits on 7; r1 idle: not counted
+      [[8, ToPod], [16, ToPod]], // r0 moved; r1 waits on 16
+      [[8, Serving], [16, ToStation]], // r0 serving: not counted; r1 waits on 16
+      [[8, Returning], [17, ToStation]], // r0 waits on 8; r1 moved
+    ];
+    const r = createRecorder(2, 0);
+    for (const f of frames) {
+      r.pushFrame(
+        Int16Array.from(f.map(([c]) => c)),
+        Int16Array.from(f.map(([c]) => c)),
+        Uint8Array.from(f.map(([, s]) => s)),
+        new Uint8Array(0),
+      );
+    }
+    const rec = r.recording;
+    const expected: Record<number, Record<number, number>> = {
+      0: {},
+      1: { 7: 1 },
+      2: { 7: 1, 16: 1 },
+      3: { 7: 1, 16: 2 },
+      4: { 7: 1, 16: 2, 8: 1 },
+    };
+    const dense = (t: number) => {
+      const a = new Array<number>(25).fill(0);
+      for (const [c, v] of Object.entries(expected[t])) a[Number(c)] = v;
+      return a;
+    };
+    const wc = createWaitCounter(tiny);
+    const first = wc.at(rec, 0);
+    for (const t of [0, 1, 2, 4, 4, 1, 3, 0, 4]) {
+      const got = wc.at(rec, t);
+      expect(got).toBe(first); // owned and reused
+      expect([...got]).toEqual(dense(t));
+      expect([...createWaitCounter(tiny).at(rec, t)]).toEqual(dense(t));
+    }
+    expect(() => wc.at(rec, 5)).toThrow(RangeError);
   });
 });
